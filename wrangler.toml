@@ -1,0 +1,19 @@
+# Cloudflare Workers Configuration for MyGPT API
+
+name = "mygpt-api"
+main = "workers/api.ts"
+compatibility_date = "2024-01-01"
+
+# D1データベース設定
+# 注意: database_id は実際のD1作成後に手動で設定する必要があります
+# 設定手順:
+# 1. npx wrangler d1 create mygpt を実行
+# 2. 出力された database_id を以下の PLACEHOLDER に置き換え
+[[d1_databases]]
+binding = "DB"
+database_name = "mygpt"
+database_id = "PLACEHOLDER"
+
+# 環境変数（シークレット）
+# OPENAI_API_KEY は以下のコマンドで設定:
+# npx wrangler secret put OPENAI_API_KEY
