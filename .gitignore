@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+
+# Build output
+.nuxt/
+.output/
+dist/
+
+# Environment variables
+.dev.vars
+.env
+.env.local
+
+# Local database
+.data/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+
+# Logs
+*.log

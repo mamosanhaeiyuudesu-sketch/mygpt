@@ -19,8 +19,8 @@ export interface Message {
 }
 
 export const useChat = () => {
-  const config = useRuntimeConfig();
-  const apiBase = config.public.apiBase;
+  // 同じオリジンのAPIを使用（相対パス）
+  const apiBase = '';
 
   // 状態管理
   const chats = ref<Chat[]>([]);
@@ -37,7 +37,7 @@ export const useChat = () => {
       if (!response.ok) {
         throw new Error('Failed to fetch chats');
       }
-      const data = await response.json();
+      const data = await response.json() as { chats: Chat[] };
       chats.value = data.chats;
     } catch (error) {
       console.error('Error fetching chats:', error);
@@ -61,7 +61,7 @@ export const useChat = () => {
         throw new Error('Failed to create chat');
       }
 
-      const data = await response.json();
+      const data = await response.json() as { chatId: string };
 
       // チャット一覧を再取得
       await fetchChats();
@@ -91,7 +91,7 @@ export const useChat = () => {
         throw new Error('Failed to fetch messages');
       }
 
-      const data = await response.json();
+      const data = await response.json() as { messages: Message[] };
       messages.value = data.messages;
     } catch (error) {
       console.error('Error selecting chat:', error);
@@ -133,7 +133,7 @@ export const useChat = () => {
         throw new Error('Failed to send message');
       }
 
-      const assistantMessage = await response.json();
+      const assistantMessage = await response.json() as Message;
 
       // 楽観的更新を削除し、実際のメッセージを追加
       messages.value = messages.value.filter(m => m.id !== optimisticUserMessage.id);

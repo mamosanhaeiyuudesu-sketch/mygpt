@@ -49,10 +49,35 @@
     <!-- メインエリア -->
     <div class="flex-1 flex flex-col">
       <!-- チャット未選択時 -->
-      <div v-if="!currentChatId" class="flex-1 flex items-center justify-center">
-        <div class="text-center">
-          <h1 class="text-4xl font-bold mb-4">MyGPT</h1>
-          <p class="text-gray-400">新しいチャットを開始するか、既存のチャットを選択してください</p>
+      <div v-if="!currentChatId" class="flex-1 flex flex-col">
+        <!-- 中央コンテンツ -->
+        <div class="flex-1 flex items-center justify-center">
+          <div class="text-center">
+            <h1 class="text-4xl font-bold mb-4">MyGPT</h1>
+            <p class="text-gray-400">メッセージを入力して会話を始めましょう</p>
+          </div>
+        </div>
+
+        <!-- 入力欄（ホーム画面用） -->
+        <div class="border-t border-gray-800 p-4">
+          <div class="max-w-3xl mx-auto">
+            <form @submit.prevent="handleNewChatWithMessage" class="flex gap-3">
+              <input
+                v-model="inputMessage"
+                type="text"
+                placeholder="メッセージを入力..."
+                class="flex-1 bg-gray-800 text-white rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                :disabled="isLoading"
+              />
+              <button
+                type="submit"
+                :disabled="!inputMessage.trim() || isLoading"
+                class="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed rounded-lg transition-colors"
+              >
+                Send
+              </button>
+            </form>
+          </div>
         </div>
       </div>
 
@@ -162,6 +187,32 @@ const handleNewChat = async () => {
   } catch (error) {
     console.error('Failed to create chat:', error);
     alert('チャットの作成に失敗しました');
+  }
+};
+
+/**
+ * 新しいチャットを作成してメッセージを送信（ホーム画面用）
+ */
+const handleNewChatWithMessage = async () => {
+  const message = inputMessage.value.trim();
+  if (!message || isLoading.value) {
+    return;
+  }
+
+  try {
+    // 入力欄をクリア
+    inputMessage.value = '';
+
+    // 新しいチャットを作成
+    await createChat();
+
+    // メッセージを送信
+    await sendMessage(message);
+  } catch (error) {
+    console.error('Failed to create chat with message:', error);
+    alert('チャットの作成に失敗しました');
+    // エラー時は入力を復元
+    inputMessage.value = message;
   }
 };
 

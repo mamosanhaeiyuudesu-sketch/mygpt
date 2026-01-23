@@ -5,10 +5,8 @@ export default defineNuxtConfig({
 
   // Runtime configuration
   runtimeConfig: {
-    public: {
-      // Cloudflare Workers APIのベースURL（環境変数で上書き可能）
-      apiBase: process.env.API_BASE || 'http://localhost:8787'
-    }
+    // サーバー側のみ（NUXT_OPENAI_API_KEY 環境変数で設定）
+    openaiApiKey: ''
   },
 
   // App configuration
