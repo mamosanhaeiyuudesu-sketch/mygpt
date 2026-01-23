@@ -1,18 +1,40 @@
 /**
- * OpenAI API ヘルパー関数
- * 標準の Chat Completions API を使用
+ * OpenAI Conversations API ヘルパー関数
+ * https://platform.openai.com/docs/api-reference/conversations
  */
 
 /**
- * Conversation ID を生成（ローカル用のダミー）
+ * Conversation を作成
+ * POST /v1/conversations
  */
 export async function createConversation(apiKey: string, name: string): Promise<string> {
-  // ローカルでは単にIDを生成するだけ
-  return `conv_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+  console.log('[OpenAI] Creating conversation:', { name });
+
+  const response = await fetch('https://api.openai.com/v1/conversations', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      metadata: { name }
+    })
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    console.error('[OpenAI] Create conversation error:', error);
+    throw new Error(`OpenAI API error: ${error}`);
+  }
+
+  const data = await response.json() as { id: string };
+  console.log('[OpenAI] Conversation created:', data.id);
+  return data.id;
 }
 
 /**
- * OpenAI Chat Completions API: メッセージ送信
+ * Responses API でメッセージを送信
+ * POST /v1/responses (conversation パラメータで会話を指定)
  */
 export async function sendMessageToOpenAI(
   apiKey: string,
@@ -21,36 +43,57 @@ export async function sendMessageToOpenAI(
 ): Promise<string> {
   console.log('[OpenAI] Sending message:', { conversationId, message: message.substring(0, 50) });
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+  const response = await fetch('https://api.openai.com/v1/responses', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'gpt-4o-mini',
-      messages: [
-        { role: 'user', content: message }
-      ]
+      model: 'gpt-5.2',
+      conversation: conversationId,
+      input: message
     })
   });
 
   if (!response.ok) {
     const error = await response.text();
-    console.error('[OpenAI] API error:', error);
+    console.error('[OpenAI] Send message error:', error);
     throw new Error(`OpenAI API error: ${error}`);
   }
 
   const data = await response.json() as {
-    choices: Array<{
-      message: {
-        content: string;
-      };
-    }>;
+    output?: Array<{
+      type: string;
+      content?: Array<{
+        type: string;
+        text?: string;
+      }>;
+    }> | { content?: string };
   };
+  console.log('[OpenAI] Raw response:', JSON.stringify(data, null, 2));
 
-  const content = data.choices[0]?.message?.content || 'No response';
-  console.log('[OpenAI] Response received:', content.substring(0, 50));
+  // レスポンス形式に応じてテキストを抽出
+  let textContent = 'No response';
 
-  return content;
+  // output_text を探す (配列形式)
+  if (Array.isArray(data.output)) {
+    for (const item of data.output) {
+      if (item.type === 'message' && item.content) {
+        for (const content of item.content) {
+          if (content.type === 'output_text' && content.text) {
+            textContent = content.text;
+            break;
+          }
+        }
+      }
+    }
+  }
+  // output.content 形式の場合
+  else if (data.output && 'content' in data.output && data.output.content) {
+    textContent = data.output.content;
+  }
+
+  console.log('[OpenAI] Response received:', textContent.substring(0, 50));
+  return textContent;
 }
