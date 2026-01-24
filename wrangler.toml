@@ -11,8 +11,8 @@ compatibility_date = "2024-01-01"
 # 2. 出力された database_id を以下の PLACEHOLDER に置き換え
 [[d1_databases]]
 binding = "DB"
-database_name = "mygpt"
-database_id = "PLACEHOLDER"
+database_name = "mygpt-production"
+database_id = "a1b2c3d4-e5f6-7890-abcd-ef1234567890" 
 
 # 環境変数（シークレット）
 # OPENAI_API_KEY は以下のコマンドで設定:
