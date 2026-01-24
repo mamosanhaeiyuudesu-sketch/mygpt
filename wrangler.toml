@@ -4,9 +4,9 @@ main = ".output/server/index.mjs"
 compatibility_date = "2024-01-01"
 compatibility_flags = ["nodejs_compat"]
 
-# 静的アセット
-[assets]
-directory = ".output/public"
+# 静的アセット（legacy形式）
+[site]
+bucket = ".output/public"
 
 # D1データベース設定
 # 注意: database_id は実際のD1作成後に手動で設定する必要があります
