@@ -7,6 +7,7 @@ export interface Chat {
   id: string;
   conversation_id: string;
   name: string;
+  model: string; // 使用するOpenAIモデル
   created_at: number;
   updated_at: number;
 }
@@ -44,12 +45,13 @@ export function getAllChats(): (Chat & { last_message?: string })[] {
     });
 }
 
-export function createChat(id: string, conversationId: string, name: string): Chat {
+export function createChat(id: string, conversationId: string, name: string, model: string): Chat {
   const now = Date.now();
   const chat: Chat = {
     id,
     conversation_id: conversationId,
     name,
+    model,
     created_at: now,
     updated_at: now
   };

@@ -12,9 +12,11 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "@nuxtjs/tailwindcss": "^6.12.2",
+    "@tailwindcss/typography": "^0.5.19",
+    "marked": "^17.0.1",
     "nuxt": "^3.15.1",
-    "vue": "^3.5.13",
-    "@nuxtjs/tailwindcss": "^6.12.2"
+    "vue": "^3.5.13"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250117.0",

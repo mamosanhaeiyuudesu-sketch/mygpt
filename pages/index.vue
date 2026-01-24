@@ -107,6 +107,7 @@
           </svg>
         </button>
         <span class="ml-3 font-semibold">MyGPT</span>
+        <span v-if="currentChatModel" class="ml-2 text-xs text-gray-400 bg-gray-800 px-2 py-1 rounded">{{ currentChatModel }}</span>
       </div>
 
       <!-- チャット未選択時 -->
@@ -115,7 +116,25 @@
         <div class="flex-1 flex items-center justify-center px-4">
           <div class="text-center">
             <h1 class="text-3xl md:text-4xl font-bold mb-3 md:mb-4">MyGPT</h1>
-            <p class="text-gray-400 text-sm md:text-base">メッセージを入力して会話を始めましょう</p>
+            <p class="text-gray-400 text-sm md:text-base mb-4">メッセージを入力して会話を始めましょう</p>
+
+            <!-- モデル選択ドロップダウン -->
+            <div class="flex items-center justify-center gap-2">
+              <label class="text-sm text-gray-400">Model:</label>
+              <select
+                v-model="selectedModel"
+                class="bg-gray-800 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                :disabled="isLoadingModels"
+              >
+                <option v-if="isLoadingModels" value="">Loading...</option>
+                <option v-for="model in availableModels" :key="model.id" :value="model.id">
+                  {{ model.name }} ({{ model.contextWindow }})
+                </option>
+              </select>
+            </div>
+            <p v-if="selectedModelInfo" class="text-xs text-gray-500 mt-2">
+              {{ selectedModelInfo.description }}
+            </p>
           </div>
         </div>
 
@@ -134,7 +153,7 @@
               ></textarea>
               <button
                 type="submit"
-                :disabled="!inputMessage.trim() || isLoading"
+                :disabled="!inputMessage.trim() || isLoading || !selectedModel"
                 class="px-4 py-2 md:px-6 md:py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed rounded-lg transition-colors shrink-0"
               >
                 Send
@@ -146,6 +165,12 @@
 
       <!-- チャット選択時 -->
       <template v-else>
+        <!-- チャットヘッダー（モデル表示） -->
+        <div class="border-b border-gray-800 px-4 py-2 hidden md:flex items-center gap-2">
+          <span class="text-sm text-gray-400">Model:</span>
+          <span class="text-sm font-medium bg-gray-800 px-2 py-1 rounded">{{ currentChatModel }}</span>
+        </div>
+
         <!-- メッセージ一覧 -->
         <div ref="messagesContainer" class="flex-1 overflow-y-auto">
           <div class="max-w-3xl mx-auto px-3 md:px-4 py-4 md:py-8">
@@ -164,7 +189,7 @@
               <!-- アシスタントメッセージ -->
               <div v-else class="flex justify-start">
                 <div class="bg-gray-800 rounded-2xl px-3 py-2 md:px-4 md:py-3 max-w-[85%] md:max-w-[80%]">
-                  <div class="whitespace-pre-wrap text-sm md:text-base">{{ message.content }}</div>
+                  <div class="prose prose-invert prose-sm md:prose-base max-w-none" v-html="renderMarkdown(message.content)"></div>
                 </div>
               </div>
             </div>
@@ -207,13 +232,62 @@
         </div>
       </template>
     </div>
+
+    <!-- モデル選択ダイアログ -->
+    <div
+      v-if="showModelSelector"
+      class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+      @click.self="showModelSelector = false"
+    >
+      <div class="bg-gray-900 rounded-lg p-6 max-w-md w-full border border-gray-700">
+        <h2 class="text-lg font-bold mb-4">モデルを選択</h2>
+        <p class="text-sm text-gray-400 mb-4">新しいチャットで使用するモデルを選択してください。</p>
+
+        <div class="max-h-64 overflow-y-auto mb-4">
+          <div v-if="isLoadingModels" class="text-center py-4 text-gray-400">
+            Loading models...
+          </div>
+          <div v-else class="space-y-2">
+            <button
+              v-for="model in availableModels"
+              :key="model.id"
+              @click="handleCreateChatWithModel(model.id)"
+              class="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-800 transition-colors border border-gray-700"
+            >
+              <div class="flex justify-between items-center">
+                <span class="font-medium">{{ model.name }}</span>
+                <span class="text-xs text-gray-500">{{ model.contextWindow }}</span>
+              </div>
+              <div class="text-xs text-gray-400 mt-1">{{ model.description }}</div>
+              <div class="text-xs text-gray-500 mt-1">{{ model.inputPrice }} / {{ model.outputPrice }}</div>
+            </button>
+          </div>
+        </div>
+
+        <button
+          @click="showModelSelector = false"
+          class="w-full px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+        >
+          キャンセル
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { marked } from 'marked';
+
+// marked の設定
+marked.setOptions({
+  breaks: true, // 改行を <br> に変換
+  gfm: true     // GitHub Flavored Markdown
+});
+
 const {
   chats,
   currentChatId,
+  currentChatModel,
   messages,
   isLoading,
   fetchChats,
@@ -224,6 +298,49 @@ const {
   renameChat,
   reorderChats
 } = useChat();
+
+// モデル関連
+interface Model {
+  id: string;
+  name: string;
+  inputPrice: string;
+  outputPrice: string;
+  contextWindow: string;
+  description: string;
+}
+const availableModels = ref<Model[]>([]);
+const selectedModel = ref<string>('gpt-4o-mini');
+const isLoadingModels = ref(false);
+const showModelSelector = ref(false);
+
+// 選択中のモデル情報
+const selectedModelInfo = computed(() => {
+  return availableModels.value.find(m => m.id === selectedModel.value);
+});
+
+/**
+ * OpenAI のモデル一覧を取得
+ */
+const fetchModels = async () => {
+  try {
+    isLoadingModels.value = true;
+    const response = await fetch('/api/models');
+    if (response.ok) {
+      const data = await response.json() as { models: Model[] };
+      availableModels.value = data.models;
+      // デフォルトでgpt-4o-miniを選択（存在する場合）
+      if (data.models.some(m => m.id === 'gpt-4o-mini')) {
+        selectedModel.value = 'gpt-4o-mini';
+      } else if (data.models.length > 0) {
+        selectedModel.value = data.models[0].id;
+      }
+    }
+  } catch (error) {
+    console.error('Failed to fetch models:', error);
+  } finally {
+    isLoadingModels.value = false;
+  }
+};
 
 // 入力メッセージ
 const inputMessage = ref('');
@@ -242,6 +359,13 @@ const dragOverIndex = ref<number | null>(null);
 
 // モバイル用サイドバー状態
 const isSidebarOpen = ref(false);
+
+/**
+ * マークダウンをHTMLに変換
+ */
+const renderMarkdown = (content: string): string => {
+  return marked.parse(content) as string;
+};
 
 /**
  * キーダウンハンドラ（Enter で送信、Shift+Enter で改行）
@@ -280,9 +404,9 @@ const resetTextareaHeight = () => {
   });
 };
 
-// 初期化: チャット一覧を取得
+// 初期化: チャット一覧とモデル一覧を取得
 onMounted(async () => {
-  await fetchChats();
+  await Promise.all([fetchChats(), fetchModels()]);
 });
 
 // メッセージが追加されたら自動スクロール
@@ -391,11 +515,19 @@ const handleDrop = async (event: DragEvent, targetIndex: number) => {
 };
 
 /**
- * 新しいチャットを作成
+ * 新しいチャットを作成（モデル選択ダイアログを表示）
  */
-const handleNewChat = async () => {
+const handleNewChat = () => {
+  showModelSelector.value = true;
+};
+
+/**
+ * モデルを選択してチャットを作成
+ */
+const handleCreateChatWithModel = async (modelId: string) => {
   try {
-    await createChat();
+    showModelSelector.value = false;
+    await createChat(modelId);
     // モバイルではサイドバーを閉じる
     isSidebarOpen.value = false;
   } catch (error) {
@@ -409,7 +541,7 @@ const handleNewChat = async () => {
  */
 const handleNewChatWithMessage = async () => {
   const message = inputMessage.value.trim();
-  if (!message || isLoading.value) {
+  if (!message || isLoading.value || !selectedModel.value) {
     return;
   }
 
@@ -418,8 +550,8 @@ const handleNewChatWithMessage = async () => {
     inputMessage.value = '';
     resetTextareaHeight();
 
-    // 新しいチャットを作成
-    await createChat();
+    // 新しいチャットを作成（選択されたモデルで）
+    await createChat(selectedModel.value);
 
     // メッセージを送信
     await sendMessage(message);

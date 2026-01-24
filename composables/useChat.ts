@@ -8,6 +8,7 @@ export interface Chat {
   id: string;
   name: string;
   conversationId: string; // OpenAI Conversation ID
+  model: string; // 使用するOpenAIモデル
   lastMessage?: string;
   createdAt: number;
   updatedAt: number;
@@ -100,6 +101,13 @@ export const useChat = () => {
     return chat?.conversationId || null;
   });
 
+  // 現在のチャットのモデルを取得
+  const currentChatModel = computed(() => {
+    if (!currentChatId.value) return null;
+    const chat = chats.value.find(c => c.id === currentChatId.value);
+    return chat?.model || null;
+  });
+
   /**
    * localStorage からチャット一覧を読み込む
    */
@@ -110,8 +118,10 @@ export const useChat = () => {
 
   /**
    * 新しいチャットを作成
+   * @param model - 使用するOpenAIモデル（必須）
+   * @param name - チャット名（オプション）
    */
-  const createChat = async (name?: string) => {
+  const createChat = async (model: string, name?: string) => {
     try {
       isLoading.value = true;
       const chatName = name || 'New Chat';
@@ -136,6 +146,7 @@ export const useChat = () => {
         id: chatId,
         name: chatName,
         conversationId,
+        model,
         createdAt: now,
         updatedAt: now
       };
@@ -176,12 +187,13 @@ export const useChat = () => {
    * メッセージを送信
    */
   const sendMessage = async (content: string) => {
-    if (!currentChatId.value || !currentConversationId.value) {
+    if (!currentChatId.value || !currentConversationId.value || !currentChatModel.value) {
       throw new Error('No chat selected');
     }
 
     const chatId = currentChatId.value;
     const conversationId = currentConversationId.value;
+    const model = currentChatModel.value;
     const now = Date.now();
 
     // ユーザーメッセージを作成して即座に表示
@@ -210,7 +222,8 @@ export const useChat = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           conversationId,
-          message: content
+          message: content,
+          model
         })
       });
 
@@ -327,6 +340,7 @@ export const useChat = () => {
     // State
     chats,
     currentChatId,
+    currentChatModel,
     messages,
     isLoading,
 

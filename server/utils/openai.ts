@@ -39,9 +39,10 @@ export async function createConversation(apiKey: string, name: string): Promise<
 export async function sendMessageToOpenAI(
   apiKey: string,
   conversationId: string,
-  message: string
+  message: string,
+  model: string
 ): Promise<string> {
-  console.log('[OpenAI] Sending message:', { conversationId, message: message.substring(0, 50) });
+  console.log('[OpenAI] Sending message:', { conversationId, model, message: message.substring(0, 50) });
 
   const response = await fetch('https://api.openai.com/v1/responses', {
     method: 'POST',
@@ -50,9 +51,10 @@ export async function sendMessageToOpenAI(
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'gpt-5.2',
+      model,
       conversation: conversationId,
-      input: message
+      input: message,
+      instructions: 'あなたは親切なアシスタントです。回答はMarkdown形式で記述してください。コードブロック、リスト、見出しなどを適切に使用して、読みやすく構造化された回答を提供してください。'
     })
   });
 

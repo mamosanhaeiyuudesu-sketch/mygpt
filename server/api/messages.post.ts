@@ -21,11 +21,19 @@ export default defineEventHandler(async (event) => {
     });
   }
 
+  if (!body?.model) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'model is required'
+    });
+  }
+
   // OpenAI にメッセージを送信
   const response = await sendMessageToOpenAI(
     config.openaiApiKey,
     body.conversationId,
-    body.message
+    body.message,
+    body.model
   );
 
   return { content: response };
