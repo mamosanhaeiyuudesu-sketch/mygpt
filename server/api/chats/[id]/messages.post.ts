@@ -3,11 +3,12 @@
  */
 import { getChat, generateId, createMessage, updateChatTimestamp } from '~/server/utils/db';
 import { sendMessageToOpenAI } from '~/server/utils/openai';
+import { getOpenAIKey } from '~/server/utils/env';
 
 export default defineEventHandler(async (event) => {
-  const config = useRuntimeConfig();
   const id = getRouterParam(event, 'id');
   const body = await readBody(event);
+  const apiKey = getOpenAIKey(event);
 
   if (!id) {
     throw createError({
@@ -35,10 +36,12 @@ export default defineEventHandler(async (event) => {
   const now = Date.now();
 
   // OpenAI APIにメッセージ送信
+  const model = body.model || 'gpt-4o';
   const assistantResponse = await sendMessageToOpenAI(
-    config.openaiApiKey,
+    apiKey,
     chat.conversation_id,
-    body.message
+    body.message,
+    model
   );
 
   // ユーザーメッセージを保存

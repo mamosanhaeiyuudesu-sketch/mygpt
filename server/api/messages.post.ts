@@ -2,10 +2,11 @@
  * POST /api/messages - OpenAI にメッセージを送信
  */
 import { sendMessageToOpenAI } from '~/server/utils/openai';
+import { getOpenAIKey } from '~/server/utils/env';
 
 export default defineEventHandler(async (event) => {
-  const config = useRuntimeConfig();
   const body = await readBody(event);
+  const apiKey = getOpenAIKey(event);
 
   if (!body?.conversationId) {
     throw createError({
@@ -30,7 +31,7 @@ export default defineEventHandler(async (event) => {
 
   // OpenAI にメッセージを送信
   const response = await sendMessageToOpenAI(
-    config.openaiApiKey,
+    apiKey,
     body.conversationId,
     body.message,
     body.model
