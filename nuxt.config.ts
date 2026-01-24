@@ -3,6 +3,11 @@ export default defineNuxtConfig({
   // Nuxt modules
   modules: ['@nuxtjs/tailwindcss'],
 
+  // Cloudflare Workers deployment
+  nitro: {
+    preset: 'cloudflare-module'
+  },
+
   // Runtime configuration
   runtimeConfig: {
     // サーバー側のみ（NUXT_OPENAI_API_KEY 環境変数で設定）
