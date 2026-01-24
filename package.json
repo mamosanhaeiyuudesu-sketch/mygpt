@@ -1,0 +1,26 @@
+{
+  "name": "mygpt",
+  "version": "1.0.0",
+  "description": "自前ChatGPTアプリケーション - OpenAI Conversations API + Cloudflare D1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "preview": "nuxt preview",
+    "generate": "nuxt generate",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "@nuxtjs/tailwindcss": "^6.12.2",
+    "@tailwindcss/typography": "^0.5.19",
+    "marked": "^17.0.1",
+    "nuxt": "^3.15.1",
+    "vue": "^3.5.13"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250117.0",
+    "typescript": "^5.7.3",
+    "wrangler": "^3.103.0"
+  }
+}
