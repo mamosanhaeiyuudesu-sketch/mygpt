@@ -405,9 +405,9 @@ __metadata:
   linkType: hard
 
 "@cloudflare/workers-types@npm:^4.20250117.0":
-  version: 4.20260123.0
-  resolution: "@cloudflare/workers-types@npm:4.20260123.0"
-  checksum: 10c0/d168428817eda98ad83495a21ac0fbb052d8a4b884d3de4fb9d93805d03f95c4166769127f1eb91cc37cdc9db36b2d1ca787b6a568e7ffa04a904c66076dc39f
+  version: 4.20260124.0
+  resolution: "@cloudflare/workers-types@npm:4.20260124.0"
+  checksum: 10c0/c4422a0715f52d253f6f49b2547ea0391395cd87f5b19d4272b31cea88249e0d68b570027be0eb77487eb114564059245af3aec8fa126527d8ba0da03e650eb8
   languageName: node
   linkType: hard
 
@@ -4153,9 +4153,9 @@ __metadata:
   linkType: hard
 
 "electron-to-chromium@npm:^1.5.263":
-  version: 1.5.277
-  resolution: "electron-to-chromium@npm:1.5.277"
-  checksum: 10c0/d9bfbd42f03eb595f609d4c369a6d565eca158dd957ef5aff69e6c8a7ea6be7a5618fbae3c9cd2f724cbff2aa32a137450c48f833d211ae09f57b13510280dab
+  version: 1.5.278
+  resolution: "electron-to-chromium@npm:1.5.278"
+  checksum: 10c0/50ca2da7e509fce7f077d720755e46190cf942451bb229a78353039cf17933ea73e543f598bf61e2899b908750f111b2c24ea61194c1d98c0e1eb6c9b1438161
   languageName: node
   linkType: hard
 
@@ -6159,7 +6159,7 @@ __metadata:
     "@tailwindcss/typography": "npm:^0.5.19"
     marked: "npm:^17.0.1"
     nuxt: "npm:^3.15.1"
-    tailwindcss: "npm:^4.1.18"
+    tailwindcss: "npm:^3.4.0"
     typescript: "npm:^5.7.3"
     vue: "npm:^3.5.13"
     wrangler: "npm:^3.103.0"
@@ -8570,14 +8570,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tailwindcss@npm:^4.1.18":
-  version: 4.1.18
-  resolution: "tailwindcss@npm:4.1.18"
-  checksum: 10c0/c79263cea0b2c577859b02f28284caa4eb3844e4d0f563686726ca97817c045c5c395a55bc776daaa351ba9e4aefa9a75bfbb43c22d86f3c573eecc2b87d6bf1
-  languageName: node
-  linkType: hard
-
-"tailwindcss@npm:~3.4.17":
+"tailwindcss@npm:^3.4.0, tailwindcss@npm:~3.4.17":
   version: 3.4.19
   resolution: "tailwindcss@npm:3.4.19"
   dependencies:
