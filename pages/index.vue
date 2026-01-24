@@ -409,14 +409,7 @@ onMounted(async () => {
   await Promise.all([fetchChats(), fetchModels()]);
 });
 
-// メッセージが追加されたら自動スクロール
-watch(messages, () => {
-  nextTick(() => {
-    if (messagesContainer.value) {
-      messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
-    }
-  });
-}, { deep: true });
+// 自動スクロールは無効（ユーザーは上から読むため）
 
 /**
  * チャットをクリック（編集中でなければ選択）
