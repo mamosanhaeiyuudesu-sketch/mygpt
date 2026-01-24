@@ -3,7 +3,7 @@
  */
 import { deleteChat } from '~/server/utils/db';
 
-export default defineEventHandler((event) => {
+export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id');
 
   if (!id) {
@@ -13,7 +13,7 @@ export default defineEventHandler((event) => {
     });
   }
 
-  deleteChat(id);
+  await deleteChat(event, id);
 
   return { success: true };
 });

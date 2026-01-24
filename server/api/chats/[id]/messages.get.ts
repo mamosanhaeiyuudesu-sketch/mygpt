@@ -3,7 +3,7 @@
  */
 import { getMessages } from '~/server/utils/db';
 
-export default defineEventHandler((event) => {
+export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id');
 
   if (!id) {
@@ -13,7 +13,9 @@ export default defineEventHandler((event) => {
     });
   }
 
-  const messages = getMessages(id).map(msg => ({
+  const allMessages = await getMessages(event, id);
+
+  const messages = allMessages.map(msg => ({
     id: msg.id,
     role: msg.role,
     content: msg.content,

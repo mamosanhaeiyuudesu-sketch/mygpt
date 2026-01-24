@@ -1,6 +1,7 @@
 /**
  * MyGPT Chat Management Composable
- * ブラウザの localStorage を使用してチャットデータを永続化
+ * ローカル環境: localStorage を使用
+ * デプロイ環境: API (D1) を使用
  */
 
 // 型定義
@@ -29,6 +30,15 @@ interface StoredData {
 const STORAGE_KEY = 'mygpt_data';
 const RETENTION_DAYS = 730; // 2年 = 730日
 const RETENTION_MS = RETENTION_DAYS * 24 * 60 * 60 * 1000;
+
+/**
+ * ローカル環境かどうかを判定
+ */
+function isLocalEnvironment(): boolean {
+  if (typeof window === 'undefined') return true;
+  const hostname = window.location.hostname;
+  return hostname === 'localhost' || hostname === '127.0.0.1';
+}
 
 /**
  * localStorage からデータを読み込む（期限切れのチャットを自動削除）
@@ -109,11 +119,33 @@ export const useChat = () => {
   });
 
   /**
-   * localStorage からチャット一覧を読み込む
+   * チャット一覧を読み込む
    */
   const fetchChats = async () => {
-    const data = loadFromStorage();
-    chats.value = data.chats.sort((a, b) => b.updatedAt - a.updatedAt);
+    if (isLocalEnvironment()) {
+      // ローカル: localStorage から読み込む
+      const data = loadFromStorage();
+      chats.value = data.chats.sort((a, b) => b.updatedAt - a.updatedAt);
+    } else {
+      // デプロイ: API から読み込む
+      try {
+        const response = await fetch('/api/chats');
+        if (response.ok) {
+          const data = await response.json() as { chats: Array<{ id: string; name: string; lastMessage: string; updatedAt: number }> };
+          chats.value = data.chats.map(c => ({
+            id: c.id,
+            name: c.name,
+            conversationId: '', // APIから取得時は不要（selectChatで取得）
+            model: '', // APIから取得時は不要
+            lastMessage: c.lastMessage,
+            createdAt: c.updatedAt,
+            updatedAt: c.updatedAt
+          }));
+        }
+      } catch (error) {
+        console.error('Failed to fetch chats:', error);
+      }
+    }
   };
 
   /**
@@ -126,44 +158,69 @@ export const useChat = () => {
       isLoading.value = true;
       const chatName = name || 'New Chat';
 
-      // OpenAI Conversation を作成
-      const response = await fetch('/api/conversations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: chatName })
-      });
+      if (isLocalEnvironment()) {
+        // ローカル: OpenAI Conversation作成 + localStorage保存
+        const response = await fetch('/api/conversations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: chatName })
+        });
 
-      if (!response.ok) {
-        throw new Error('Failed to create conversation');
+        if (!response.ok) {
+          throw new Error('Failed to create conversation');
+        }
+
+        const { conversationId } = await response.json() as { conversationId: string };
+
+        const now = Date.now();
+        const chatId = generateId('chat');
+        const newChat: Chat = {
+          id: chatId,
+          name: chatName,
+          conversationId,
+          model,
+          createdAt: now,
+          updatedAt: now
+        };
+
+        const data = loadFromStorage();
+        data.chats.push(newChat);
+        data.messages[chatId] = [];
+        saveToStorage(data);
+
+        chats.value = data.chats.sort((a, b) => b.updatedAt - a.updatedAt);
+        await selectChat(chatId);
+
+        return chatId;
+      } else {
+        // デプロイ: API経由でD1に保存
+        const response = await fetch('/api/chats', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: chatName, model })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to create chat');
+        }
+
+        const { chatId, conversationId } = await response.json() as { chatId: string; conversationId: string };
+
+        const now = Date.now();
+        const newChat: Chat = {
+          id: chatId,
+          name: chatName,
+          conversationId,
+          model,
+          createdAt: now,
+          updatedAt: now
+        };
+
+        chats.value = [newChat, ...chats.value];
+        await selectChat(chatId);
+
+        return chatId;
       }
-
-      const { conversationId } = await response.json() as { conversationId: string };
-
-      // 新しいチャットを作成
-      const now = Date.now();
-      const chatId = generateId('chat');
-      const newChat: Chat = {
-        id: chatId,
-        name: chatName,
-        conversationId,
-        model,
-        createdAt: now,
-        updatedAt: now
-      };
-
-      // localStorage に保存
-      const data = loadFromStorage();
-      data.chats.push(newChat);
-      data.messages[chatId] = [];
-      saveToStorage(data);
-
-      // 状態を更新
-      chats.value = data.chats.sort((a, b) => b.updatedAt - a.updatedAt);
-
-      // 新しいチャットを選択
-      await selectChat(chatId);
-
-      return chatId;
     } catch (error) {
       console.error('Error creating chat:', error);
       throw error;
@@ -178,21 +235,34 @@ export const useChat = () => {
   const selectChat = async (chatId: string) => {
     currentChatId.value = chatId;
 
-    // localStorage からメッセージを読み込む
-    const data = loadFromStorage();
-    messages.value = data.messages[chatId] || [];
+    if (isLocalEnvironment()) {
+      // ローカル: localStorage からメッセージを読み込む
+      const data = loadFromStorage();
+      messages.value = data.messages[chatId] || [];
+    } else {
+      // デプロイ: API からメッセージを読み込む
+      try {
+        const response = await fetch(`/api/chats/${chatId}/messages`);
+        if (response.ok) {
+          const data = await response.json() as { messages: Message[] };
+          messages.value = data.messages;
+        }
+      } catch (error) {
+        console.error('Failed to fetch messages:', error);
+        messages.value = [];
+      }
+    }
   };
 
   /**
    * メッセージを送信
    */
   const sendMessage = async (content: string) => {
-    if (!currentChatId.value || !currentConversationId.value || !currentChatModel.value) {
+    if (!currentChatId.value || !currentChatModel.value) {
       throw new Error('No chat selected');
     }
 
     const chatId = currentChatId.value;
-    const conversationId = currentConversationId.value;
     const model = currentChatModel.value;
     const now = Date.now();
 
@@ -205,65 +275,97 @@ export const useChat = () => {
     };
     messages.value.push(userMessage);
 
-    // localStorage に保存
-    const data = loadFromStorage();
-    if (!data.messages[chatId]) {
-      data.messages[chatId] = [];
+    if (isLocalEnvironment()) {
+      // ローカル: localStorage に保存
+      const data = loadFromStorage();
+      if (!data.messages[chatId]) {
+        data.messages[chatId] = [];
+      }
+      data.messages[chatId].push(userMessage);
+      saveToStorage(data);
     }
-    data.messages[chatId].push(userMessage);
-    saveToStorage(data);
 
     try {
       isLoading.value = true;
 
-      // OpenAI にメッセージを送信
-      const response = await fetch('/api/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          conversationId,
-          message: content,
-          model
-        })
-      });
+      if (isLocalEnvironment()) {
+        // ローカル: /api/messages を使用
+        const conversationId = currentConversationId.value;
+        if (!conversationId) {
+          throw new Error('No conversation ID');
+        }
 
-      if (!response.ok) {
-        throw new Error('Failed to send message');
+        const response = await fetch('/api/messages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            conversationId,
+            message: content,
+            model
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to send message');
+        }
+
+        const { content: assistantContent } = await response.json() as { content: string };
+
+        const assistantMessage: Message = {
+          id: generateId('msg'),
+          role: 'assistant',
+          content: assistantContent,
+          createdAt: Date.now()
+        };
+        messages.value.push(assistantMessage);
+
+        // localStorage に保存
+        const updatedData = loadFromStorage();
+        updatedData.messages[chatId].push(assistantMessage);
+
+        const chatIndex = updatedData.chats.findIndex(c => c.id === chatId);
+        if (chatIndex !== -1) {
+          updatedData.chats[chatIndex].lastMessage = assistantContent.substring(0, 50);
+          updatedData.chats[chatIndex].updatedAt = Date.now();
+        }
+        saveToStorage(updatedData);
+
+        chats.value = updatedData.chats.sort((a, b) => b.updatedAt - a.updatedAt);
+      } else {
+        // デプロイ: /api/chats/:id/messages を使用（D1に保存）
+        const response = await fetch(`/api/chats/${chatId}/messages`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: content,
+            model
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to send message');
+        }
+
+        const assistantMessage = await response.json() as Message;
+        messages.value.push(assistantMessage);
+
+        // チャット一覧を更新
+        const chatIndex = chats.value.findIndex(c => c.id === chatId);
+        if (chatIndex !== -1) {
+          chats.value[chatIndex].lastMessage = assistantMessage.content.substring(0, 50);
+          chats.value[chatIndex].updatedAt = Date.now();
+          chats.value = [...chats.value].sort((a, b) => b.updatedAt - a.updatedAt);
+        }
       }
-
-      const { content: assistantContent } = await response.json() as { content: string };
-
-      // アシスタントメッセージを作成
-      const assistantMessage: Message = {
-        id: generateId('msg'),
-        role: 'assistant',
-        content: assistantContent,
-        createdAt: Date.now()
-      };
-      messages.value.push(assistantMessage);
-
-      // localStorage に保存
-      const updatedData = loadFromStorage();
-      updatedData.messages[chatId].push(assistantMessage);
-
-      // チャットの lastMessage と updatedAt を更新
-      const chatIndex = updatedData.chats.findIndex(c => c.id === chatId);
-      if (chatIndex !== -1) {
-        updatedData.chats[chatIndex].lastMessage = assistantContent.substring(0, 50);
-        updatedData.chats[chatIndex].updatedAt = Date.now();
-      }
-      saveToStorage(updatedData);
-
-      // チャット一覧を更新
-      chats.value = updatedData.chats.sort((a, b) => b.updatedAt - a.updatedAt);
     } catch (error) {
       // エラー時はユーザーメッセージを削除
       messages.value = messages.value.filter(m => m.id !== userMessage.id);
 
-      // localStorage からも削除
-      const errorData = loadFromStorage();
-      errorData.messages[chatId] = errorData.messages[chatId].filter(m => m.id !== userMessage.id);
-      saveToStorage(errorData);
+      if (isLocalEnvironment()) {
+        const errorData = loadFromStorage();
+        errorData.messages[chatId] = errorData.messages[chatId].filter(m => m.id !== userMessage.id);
+        saveToStorage(errorData);
+      }
 
       console.error('Error sending message:', error);
       throw error;
@@ -276,16 +378,24 @@ export const useChat = () => {
    * チャットを削除
    */
   const deleteChat = async (chatId: string) => {
-    // localStorage から削除
-    const data = loadFromStorage();
-    data.chats = data.chats.filter(c => c.id !== chatId);
-    delete data.messages[chatId];
-    saveToStorage(data);
+    if (isLocalEnvironment()) {
+      // ローカル: localStorage から削除
+      const data = loadFromStorage();
+      data.chats = data.chats.filter(c => c.id !== chatId);
+      delete data.messages[chatId];
+      saveToStorage(data);
 
-    // 状態を更新
-    chats.value = data.chats.sort((a, b) => b.updatedAt - a.updatedAt);
+      chats.value = data.chats.sort((a, b) => b.updatedAt - a.updatedAt);
+    } else {
+      // デプロイ: API経由で削除
+      try {
+        await fetch(`/api/chats/${chatId}`, { method: 'DELETE' });
+        chats.value = chats.value.filter(c => c.id !== chatId);
+      } catch (error) {
+        console.error('Failed to delete chat:', error);
+      }
+    }
 
-    // 現在のチャットが削除された場合、選択を解除
     if (currentChatId.value === chatId) {
       currentChatId.value = null;
       messages.value = [];
@@ -296,44 +406,64 @@ export const useChat = () => {
    * チャット名を変更
    */
   const renameChat = async (chatId: string, name: string) => {
-    // localStorage を更新
-    const data = loadFromStorage();
-    const chatIndex = data.chats.findIndex(c => c.id === chatId);
-    if (chatIndex !== -1) {
-      data.chats[chatIndex].name = name;
-      saveToStorage(data);
-    }
+    if (isLocalEnvironment()) {
+      // ローカル: localStorage を更新
+      const data = loadFromStorage();
+      const chatIndex = data.chats.findIndex(c => c.id === chatId);
+      if (chatIndex !== -1) {
+        data.chats[chatIndex].name = name;
+        saveToStorage(data);
+      }
 
-    // 状態を更新
-    chats.value = data.chats.sort((a, b) => b.updatedAt - a.updatedAt);
+      chats.value = data.chats.sort((a, b) => b.updatedAt - a.updatedAt);
+    } else {
+      // デプロイ: API経由で更新
+      try {
+        await fetch(`/api/chats/${chatId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name })
+        });
+
+        const chatIndex = chats.value.findIndex(c => c.id === chatId);
+        if (chatIndex !== -1) {
+          chats.value[chatIndex].name = name;
+          chats.value = [...chats.value];
+        }
+      } catch (error) {
+        console.error('Failed to rename chat:', error);
+      }
+    }
   };
 
   /**
    * チャットの順番を変更（ドラッグ&ドロップ用）
    */
   const reorderChats = async (fromIndex: number, toIndex: number) => {
-    const data = loadFromStorage();
+    if (isLocalEnvironment()) {
+      const data = loadFromStorage();
+      const sortedChats = [...data.chats].sort((a, b) => b.updatedAt - a.updatedAt);
 
-    // 現在の並び順（updatedAtでソート済み）を取得
-    const sortedChats = [...data.chats].sort((a, b) => b.updatedAt - a.updatedAt);
+      const [movedChat] = sortedChats.splice(fromIndex, 1);
+      sortedChats.splice(toIndex, 0, movedChat);
 
-    // 要素を移動
-    const [movedChat] = sortedChats.splice(fromIndex, 1);
-    sortedChats.splice(toIndex, 0, movedChat);
+      const now = Date.now();
+      sortedChats.forEach((chat, index) => {
+        chat.updatedAt = now - index;
+      });
 
-    // updatedAt を調整して順番を維持
-    // 一番上のチャットが最新になるように、上から順に新しいタイムスタンプを設定
-    const now = Date.now();
-    sortedChats.forEach((chat, index) => {
-      chat.updatedAt = now - index;
-    });
+      data.chats = sortedChats;
+      saveToStorage(data);
 
-    // localStorage に保存
-    data.chats = sortedChats;
-    saveToStorage(data);
-
-    // 状態を更新
-    chats.value = sortedChats;
+      chats.value = sortedChats;
+    } else {
+      // デプロイ環境では updatedAt でソートされるため、
+      // フロントエンドでの並び替えは一時的なものになる
+      const sortedChats = [...chats.value];
+      const [movedChat] = sortedChats.splice(fromIndex, 1);
+      sortedChats.splice(toIndex, 0, movedChat);
+      chats.value = sortedChats;
+    }
   };
 
   return {

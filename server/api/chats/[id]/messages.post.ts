@@ -25,7 +25,7 @@ export default defineEventHandler(async (event) => {
   }
 
   // チャットからconversation_idを取得
-  const chat = getChat(id);
+  const chat = await getChat(event, id);
   if (!chat) {
     throw createError({
       statusCode: 404,
@@ -46,14 +46,14 @@ export default defineEventHandler(async (event) => {
 
   // ユーザーメッセージを保存
   const userMessageId = generateId('msg');
-  createMessage(userMessageId, id, 'user', body.message, now);
+  await createMessage(event, userMessageId, id, 'user', body.message, now);
 
   // アシスタントメッセージを保存
   const assistantMessageId = generateId('msg');
-  createMessage(assistantMessageId, id, 'assistant', assistantResponse, now + 1);
+  await createMessage(event, assistantMessageId, id, 'assistant', assistantResponse, now + 1);
 
   // チャットのupdated_atを更新
-  updateChatTimestamp(id, now + 1);
+  await updateChatTimestamp(event, id, now + 1);
 
   return {
     id: assistantMessageId,

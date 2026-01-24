@@ -3,8 +3,10 @@
  */
 import { getAllChats } from '~/server/utils/db';
 
-export default defineEventHandler(() => {
-  const chats = getAllChats().map(chat => ({
+export default defineEventHandler(async (event) => {
+  const allChats = await getAllChats(event);
+
+  const chats = allChats.map(chat => ({
     id: chat.id,
     name: chat.name,
     lastMessage: chat.last_message || '',

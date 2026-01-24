@@ -1,13 +1,14 @@
 /**
- * シンプルなインメモリデータベース（ローカル開発用）
- * サーバー再起動でデータはリセットされます
+ * データベースユーティリティ
+ * Cloudflare D1 (本番) / インメモリ (ローカル開発) 対応
  */
+import type { H3Event } from 'h3';
 
 export interface Chat {
   id: string;
   conversation_id: string;
   name: string;
-  model: string; // 使用するOpenAIモデル
+  vector_store_id?: string | null;
   created_at: number;
   updated_at: number;
 }
@@ -20,76 +21,190 @@ export interface Message {
   created_at: number;
 }
 
-// インメモリストレージ
-const store = {
+// インメモリストレージ（ローカル開発用フォールバック）
+const memoryStore = {
   chats: [] as Chat[],
   messages: [] as Message[]
 };
 
+/**
+ * D1データベースを取得（Cloudflare Workers環境のみ）
+ */
+function getD1(event: H3Event): D1Database | null {
+  const cfEnv = event.context.cloudflare?.env as { DB?: D1Database } | undefined;
+  return cfEnv?.DB || null;
+}
+
+/**
+ * ユニークID生成
+ */
 export function generateId(prefix: string): string {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
 }
 
-// Chat operations
-export function getAllChats(): (Chat & { last_message?: string })[] {
-  return store.chats
+// ========== Chat Operations ==========
+
+/**
+ * 全チャット取得
+ */
+export async function getAllChats(event: H3Event): Promise<(Chat & { last_message?: string })[]> {
+  const db = getD1(event);
+
+  if (db) {
+    // D1を使用
+    const result = await db.prepare(`
+      SELECT
+        c.id,
+        c.conversation_id,
+        c.name,
+        c.vector_store_id,
+        c.created_at,
+        c.updated_at,
+        (SELECT content FROM messages WHERE chat_id = c.id ORDER BY created_at DESC LIMIT 1) as last_message
+      FROM chats c
+      ORDER BY c.updated_at DESC
+    `).all();
+
+    return (result.results || []) as (Chat & { last_message?: string })[];
+  }
+
+  // インメモリ（ローカル開発用）
+  return memoryStore.chats
     .sort((a, b) => b.updated_at - a.updated_at)
     .map(chat => {
-      const lastMsg = store.messages
+      const lastMsg = memoryStore.messages
         .filter(m => m.chat_id === chat.id)
         .sort((a, b) => b.created_at - a.created_at)[0];
-      return {
-        ...chat,
-        last_message: lastMsg?.content
-      };
+      return { ...chat, last_message: lastMsg?.content };
     });
 }
 
-export function createChat(id: string, conversationId: string, name: string, model: string): Chat {
+/**
+ * チャット作成
+ */
+export async function createChat(
+  event: H3Event,
+  id: string,
+  conversationId: string,
+  name: string
+): Promise<Chat> {
   const now = Date.now();
   const chat: Chat = {
     id,
     conversation_id: conversationId,
     name,
-    model,
     created_at: now,
     updated_at: now
   };
-  store.chats.push(chat);
+
+  const db = getD1(event);
+
+  if (db) {
+    await db.prepare(`
+      INSERT INTO chats (id, conversation_id, name, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?)
+    `).bind(id, conversationId, name, now, now).run();
+  } else {
+    memoryStore.chats.push(chat);
+  }
+
   return chat;
 }
 
-export function getChat(id: string): Chat | undefined {
-  return store.chats.find(c => c.id === id);
+/**
+ * チャット取得
+ */
+export async function getChat(event: H3Event, id: string): Promise<Chat | null> {
+  const db = getD1(event);
+
+  if (db) {
+    const result = await db.prepare(
+      'SELECT * FROM chats WHERE id = ?'
+    ).bind(id).first() as Chat | null;
+    return result;
+  }
+
+  return memoryStore.chats.find(c => c.id === id) || null;
 }
 
-export function deleteChat(id: string): void {
-  store.chats = store.chats.filter(c => c.id !== id);
-  store.messages = store.messages.filter(m => m.chat_id !== id);
-}
+/**
+ * チャット削除
+ */
+export async function deleteChat(event: H3Event, id: string): Promise<void> {
+  const db = getD1(event);
 
-export function updateChatName(id: string, name: string): void {
-  const chat = store.chats.find(c => c.id === id);
-  if (chat) {
-    chat.name = name;
+  if (db) {
+    // メッセージは CASCADE で自動削除される
+    await db.prepare('DELETE FROM chats WHERE id = ?').bind(id).run();
+  } else {
+    memoryStore.chats = memoryStore.chats.filter(c => c.id !== id);
+    memoryStore.messages = memoryStore.messages.filter(m => m.chat_id !== id);
   }
 }
 
-export function updateChatTimestamp(id: string, timestamp: number): void {
-  const chat = store.chats.find(c => c.id === id);
-  if (chat) {
-    chat.updated_at = timestamp;
+/**
+ * チャット名更新
+ */
+export async function updateChatName(event: H3Event, id: string, name: string): Promise<void> {
+  const db = getD1(event);
+
+  if (db) {
+    await db.prepare('UPDATE chats SET name = ? WHERE id = ?').bind(name, id).run();
+  } else {
+    const chat = memoryStore.chats.find(c => c.id === id);
+    if (chat) chat.name = name;
   }
 }
 
-// Message operations
-export function getMessages(chatId: string): Message[] {
-  return store.messages
+/**
+ * チャット更新日時更新
+ */
+export async function updateChatTimestamp(event: H3Event, id: string, timestamp: number): Promise<void> {
+  const db = getD1(event);
+
+  if (db) {
+    await db.prepare('UPDATE chats SET updated_at = ? WHERE id = ?').bind(timestamp, id).run();
+  } else {
+    const chat = memoryStore.chats.find(c => c.id === id);
+    if (chat) chat.updated_at = timestamp;
+  }
+}
+
+// ========== Message Operations ==========
+
+/**
+ * メッセージ取得
+ */
+export async function getMessages(event: H3Event, chatId: string): Promise<Message[]> {
+  const db = getD1(event);
+
+  if (db) {
+    const result = await db.prepare(`
+      SELECT id, chat_id, role, content, created_at
+      FROM messages
+      WHERE chat_id = ?
+      ORDER BY created_at ASC
+    `).bind(chatId).all();
+
+    return (result.results || []) as Message[];
+  }
+
+  return memoryStore.messages
     .filter(m => m.chat_id === chatId)
     .sort((a, b) => a.created_at - b.created_at);
 }
 
-export function createMessage(id: string, chatId: string, role: 'user' | 'assistant', content: string, createdAt: number): Message {
+/**
+ * メッセージ作成
+ */
+export async function createMessage(
+  event: H3Event,
+  id: string,
+  chatId: string,
+  role: 'user' | 'assistant',
+  content: string,
+  createdAt: number
+): Promise<Message> {
   const message: Message = {
     id,
     chat_id: chatId,
@@ -97,6 +212,17 @@ export function createMessage(id: string, chatId: string, role: 'user' | 'assist
     content,
     created_at: createdAt
   };
-  store.messages.push(message);
+
+  const db = getD1(event);
+
+  if (db) {
+    await db.prepare(`
+      INSERT INTO messages (id, chat_id, role, content, created_at)
+      VALUES (?, ?, ?, ?, ?)
+    `).bind(id, chatId, role, content, createdAt).run();
+  } else {
+    memoryStore.messages.push(message);
+  }
+
   return message;
 }

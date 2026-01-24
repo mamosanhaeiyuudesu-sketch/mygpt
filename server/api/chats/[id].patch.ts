@@ -21,7 +21,7 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  updateChatName(id, body.name);
+  await updateChatName(event, id, body.name);
 
   return { success: true };
 });
