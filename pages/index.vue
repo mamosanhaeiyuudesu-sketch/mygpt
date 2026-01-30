@@ -191,7 +191,7 @@
       <!-- チャット選択時 -->
       <template v-else>
         <!-- チャットヘッダー（モデル・システムプロンプト表示） -->
-        <div class="border-b border-gray-800 px-4 py-2 hidden md:flex items-center gap-3">
+        <div class="border-b border-gray-800 px-4 py-2 hidden md:flex items-center gap-2">
           <div class="flex items-center gap-2">
             <span class="text-sm text-gray-400">Model:</span>
             <span class="text-sm font-medium bg-gray-800 px-2 py-1 rounded">{{ currentChatModel }}</span>
@@ -205,7 +205,7 @@
           <!-- 設定編集ボタン -->
           <button
             @click="openSettingsEditor"
-            class="ml-auto p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded transition-colors"
+            class="p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded transition-colors"
             title="設定を編集"
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
