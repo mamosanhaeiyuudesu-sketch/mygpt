@@ -135,6 +135,31 @@
             <p v-if="selectedModelInfo" class="text-xs text-gray-500 mt-2">
               {{ selectedModelInfo.description }}
             </p>
+
+            <!-- システムプロンプト設定 -->
+            <div class="mt-4 w-full max-w-md">
+              <button
+                @click="showSystemPromptEditor = !showSystemPromptEditor"
+                class="text-sm text-gray-400 hover:text-white flex items-center gap-1 mx-auto"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
+                </svg>
+                システムプロンプト
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform" :class="showSystemPromptEditor ? 'rotate-180' : ''" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+              </button>
+              <div v-if="showSystemPromptEditor" class="mt-2">
+                <textarea
+                  v-model="selectedSystemPrompt"
+                  placeholder="カスタム指示を入力（空欄でデフォルト）"
+                  rows="3"
+                  class="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                ></textarea>
+                <p class="text-xs text-gray-500 mt-1">例: 「あなたはプログラミングの専門家です」</p>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -165,10 +190,28 @@
 
       <!-- チャット選択時 -->
       <template v-else>
-        <!-- チャットヘッダー（モデル表示） -->
-        <div class="border-b border-gray-800 px-4 py-2 hidden md:flex items-center gap-2">
-          <span class="text-sm text-gray-400">Model:</span>
-          <span class="text-sm font-medium bg-gray-800 px-2 py-1 rounded">{{ currentChatModel }}</span>
+        <!-- チャットヘッダー（モデル・システムプロンプト表示） -->
+        <div class="border-b border-gray-800 px-4 py-2 hidden md:flex items-center gap-3">
+          <div class="flex items-center gap-2">
+            <span class="text-sm text-gray-400">Model:</span>
+            <span class="text-sm font-medium bg-gray-800 px-2 py-1 rounded">{{ currentChatModel }}</span>
+          </div>
+          <div v-if="currentChatSystemPrompt" class="flex items-center gap-1 text-sm text-gray-400" title="カスタムシステムプロンプト設定済み">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
+            </svg>
+            <span class="truncate max-w-32">{{ currentChatSystemPrompt.substring(0, 20) }}...</span>
+          </div>
+          <!-- 設定編集ボタン -->
+          <button
+            @click="openSettingsEditor"
+            class="ml-auto p-1.5 text-gray-400 hover:text-white hover:bg-gray-800 rounded transition-colors"
+            title="設定を編集"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+            </svg>
+          </button>
         </div>
 
         <!-- メッセージ一覧 -->
@@ -243,7 +286,7 @@
         <h2 class="text-lg font-bold mb-4">モデルを選択</h2>
         <p class="text-sm text-gray-400 mb-4">新しいチャットで使用するモデルを選択してください。</p>
 
-        <div class="max-h-64 overflow-y-auto mb-4">
+        <div class="max-h-48 overflow-y-auto mb-4">
           <div v-if="isLoadingModels" class="text-center py-4 text-gray-400">
             Loading models...
           </div>
@@ -251,8 +294,9 @@
             <button
               v-for="model in availableModels"
               :key="model.id"
-              @click="handleCreateChatWithModel(model.id)"
-              class="w-full text-left px-4 py-3 rounded-lg hover:bg-gray-800 transition-colors border border-gray-700"
+              @click="dialogSelectedModel = model.id"
+              class="w-full text-left px-4 py-3 rounded-lg transition-colors border"
+              :class="dialogSelectedModel === model.id ? 'border-blue-500 bg-gray-800' : 'border-gray-700 hover:bg-gray-800'"
             >
               <div class="flex justify-between items-center">
                 <span class="font-medium">{{ model.name }}</span>
@@ -264,12 +308,83 @@
           </div>
         </div>
 
-        <button
-          @click="showModelSelector = false"
-          class="w-full px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
-        >
-          キャンセル
-        </button>
+        <!-- システムプロンプト入力 -->
+        <div class="mb-4">
+          <label class="text-sm text-gray-400 block mb-2">システムプロンプト（オプション）</label>
+          <textarea
+            v-model="dialogSystemPrompt"
+            placeholder="カスタム指示を入力（空欄でデフォルト）"
+            rows="2"
+            class="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+          ></textarea>
+        </div>
+
+        <div class="flex gap-2">
+          <button
+            @click="showModelSelector = false"
+            class="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+          >
+            キャンセル
+          </button>
+          <button
+            @click="handleCreateChatFromDialog"
+            :disabled="!dialogSelectedModel"
+            class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed rounded-lg transition-colors"
+          >
+            作成
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 設定編集ダイアログ -->
+    <div
+      v-if="showSettingsEditor"
+      class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+      @click.self="showSettingsEditor = false"
+    >
+      <div class="bg-gray-900 rounded-lg p-6 max-w-md w-full border border-gray-700">
+        <h2 class="text-lg font-bold mb-4">チャット設定</h2>
+        <p class="text-sm text-gray-400 mb-4">モデルとシステムプロンプトを変更できます。</p>
+
+        <!-- モデル選択 -->
+        <div class="mb-4">
+          <label class="text-sm text-gray-400 block mb-2">モデル</label>
+          <select
+            v-model="editModel"
+            class="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option v-for="model in availableModels" :key="model.id" :value="model.id">
+              {{ model.name }} ({{ model.contextWindow }})
+            </option>
+          </select>
+        </div>
+
+        <!-- システムプロンプト入力 -->
+        <div class="mb-4">
+          <label class="text-sm text-gray-400 block mb-2">システムプロンプト</label>
+          <textarea
+            v-model="editSystemPrompt"
+            placeholder="カスタム指示を入力（空欄でデフォルト）"
+            rows="3"
+            class="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+          ></textarea>
+        </div>
+
+        <div class="flex gap-2">
+          <button
+            @click="showSettingsEditor = false"
+            class="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+          >
+            キャンセル
+          </button>
+          <button
+            @click="handleSaveSettings"
+            class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+          >
+            保存
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -288,6 +403,7 @@ const {
   chats,
   currentChatId,
   currentChatModel,
+  currentChatSystemPrompt,
   messages,
   isLoading,
   fetchChats,
@@ -296,6 +412,7 @@ const {
   sendMessage,
   deleteChat,
   renameChat,
+  updateChatSettings,
   reorderChats
 } = useChat();
 
@@ -309,9 +426,20 @@ interface Model {
   description: string;
 }
 const availableModels = ref<Model[]>([]);
-const selectedModel = ref<string>('gpt-4o-mini');
+const selectedModel = ref<string>('gpt-4o');
+const selectedSystemPrompt = ref<string>('');
 const isLoadingModels = ref(false);
 const showModelSelector = ref(false);
+const showSystemPromptEditor = ref(false);
+
+// ダイアログ用の状態
+const dialogSelectedModel = ref<string>('');
+const dialogSystemPrompt = ref<string>('');
+
+// 設定編集用の状態
+const showSettingsEditor = ref(false);
+const editModel = ref<string>('');
+const editSystemPrompt = ref<string>('');
 
 // 選択中のモデル情報
 const selectedModelInfo = computed(() => {
@@ -329,8 +457,8 @@ const fetchModels = async () => {
       const data = await response.json() as { models: Model[] };
       availableModels.value = data.models;
       // デフォルトでgpt-4o-miniを選択（存在する場合）
-      if (data.models.some(m => m.id === 'gpt-4o-mini')) {
-        selectedModel.value = 'gpt-4o-mini';
+      if (data.models.some(m => m.id === 'gpt-4o')) {
+        selectedModel.value = 'gpt-4o';
       } else if (data.models.length > 0) {
         selectedModel.value = data.models[0].id;
       }
@@ -511,21 +639,52 @@ const handleDrop = async (event: DragEvent, targetIndex: number) => {
  * 新しいチャットを作成（モデル選択ダイアログを表示）
  */
 const handleNewChat = () => {
+  // ダイアログの状態をリセット
+  dialogSelectedModel.value = selectedModel.value || 'gpt-4o';
+  dialogSystemPrompt.value = '';
   showModelSelector.value = true;
 };
 
 /**
- * モデルを選択してチャットを作成
+ * ダイアログからチャットを作成
  */
-const handleCreateChatWithModel = async (modelId: string) => {
+const handleCreateChatFromDialog = async () => {
+  if (!dialogSelectedModel.value) return;
+
   try {
     showModelSelector.value = false;
-    await createChat(modelId);
+    const systemPrompt = dialogSystemPrompt.value.trim() || undefined;
+    await createChat(dialogSelectedModel.value, undefined, systemPrompt);
     // モバイルではサイドバーを閉じる
     isSidebarOpen.value = false;
   } catch (error) {
     console.error('Failed to create chat:', error);
     alert('チャットの作成に失敗しました');
+  }
+};
+
+/**
+ * 設定編集ダイアログを開く
+ */
+const openSettingsEditor = () => {
+  editModel.value = currentChatModel.value || 'gpt-4o';
+  editSystemPrompt.value = currentChatSystemPrompt.value || '';
+  showSettingsEditor.value = true;
+};
+
+/**
+ * 設定を保存
+ */
+const handleSaveSettings = async () => {
+  if (!currentChatId.value) return;
+
+  try {
+    const systemPrompt = editSystemPrompt.value.trim() || null;
+    await updateChatSettings(currentChatId.value, editModel.value, systemPrompt);
+    showSettingsEditor.value = false;
+  } catch (error) {
+    console.error('Failed to save settings:', error);
+    alert('設定の保存に失敗しました');
   }
 };
 
@@ -543,8 +702,9 @@ const handleNewChatWithMessage = async () => {
     inputMessage.value = '';
     resetTextareaHeight();
 
-    // 新しいチャットを作成（選択されたモデルで）
-    await createChat(selectedModel.value);
+    // 新しいチャットを作成（選択されたモデルとシステムプロンプトで）
+    const systemPrompt = selectedSystemPrompt.value.trim() || undefined;
+    await createChat(selectedModel.value, undefined, systemPrompt);
 
     // メッセージを送信
     await sendMessage(message);

@@ -34,7 +34,8 @@ export default defineEventHandler(async (event) => {
     apiKey,
     body.conversationId,
     body.message,
-    body.model
+    body.model,
+    body.systemPrompt
   );
 
   return { content: response };

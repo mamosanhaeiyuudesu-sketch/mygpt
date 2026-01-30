@@ -32,6 +32,8 @@ export async function createConversation(apiKey: string, name: string): Promise<
   return data.id;
 }
 
+const DEFAULT_SYSTEM_PROMPT = 'あなたは親切なアシスタントです。回答はMarkdown形式で記述してください。コードブロック、リスト、見出しなどを適切に使用して、読みやすく構造化された回答を提供してください。';
+
 /**
  * Responses API でメッセージを送信
  * POST /v1/responses (conversation パラメータで会話を指定)
@@ -40,9 +42,12 @@ export async function sendMessageToOpenAI(
   apiKey: string,
   conversationId: string,
   message: string,
-  model: string
+  model: string,
+  systemPrompt?: string
 ): Promise<string> {
   console.log('[OpenAI] Sending message:', { conversationId, model, message: message.substring(0, 50) });
+
+  const instructions = systemPrompt || DEFAULT_SYSTEM_PROMPT;
 
   const response = await fetch('https://api.openai.com/v1/responses', {
     method: 'POST',
@@ -54,7 +59,7 @@ export async function sendMessageToOpenAI(
       model,
       conversation: conversationId,
       input: message,
-      instructions: 'あなたは親切なアシスタントです。回答はMarkdown形式で記述してください。コードブロック、リスト、見出しなどを適切に使用して、読みやすく構造化された回答を提供してください。'
+      instructions
     })
   });
 

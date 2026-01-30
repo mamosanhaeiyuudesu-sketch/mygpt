@@ -10,6 +10,7 @@ export interface Chat {
   name: string;
   conversationId: string; // OpenAI Conversation ID
   model: string; // 使用するOpenAIモデル
+  systemPrompt?: string; // カスタムシステムプロンプト
   lastMessage?: string;
   createdAt: number;
   updatedAt: number;
@@ -118,6 +119,13 @@ export const useChat = () => {
     return chat?.model || null;
   });
 
+  // 現在のチャットのシステムプロンプトを取得
+  const currentChatSystemPrompt = computed(() => {
+    if (!currentChatId.value) return null;
+    const chat = chats.value.find(c => c.id === currentChatId.value);
+    return chat?.systemPrompt || null;
+  });
+
   /**
    * チャット一覧を読み込む
    */
@@ -152,8 +160,9 @@ export const useChat = () => {
    * 新しいチャットを作成
    * @param model - 使用するOpenAIモデル（必須）
    * @param name - チャット名（オプション）
+   * @param systemPrompt - カスタムシステムプロンプト（オプション）
    */
-  const createChat = async (model: string, name?: string) => {
+  const createChat = async (model: string, name?: string, systemPrompt?: string) => {
     try {
       isLoading.value = true;
       const chatName = name || 'New Chat';
@@ -179,6 +188,7 @@ export const useChat = () => {
           name: chatName,
           conversationId,
           model,
+          systemPrompt,
           createdAt: now,
           updatedAt: now
         };
@@ -197,7 +207,7 @@ export const useChat = () => {
         const response = await fetch('/api/chats', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: chatName, model })
+          body: JSON.stringify({ name: chatName, model, systemPrompt })
         });
 
         if (!response.ok) {
@@ -212,6 +222,7 @@ export const useChat = () => {
           name: chatName,
           conversationId,
           model,
+          systemPrompt,
           createdAt: now,
           updatedAt: now
         };
@@ -264,6 +275,7 @@ export const useChat = () => {
 
     const chatId = currentChatId.value;
     const model = currentChatModel.value;
+    const systemPrompt = currentChatSystemPrompt.value;
     const now = Date.now();
 
     // ユーザーメッセージを作成して即座に表示
@@ -301,7 +313,8 @@ export const useChat = () => {
           body: JSON.stringify({
             conversationId,
             message: content,
-            model
+            model,
+            systemPrompt
           })
         });
 
@@ -437,6 +450,42 @@ export const useChat = () => {
   };
 
   /**
+   * チャット設定を変更（モデル・システムプロンプト）
+   */
+  const updateChatSettings = async (chatId: string, model?: string, systemPrompt?: string | null) => {
+    if (isLocalEnvironment()) {
+      // ローカル: localStorage を更新
+      const data = loadFromStorage();
+      const chatIndex = data.chats.findIndex(c => c.id === chatId);
+      if (chatIndex !== -1) {
+        if (model !== undefined) data.chats[chatIndex].model = model;
+        if (systemPrompt !== undefined) data.chats[chatIndex].systemPrompt = systemPrompt || undefined;
+        saveToStorage(data);
+      }
+
+      chats.value = data.chats.sort((a, b) => b.updatedAt - a.updatedAt);
+    } else {
+      // デプロイ: API経由で更新
+      try {
+        await fetch(`/api/chats/${chatId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model, systemPrompt })
+        });
+
+        const chatIndex = chats.value.findIndex(c => c.id === chatId);
+        if (chatIndex !== -1) {
+          if (model !== undefined) chats.value[chatIndex].model = model;
+          if (systemPrompt !== undefined) chats.value[chatIndex].systemPrompt = systemPrompt || undefined;
+          chats.value = [...chats.value];
+        }
+      } catch (error) {
+        console.error('Failed to update chat settings:', error);
+      }
+    }
+  };
+
+  /**
    * チャットの順番を変更（ドラッグ&ドロップ用）
    */
   const reorderChats = async (fromIndex: number, toIndex: number) => {
@@ -471,6 +520,7 @@ export const useChat = () => {
     chats,
     currentChatId,
     currentChatModel,
+    currentChatSystemPrompt,
     messages,
     isLoading,
 
@@ -481,6 +531,7 @@ export const useChat = () => {
     sendMessage,
     deleteChat,
     renameChat,
+    updateChatSettings,
     reorderChats
   };
 };

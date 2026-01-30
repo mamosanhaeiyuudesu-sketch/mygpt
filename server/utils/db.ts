@@ -8,6 +8,8 @@ export interface Chat {
   id: string;
   conversation_id: string;
   name: string;
+  model?: string | null;
+  system_prompt?: string | null;
   vector_store_id?: string | null;
   created_at: number;
   updated_at: number;
@@ -86,13 +88,17 @@ export async function createChat(
   event: H3Event,
   id: string,
   conversationId: string,
-  name: string
+  name: string,
+  model?: string,
+  systemPrompt?: string
 ): Promise<Chat> {
   const now = Date.now();
   const chat: Chat = {
     id,
     conversation_id: conversationId,
     name,
+    model: model || null,
+    system_prompt: systemPrompt || null,
     created_at: now,
     updated_at: now
   };
@@ -101,9 +107,9 @@ export async function createChat(
 
   if (db) {
     await db.prepare(`
-      INSERT INTO chats (id, conversation_id, name, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?)
-    `).bind(id, conversationId, name, now, now).run();
+      INSERT INTO chats (id, conversation_id, name, model, system_prompt, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).bind(id, conversationId, name, model || null, systemPrompt || null, now, now).run();
   } else {
     memoryStore.chats.push(chat);
   }
@@ -167,6 +173,30 @@ export async function updateChatTimestamp(event: H3Event, id: string, timestamp:
   } else {
     const chat = memoryStore.chats.find(c => c.id === id);
     if (chat) chat.updated_at = timestamp;
+  }
+}
+
+/**
+ * チャット設定更新（モデル・システムプロンプト）
+ */
+export async function updateChatSettings(
+  event: H3Event,
+  id: string,
+  model?: string,
+  systemPrompt?: string | null
+): Promise<void> {
+  const db = getD1(event);
+
+  if (db) {
+    await db.prepare(
+      'UPDATE chats SET model = ?, system_prompt = ? WHERE id = ?'
+    ).bind(model || null, systemPrompt ?? null, id).run();
+  } else {
+    const chat = memoryStore.chats.find(c => c.id === id);
+    if (chat) {
+      if (model !== undefined) chat.model = model || null;
+      if (systemPrompt !== undefined) chat.system_prompt = systemPrompt ?? null;
+    }
   }
 }
 

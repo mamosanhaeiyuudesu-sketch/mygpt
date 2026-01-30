@@ -7,6 +7,8 @@ CREATE TABLE chats (
   id TEXT PRIMARY KEY,
   conversation_id TEXT UNIQUE NOT NULL,  -- OpenAI Conversations API の conversation ID
   name TEXT NOT NULL,                    -- チャット名（ユーザーが編集可能）
+  model TEXT,                            -- 使用するOpenAIモデル
+  system_prompt TEXT,                    -- システムプロンプト（カスタム指示）
   vector_store_id TEXT,                  -- 将来の拡張用（RAG機能など）
   created_at INTEGER NOT NULL,           -- UNIXタイムスタンプ (ミリ秒)
   updated_at INTEGER NOT NULL            -- UNIXタイムスタンプ (ミリ秒)

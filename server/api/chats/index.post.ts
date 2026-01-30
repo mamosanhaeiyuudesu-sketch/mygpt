@@ -10,13 +10,15 @@ export default defineEventHandler(async (event) => {
   const apiKey = getOpenAIKey(event);
 
   const chatName = body?.name || 'New Chat';
+  const model = body?.model;
+  const systemPrompt = body?.systemPrompt;
   const chatId = generateId('chat');
 
   // OpenAI Conversationを作成
   const conversationId = await createConversation(apiKey, chatName);
 
-  // DBに保存
-  await createChat(event, chatId, conversationId, chatName);
+  // DBに保存（model と systemPrompt を含む）
+  await createChat(event, chatId, conversationId, chatName, model, systemPrompt);
 
   return { chatId, conversationId };
 });
