@@ -39,16 +39,17 @@ const RAG_INSTRUCTION_SUFFIX = '\n\n重要: ユーザーの質問に答える際
 /**
  * Responses API でメッセージを送信
  * POST /v1/responses (conversation パラメータで会話を指定)
+ * @param conversationId - 会話ID（undefinedの場合は文脈なしで単発送信）
  */
 export async function sendMessageToOpenAI(
   apiKey: string,
-  conversationId: string,
+  conversationId: string | undefined,
   message: string,
   model: string,
   systemPrompt?: string,
   vectorStoreId?: string
 ): Promise<string> {
-  console.log('[OpenAI] Sending message:', { conversationId, model, vectorStoreId, message: message.substring(0, 50) });
+  console.log('[OpenAI] Sending message:', { conversationId: conversationId || '(no context)', model, vectorStoreId, message: message.substring(0, 50) });
 
   // Vector Storeが指定されている場合、RAG用の指示を追加
   let instructions = systemPrompt || DEFAULT_SYSTEM_PROMPT;
@@ -59,10 +60,14 @@ export async function sendMessageToOpenAI(
   // リクエストボディを構築
   const requestBody: Record<string, unknown> = {
     model,
-    conversation: conversationId,
     input: message,
     instructions
   };
+
+  // conversationIdがある場合のみ文脈を保持
+  if (conversationId) {
+    requestBody.conversation = conversationId;
+  }
 
   // Vector Storeが指定されている場合、file_searchツールを追加
   // Responses APIではvector_store_idsはツール定義内に含める

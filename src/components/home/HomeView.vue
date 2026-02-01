@@ -59,6 +59,17 @@
               />
               <p class="text-xs text-gray-500 mt-1 text-left">OpenAI Vector Store IDを入力するとRAGが有効になります</p>
             </div>
+            <div>
+              <label class="flex items-center gap-3 cursor-pointer">
+                <input
+                  v-model="localUseContext"
+                  type="checkbox"
+                  class="w-5 h-5 rounded bg-gray-800 border-gray-600 text-blue-600 focus:ring-blue-500"
+                />
+                <span class="text-xs text-gray-400">文脈を保持する</span>
+              </label>
+              <p class="text-xs text-gray-500 mt-1 ml-8">OFFにすると毎回高速に応答（会話履歴なし）</p>
+            </div>
           </div>
         </div>
       </div>
@@ -88,12 +99,13 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:selectedModel': [value: string];
-  submit: [message: string, model: string, systemPrompt?: string, vectorStoreId?: string];
+  submit: [message: string, model: string, systemPrompt?: string, vectorStoreId?: string, useContext?: boolean];
 }>();
 
 const showAdvanced = ref(false);
 const localSystemPrompt = ref('');
 const localVectorStoreId = ref('');
+const localUseContext = ref(true);
 
 const localSelectedModel = computed({
   get: () => props.selectedModel,
@@ -105,6 +117,6 @@ const selectedModelInfo = computed(() => {
 });
 
 const handleSubmit = (message: string) => {
-  emit('submit', message, props.selectedModel, localSystemPrompt.value.trim() || undefined, localVectorStoreId.value.trim() || undefined);
+  emit('submit', message, props.selectedModel, localSystemPrompt.value.trim() || undefined, localVectorStoreId.value.trim() || undefined, localUseContext.value);
 };
 </script>

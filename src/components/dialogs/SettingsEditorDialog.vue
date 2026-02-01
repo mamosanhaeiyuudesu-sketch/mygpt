@@ -43,6 +43,19 @@
         />
       </div>
 
+      <!-- 文脈保持設定 -->
+      <div class="mb-4">
+        <label class="flex items-center gap-3 cursor-pointer">
+          <input
+            v-model="editUseContext"
+            type="checkbox"
+            class="w-5 h-5 rounded bg-gray-800 border-gray-600 text-blue-600 focus:ring-blue-500"
+          />
+          <span class="text-sm text-gray-400">文脈を保持する</span>
+        </label>
+        <p class="text-xs text-gray-500 mt-1 ml-8">OFFにすると会話履歴を使わず、毎回高速に応答します</p>
+      </div>
+
       <div class="flex gap-2">
         <button
           @click="emit('update:modelValue', false)"
@@ -74,16 +87,18 @@ const props = defineProps<{
   currentModel?: string | null;
   currentSystemPrompt?: string | null;
   currentVectorStoreId?: string | null;
+  currentUseContext?: boolean;
 }>();
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean];
-  save: [model: string, systemPrompt: string | null, vectorStoreId: string | null];
+  save: [model: string, systemPrompt: string | null, vectorStoreId: string | null, useContext: boolean];
 }>();
 
 const editModel = ref('');
 const editSystemPrompt = ref('');
 const editVectorStoreId = ref('');
+const editUseContext = ref(true);
 
 // ダイアログが開かれたときに現在の値をセット
 watch(() => props.modelValue, (isOpen) => {
@@ -91,11 +106,12 @@ watch(() => props.modelValue, (isOpen) => {
     editModel.value = props.currentModel || 'gpt-4o';
     editSystemPrompt.value = props.currentSystemPrompt || '';
     editVectorStoreId.value = props.currentVectorStoreId || '';
+    editUseContext.value = props.currentUseContext ?? true;
   }
 });
 
 const handleSave = () => {
-  emit('save', editModel.value, editSystemPrompt.value.trim() || null, editVectorStoreId.value.trim() || null);
+  emit('save', editModel.value, editSystemPrompt.value.trim() || null, editVectorStoreId.value.trim() || null, editUseContext.value);
   emit('update:modelValue', false);
 };
 </script>

@@ -29,10 +29,13 @@ export default defineEventHandler(async (event) => {
     });
   }
 
+  // useContextがfalseの場合はconversationIdを渡さない（文脈なし）
+  const useContext = body.useContext !== false;
+
   // OpenAI にメッセージを送信
   const response = await sendMessageToOpenAI(
     apiKey,
-    body.conversationId,
+    useContext ? body.conversationId : undefined,
     body.message,
     body.model,
     body.systemPrompt,

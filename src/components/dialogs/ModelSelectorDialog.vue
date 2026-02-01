@@ -52,6 +52,19 @@
         />
       </div>
 
+      <!-- 文脈保持設定 -->
+      <div class="mb-4">
+        <label class="flex items-center gap-3 cursor-pointer">
+          <input
+            v-model="useContext"
+            type="checkbox"
+            class="w-5 h-5 rounded bg-gray-800 border-gray-600 text-blue-600 focus:ring-blue-500"
+          />
+          <span class="text-sm text-gray-400">文脈を保持する</span>
+        </label>
+        <p class="text-xs text-gray-500 mt-1 ml-8">OFFにすると毎回高速に応答（会話履歴なし）</p>
+      </div>
+
       <div class="flex gap-2">
         <button
           @click="emit('update:modelValue', false)"
@@ -90,12 +103,13 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean];
-  create: [model: string, systemPrompt?: string, vectorStoreId?: string];
+  create: [model: string, systemPrompt?: string, vectorStoreId?: string, useContext?: boolean];
 }>();
 
 const selectedModel = ref(props.defaultModel || 'gpt-4o');
 const systemPrompt = ref('');
 const vectorStoreId = ref('');
+const useContext = ref(true);
 
 // ダイアログが開かれたときにリセット
 watch(() => props.modelValue, (isOpen) => {
@@ -103,12 +117,13 @@ watch(() => props.modelValue, (isOpen) => {
     selectedModel.value = props.defaultModel || 'gpt-4o';
     systemPrompt.value = '';
     vectorStoreId.value = '';
+    useContext.value = true;
   }
 });
 
 const handleCreate = () => {
   if (!selectedModel.value) return;
-  emit('create', selectedModel.value, systemPrompt.value.trim() || undefined, vectorStoreId.value.trim() || undefined);
+  emit('create', selectedModel.value, systemPrompt.value.trim() || undefined, vectorStoreId.value.trim() || undefined, useContext.value);
   emit('update:modelValue', false);
 };
 </script>

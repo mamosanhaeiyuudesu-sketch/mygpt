@@ -44,6 +44,7 @@
           :model="currentChatModel || ''"
           :system-prompt="currentChatSystemPrompt"
           :vector-store-id="currentChatVectorStoreId"
+          :use-context="currentChatUseContext"
           @edit="showSettingsEditor = true"
         />
 
@@ -80,6 +81,7 @@
       :current-model="currentChatModel"
       :current-system-prompt="currentChatSystemPrompt"
       :current-vector-store-id="currentChatVectorStoreId"
+      :current-use-context="currentChatUseContext"
       @save="handleSaveSettings"
     />
   </div>
@@ -92,6 +94,7 @@ const {
   currentChatModel,
   currentChatSystemPrompt,
   currentChatVectorStoreId,
+  currentChatUseContext,
   messages,
   isLoading,
   fetchChats,
@@ -164,9 +167,9 @@ const handleNewChat = () => {
   showModelSelector.value = true;
 };
 
-const handleCreateChatFromDialog = async (model: string, systemPrompt?: string, vectorStoreId?: string) => {
+const handleCreateChatFromDialog = async (model: string, systemPrompt?: string, vectorStoreId?: string, useContext?: boolean) => {
   try {
-    await createChat(model, undefined, systemPrompt, vectorStoreId);
+    await createChat(model, undefined, systemPrompt, vectorStoreId, useContext ?? true);
     isSidebarOpen.value = false;
   } catch (error) {
     console.error('Failed to create chat:', error);
@@ -200,9 +203,9 @@ const handleReorderChats = async (fromIndex: number, toIndex: number) => {
   }
 };
 
-const handleNewChatWithMessage = async (message: string, model: string, systemPrompt?: string, vectorStoreId?: string) => {
+const handleNewChatWithMessage = async (message: string, model: string, systemPrompt?: string, vectorStoreId?: string, useContext?: boolean) => {
   try {
-    await createChat(model, undefined, systemPrompt, vectorStoreId);
+    await createChat(model, undefined, systemPrompt, vectorStoreId, useContext ?? true);
     await sendMessage(message);
   } catch (error) {
     console.error('Failed to create chat with message:', error);
@@ -219,10 +222,10 @@ const handleSendMessage = async (message: string) => {
   }
 };
 
-const handleSaveSettings = async (model: string, systemPrompt: string | null, vectorStoreId: string | null) => {
+const handleSaveSettings = async (model: string, systemPrompt: string | null, vectorStoreId: string | null, useContext: boolean) => {
   if (!currentChatId.value) return;
   try {
-    await updateChatSettings(currentChatId.value, model, systemPrompt, vectorStoreId);
+    await updateChatSettings(currentChatId.value, model, systemPrompt, vectorStoreId, useContext);
   } catch (error) {
     console.error('Failed to save settings:', error);
     alert('設定の保存に失敗しました');

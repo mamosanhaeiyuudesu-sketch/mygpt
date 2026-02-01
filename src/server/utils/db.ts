@@ -11,6 +11,7 @@ export interface Chat {
   model?: string | null;
   system_prompt?: string | null;
   vector_store_id?: string | null;
+  use_context?: boolean | null; // 文脈保持するかどうか（デフォルトtrue）
   created_at: number;
   updated_at: number;
 }
@@ -91,7 +92,8 @@ export async function createChat(
   name: string,
   model?: string,
   systemPrompt?: string,
-  vectorStoreId?: string
+  vectorStoreId?: string,
+  useContext: boolean = true
 ): Promise<Chat> {
   const now = Date.now();
   const chat: Chat = {
@@ -101,6 +103,7 @@ export async function createChat(
     model: model || null,
     system_prompt: systemPrompt || null,
     vector_store_id: vectorStoreId || null,
+    use_context: useContext,
     created_at: now,
     updated_at: now
   };
@@ -109,9 +112,9 @@ export async function createChat(
 
   if (db) {
     await db.prepare(`
-      INSERT INTO chats (id, conversation_id, name, model, system_prompt, vector_store_id, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `).bind(id, conversationId, name, model || null, systemPrompt || null, vectorStoreId || null, now, now).run();
+      INSERT INTO chats (id, conversation_id, name, model, system_prompt, vector_store_id, use_context, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(id, conversationId, name, model || null, systemPrompt || null, vectorStoreId || null, useContext ? 1 : 0, now, now).run();
   } else {
     memoryStore.chats.push(chat);
   }
@@ -179,27 +182,29 @@ export async function updateChatTimestamp(event: H3Event, id: string, timestamp:
 }
 
 /**
- * チャット設定更新（モデル・システムプロンプト・Vector Store ID）
+ * チャット設定更新（モデル・システムプロンプト・Vector Store ID・文脈保持）
  */
 export async function updateChatSettings(
   event: H3Event,
   id: string,
   model?: string,
   systemPrompt?: string | null,
-  vectorStoreId?: string | null
+  vectorStoreId?: string | null,
+  useContext?: boolean
 ): Promise<void> {
   const db = getD1(event);
 
   if (db) {
     await db.prepare(
-      'UPDATE chats SET model = ?, system_prompt = ?, vector_store_id = ? WHERE id = ?'
-    ).bind(model || null, systemPrompt ?? null, vectorStoreId ?? null, id).run();
+      'UPDATE chats SET model = ?, system_prompt = ?, vector_store_id = ?, use_context = ? WHERE id = ?'
+    ).bind(model || null, systemPrompt ?? null, vectorStoreId ?? null, useContext === undefined ? 1 : (useContext ? 1 : 0), id).run();
   } else {
     const chat = memoryStore.chats.find(c => c.id === id);
     if (chat) {
       if (model !== undefined) chat.model = model || null;
       if (systemPrompt !== undefined) chat.system_prompt = systemPrompt ?? null;
       if (vectorStoreId !== undefined) chat.vector_store_id = vectorStoreId ?? null;
+      if (useContext !== undefined) chat.use_context = useContext;
     }
   }
 }
