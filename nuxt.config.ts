@@ -1,7 +1,21 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
+  // Source directory
+  srcDir: 'src/',
+  serverDir: 'src/server/',
+
   // Nuxt modules
   modules: ['@nuxtjs/tailwindcss'],
+
+  // Components configuration - disable path prefix for cleaner imports
+  components: {
+    dirs: [
+      {
+        path: '~/components',
+        pathPrefix: false
+      }
+    ]
+  },
 
   // Cloudflare Workers deployment
   nitro: {
