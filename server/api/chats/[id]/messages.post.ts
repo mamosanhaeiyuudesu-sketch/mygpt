@@ -38,12 +38,14 @@ export default defineEventHandler(async (event) => {
   // OpenAI APIにメッセージ送信
   const model = body.model || 'gpt-4o';
   const systemPrompt = chat.system_prompt || undefined;
+  const vectorStoreId = chat.vector_store_id || undefined;
   const assistantResponse = await sendMessageToOpenAI(
     apiKey,
     chat.conversation_id,
     body.message,
     model,
-    systemPrompt
+    systemPrompt,
+    vectorStoreId
   );
 
   // ユーザーメッセージを保存

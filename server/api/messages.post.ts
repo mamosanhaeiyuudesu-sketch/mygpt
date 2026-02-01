@@ -35,7 +35,8 @@ export default defineEventHandler(async (event) => {
     body.conversationId,
     body.message,
     body.model,
-    body.systemPrompt
+    body.systemPrompt,
+    body.vectorStoreId
   );
 
   return { content: response };

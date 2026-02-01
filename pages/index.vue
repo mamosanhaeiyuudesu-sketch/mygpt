@@ -145,19 +145,32 @@
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                   <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
                 </svg>
-                システムプロンプト
+                詳細設定
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transition-transform" :class="showSystemPromptEditor ? 'rotate-180' : ''" viewBox="0 0 20 20" fill="currentColor">
                   <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                 </svg>
               </button>
-              <div v-if="showSystemPromptEditor" class="mt-2">
-                <textarea
-                  v-model="selectedSystemPrompt"
-                  placeholder="カスタム指示を入力（空欄でデフォルト）"
-                  rows="3"
-                  class="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                ></textarea>
-                <p class="text-xs text-gray-500 mt-1">例: 「あなたはプログラミングの専門家です」</p>
+              <div v-if="showSystemPromptEditor" class="mt-2 space-y-3">
+                <div>
+                  <label class="text-xs text-gray-400 block mb-1 text-left">システムプロンプト</label>
+                  <textarea
+                    v-model="selectedSystemPrompt"
+                    placeholder="カスタム指示を入力（空欄でデフォルト）"
+                    rows="3"
+                    class="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  ></textarea>
+                  <p class="text-xs text-gray-500 mt-1 text-left">例: 「あなたはプログラミングの専門家です」</p>
+                </div>
+                <div>
+                  <label class="text-xs text-gray-400 block mb-1 text-left">Vector Store ID（RAG用）</label>
+                  <input
+                    v-model="selectedVectorStoreId"
+                    type="text"
+                    placeholder="vs_xxxxxxxxxxxxxxxx"
+                    class="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <p class="text-xs text-gray-500 mt-1 text-left">OpenAI Vector Store IDを入力するとRAGが有効になります</p>
+                </div>
               </div>
             </div>
           </div>
@@ -190,7 +203,7 @@
 
       <!-- チャット選択時 -->
       <template v-else>
-        <!-- チャットヘッダー（モデル・システムプロンプト表示） -->
+        <!-- チャットヘッダー（モデル・システムプロンプト・Vector Store表示） -->
         <div class="border-b border-gray-800 px-4 py-2 hidden md:flex items-center gap-2">
           <div class="flex items-center gap-2">
             <span class="text-sm text-gray-400">Model:</span>
@@ -201,6 +214,12 @@
               <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
             </svg>
             <span class="truncate max-w-32">{{ currentChatSystemPrompt.substring(0, 20) }}...</span>
+          </div>
+          <div v-if="currentChatVectorStoreId" class="flex items-center gap-1 text-sm text-green-400" title="RAG有効（Vector Store）">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" />
+            </svg>
+            <span>RAG</span>
           </div>
           <!-- 設定編集ボタン -->
           <button
@@ -319,6 +338,17 @@
           ></textarea>
         </div>
 
+        <!-- Vector Store ID入力 -->
+        <div class="mb-4">
+          <label class="text-sm text-gray-400 block mb-2">Vector Store ID（RAG用、オプション）</label>
+          <input
+            v-model="dialogVectorStoreId"
+            type="text"
+            placeholder="vs_xxxxxxxxxxxxxxxx"
+            class="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
         <div class="flex gap-2">
           <button
             @click="showModelSelector = false"
@@ -345,7 +375,7 @@
     >
       <div class="bg-gray-900 rounded-lg p-6 max-w-md w-full border border-gray-700">
         <h2 class="text-lg font-bold mb-4">チャット設定</h2>
-        <p class="text-sm text-gray-400 mb-4">モデルとシステムプロンプトを変更できます。</p>
+        <p class="text-sm text-gray-400 mb-4">モデル・システムプロンプト・Vector Storeを変更できます。</p>
 
         <!-- モデル選択 -->
         <div class="mb-4">
@@ -369,6 +399,17 @@
             rows="3"
             class="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
           ></textarea>
+        </div>
+
+        <!-- Vector Store ID入力 -->
+        <div class="mb-4">
+          <label class="text-sm text-gray-400 block mb-2">Vector Store ID（RAG用）</label>
+          <input
+            v-model="editVectorStoreId"
+            type="text"
+            placeholder="vs_xxxxxxxxxxxxxxxx（空欄で無効）"
+            class="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
         </div>
 
         <div class="flex gap-2">
@@ -404,6 +445,7 @@ const {
   currentChatId,
   currentChatModel,
   currentChatSystemPrompt,
+  currentChatVectorStoreId,
   messages,
   isLoading,
   fetchChats,
@@ -428,6 +470,7 @@ interface Model {
 const availableModels = ref<Model[]>([]);
 const selectedModel = ref<string>('gpt-4o');
 const selectedSystemPrompt = ref<string>('');
+const selectedVectorStoreId = ref<string>('');
 const isLoadingModels = ref(false);
 const showModelSelector = ref(false);
 const showSystemPromptEditor = ref(false);
@@ -435,11 +478,13 @@ const showSystemPromptEditor = ref(false);
 // ダイアログ用の状態
 const dialogSelectedModel = ref<string>('');
 const dialogSystemPrompt = ref<string>('');
+const dialogVectorStoreId = ref<string>('');
 
 // 設定編集用の状態
 const showSettingsEditor = ref(false);
 const editModel = ref<string>('');
 const editSystemPrompt = ref<string>('');
+const editVectorStoreId = ref<string>('');
 
 // 選択中のモデル情報
 const selectedModelInfo = computed(() => {
@@ -642,6 +687,7 @@ const handleNewChat = () => {
   // ダイアログの状態をリセット
   dialogSelectedModel.value = selectedModel.value || 'gpt-4o';
   dialogSystemPrompt.value = '';
+  dialogVectorStoreId.value = '';
   showModelSelector.value = true;
 };
 
@@ -654,7 +700,8 @@ const handleCreateChatFromDialog = async () => {
   try {
     showModelSelector.value = false;
     const systemPrompt = dialogSystemPrompt.value.trim() || undefined;
-    await createChat(dialogSelectedModel.value, undefined, systemPrompt);
+    const vectorStoreId = dialogVectorStoreId.value.trim() || undefined;
+    await createChat(dialogSelectedModel.value, undefined, systemPrompt, vectorStoreId);
     // モバイルではサイドバーを閉じる
     isSidebarOpen.value = false;
   } catch (error) {
@@ -669,6 +716,7 @@ const handleCreateChatFromDialog = async () => {
 const openSettingsEditor = () => {
   editModel.value = currentChatModel.value || 'gpt-4o';
   editSystemPrompt.value = currentChatSystemPrompt.value || '';
+  editVectorStoreId.value = currentChatVectorStoreId.value || '';
   showSettingsEditor.value = true;
 };
 
@@ -680,7 +728,8 @@ const handleSaveSettings = async () => {
 
   try {
     const systemPrompt = editSystemPrompt.value.trim() || null;
-    await updateChatSettings(currentChatId.value, editModel.value, systemPrompt);
+    const vectorStoreId = editVectorStoreId.value.trim() || null;
+    await updateChatSettings(currentChatId.value, editModel.value, systemPrompt, vectorStoreId);
     showSettingsEditor.value = false;
   } catch (error) {
     console.error('Failed to save settings:', error);
@@ -702,9 +751,10 @@ const handleNewChatWithMessage = async () => {
     inputMessage.value = '';
     resetTextareaHeight();
 
-    // 新しいチャットを作成（選択されたモデルとシステムプロンプトで）
+    // 新しいチャットを作成（選択されたモデル・システムプロンプト・Vector Storeで）
     const systemPrompt = selectedSystemPrompt.value.trim() || undefined;
-    await createChat(selectedModel.value, undefined, systemPrompt);
+    const vectorStoreId = selectedVectorStoreId.value.trim() || undefined;
+    await createChat(selectedModel.value, undefined, systemPrompt, vectorStoreId);
 
     // メッセージを送信
     await sendMessage(message);

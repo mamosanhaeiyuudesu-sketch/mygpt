@@ -12,13 +12,14 @@ export default defineEventHandler(async (event) => {
   const chatName = body?.name || 'New Chat';
   const model = body?.model;
   const systemPrompt = body?.systemPrompt;
+  const vectorStoreId = body?.vectorStoreId;
   const chatId = generateId('chat');
 
   // OpenAI Conversationを作成
   const conversationId = await createConversation(apiKey, chatName);
 
-  // DBに保存（model と systemPrompt を含む）
-  await createChat(event, chatId, conversationId, chatName, model, systemPrompt);
+  // DBに保存（model, systemPrompt, vectorStoreId を含む）
+  await createChat(event, chatId, conversationId, chatName, model, systemPrompt, vectorStoreId);
 
   return { chatId, conversationId };
 });

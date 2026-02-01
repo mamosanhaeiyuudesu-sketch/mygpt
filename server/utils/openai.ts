@@ -34,6 +34,8 @@ export async function createConversation(apiKey: string, name: string): Promise<
 
 const DEFAULT_SYSTEM_PROMPT = 'あなたは親切なアシスタントです。回答はMarkdown形式で記述してください。コードブロック、リスト、見出しなどを適切に使用して、読みやすく構造化された回答を提供してください。';
 
+const RAG_INSTRUCTION_SUFFIX = '\n\n重要: ユーザーの質問に答える際は、必ず提供されたファイル検索ツール(file_search)を使用して関連情報を検索し、その結果に基づいて回答してください。検索結果がない場合や関連情報が見つからない場合は、その旨を明記してください。';
+
 /**
  * Responses API でメッセージを送信
  * POST /v1/responses (conversation パラメータで会話を指定)
@@ -43,11 +45,33 @@ export async function sendMessageToOpenAI(
   conversationId: string,
   message: string,
   model: string,
-  systemPrompt?: string
+  systemPrompt?: string,
+  vectorStoreId?: string
 ): Promise<string> {
-  console.log('[OpenAI] Sending message:', { conversationId, model, message: message.substring(0, 50) });
+  console.log('[OpenAI] Sending message:', { conversationId, model, vectorStoreId, message: message.substring(0, 50) });
 
-  const instructions = systemPrompt || DEFAULT_SYSTEM_PROMPT;
+  // Vector Storeが指定されている場合、RAG用の指示を追加
+  let instructions = systemPrompt || DEFAULT_SYSTEM_PROMPT;
+  if (vectorStoreId) {
+    instructions += RAG_INSTRUCTION_SUFFIX;
+  }
+
+  // リクエストボディを構築
+  const requestBody: Record<string, unknown> = {
+    model,
+    conversation: conversationId,
+    input: message,
+    instructions
+  };
+
+  // Vector Storeが指定されている場合、file_searchツールを追加
+  // Responses APIではvector_store_idsはツール定義内に含める
+  if (vectorStoreId) {
+    requestBody.tools = [{
+      type: 'file_search',
+      vector_store_ids: [vectorStoreId]
+    }];
+  }
 
   const response = await fetch('https://api.openai.com/v1/responses', {
     method: 'POST',
@@ -55,12 +79,7 @@ export async function sendMessageToOpenAI(
       'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({
-      model,
-      conversation: conversationId,
-      input: message,
-      instructions
-    })
+    body: JSON.stringify(requestBody)
   });
 
   if (!response.ok) {

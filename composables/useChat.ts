@@ -11,6 +11,7 @@ export interface Chat {
   conversationId: string; // OpenAI Conversation ID
   model: string; // 使用するOpenAIモデル
   systemPrompt?: string; // カスタムシステムプロンプト
+  vectorStoreId?: string; // OpenAI Vector Store ID (RAG用)
   lastMessage?: string;
   createdAt: number;
   updatedAt: number;
@@ -126,6 +127,13 @@ export const useChat = () => {
     return chat?.systemPrompt || null;
   });
 
+  // 現在のチャットのVector Store IDを取得
+  const currentChatVectorStoreId = computed(() => {
+    if (!currentChatId.value) return null;
+    const chat = chats.value.find(c => c.id === currentChatId.value);
+    return chat?.vectorStoreId || null;
+  });
+
   /**
    * チャット一覧を読み込む
    */
@@ -161,8 +169,9 @@ export const useChat = () => {
    * @param model - 使用するOpenAIモデル（必須）
    * @param name - チャット名（オプション）
    * @param systemPrompt - カスタムシステムプロンプト（オプション）
+   * @param vectorStoreId - Vector Store ID（RAG用、オプション）
    */
-  const createChat = async (model: string, name?: string, systemPrompt?: string) => {
+  const createChat = async (model: string, name?: string, systemPrompt?: string, vectorStoreId?: string) => {
     try {
       isLoading.value = true;
       const chatName = name || 'New Chat';
@@ -189,6 +198,7 @@ export const useChat = () => {
           conversationId,
           model,
           systemPrompt,
+          vectorStoreId,
           createdAt: now,
           updatedAt: now
         };
@@ -207,7 +217,7 @@ export const useChat = () => {
         const response = await fetch('/api/chats', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: chatName, model, systemPrompt })
+          body: JSON.stringify({ name: chatName, model, systemPrompt, vectorStoreId })
         });
 
         if (!response.ok) {
@@ -223,6 +233,7 @@ export const useChat = () => {
           conversationId,
           model,
           systemPrompt,
+          vectorStoreId,
           createdAt: now,
           updatedAt: now
         };
@@ -276,6 +287,7 @@ export const useChat = () => {
     const chatId = currentChatId.value;
     const model = currentChatModel.value;
     const systemPrompt = currentChatSystemPrompt.value;
+    const vectorStoreId = currentChatVectorStoreId.value;
     const now = Date.now();
 
     // ユーザーメッセージを作成して即座に表示
@@ -314,7 +326,8 @@ export const useChat = () => {
             conversationId,
             message: content,
             model,
-            systemPrompt
+            systemPrompt,
+            vectorStoreId
           })
         });
 
@@ -450,9 +463,9 @@ export const useChat = () => {
   };
 
   /**
-   * チャット設定を変更（モデル・システムプロンプト）
+   * チャット設定を変更（モデル・システムプロンプト・Vector Store ID）
    */
-  const updateChatSettings = async (chatId: string, model?: string, systemPrompt?: string | null) => {
+  const updateChatSettings = async (chatId: string, model?: string, systemPrompt?: string | null, vectorStoreId?: string | null) => {
     if (isLocalEnvironment()) {
       // ローカル: localStorage を更新
       const data = loadFromStorage();
@@ -460,6 +473,7 @@ export const useChat = () => {
       if (chatIndex !== -1) {
         if (model !== undefined) data.chats[chatIndex].model = model;
         if (systemPrompt !== undefined) data.chats[chatIndex].systemPrompt = systemPrompt || undefined;
+        if (vectorStoreId !== undefined) data.chats[chatIndex].vectorStoreId = vectorStoreId || undefined;
         saveToStorage(data);
       }
 
@@ -470,13 +484,14 @@ export const useChat = () => {
         await fetch(`/api/chats/${chatId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ model, systemPrompt })
+          body: JSON.stringify({ model, systemPrompt, vectorStoreId })
         });
 
         const chatIndex = chats.value.findIndex(c => c.id === chatId);
         if (chatIndex !== -1) {
           if (model !== undefined) chats.value[chatIndex].model = model;
           if (systemPrompt !== undefined) chats.value[chatIndex].systemPrompt = systemPrompt || undefined;
+          if (vectorStoreId !== undefined) chats.value[chatIndex].vectorStoreId = vectorStoreId || undefined;
           chats.value = [...chats.value];
         }
       } catch (error) {
@@ -521,6 +536,7 @@ export const useChat = () => {
     currentChatId,
     currentChatModel,
     currentChatSystemPrompt,
+    currentChatVectorStoreId,
     messages,
     isLoading,
 
