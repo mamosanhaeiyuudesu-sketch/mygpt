@@ -45,17 +45,35 @@ const breakAtComma = (line: string): string => {
   return line.slice(0, commaIndex + 1) + '\n' + breakAtComma(line.slice(commaIndex + 1));
 };
 
+// 段落内で2行以上続く場合、句点で空白行を入れる
+const addParagraphBreaks = (text: string): string => {
+  const paragraphs = text.split(/\n\n+/);
+  return paragraphs.map(paragraph => {
+    // 見出しやリストはスキップ
+    if (/^#{1,6}\s/.test(paragraph) || /^[-*]\s/.test(paragraph)) {
+      return paragraph;
+    }
+    const lines = paragraph.split('\n');
+    if (lines.length < 2) return paragraph;
+    // 句点の後に空白行を入れる
+    return paragraph.replace(/。\n(?!\n)/g, '。\n\n');
+  }).join('\n\n');
+};
+
 // 前処理関数
 const preprocess = (text: string): string => {
   // **text** を <strong>text</strong> に変換
   let result = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-  // 句点の後に改行を追加（既に改行がない場合）
-  result = result.replace(/。(?!\n)/g, '。\n');
-  // 各行に対して読点での改行処理（見出し行は除く）
+  // 各行に対して句点・読点での改行処理（見出し行・リスト項目は除く）
   result = result.split('\n').map((line) => {
-    if (/^#{1,6}\s/.test(line)) return line;
-    return breakAtComma(line);
+    if (/^#{1,6}\s/.test(line) || /^[-*]\s/.test(line) || /^\d+\.\s/.test(line)) return line;
+    // 句点の後に改行を追加
+    let processed = line.replace(/。(?!\n)/g, '。\n');
+    // 読点での改行処理（句点で分割した各行に適用）
+    return processed.split('\n').map(l => breakAtComma(l)).join('\n');
   }).join('\n');
+  // 2行以上続く段落で句点の後に空白行を入れる
+  result = addParagraphBreaks(result);
   return result;
 };
 
@@ -72,7 +90,7 @@ const renderedContent = computed(() => {
 }
 
 .prose :deep(h3) {
-  margin-bottom: 0.5em;
+  margin-bottom: 0.6em;
 }
 
 .prose :deep(ul) {

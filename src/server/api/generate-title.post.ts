@@ -45,14 +45,14 @@ export default defineEventHandler(async (event) => {
       messages: [
         {
           role: 'system',
-          content: 'あなたはチャットのタイトルを生成するアシスタントです。与えられた会話内容から、10文字以内の簡潔な日本語タイトルを生成してください。タイトルのみを出力し、余計な説明は不要です。'
+          content: 'あなたはチャットのタイトルを生成するアシスタントです。与えられた会話内容から、15文字以内の簡潔な日本語タイトルを生成してください。タイトルのみを出力し、余計な説明は不要です。'
         },
         {
           role: 'user',
-          content: `以下の会話内容から日本語10文字以内のタイトルを生成してください:\n\n${summary}${excludeInstruction}`
+          content: `以下の会話内容から日本語15文字以内のタイトルを生成してください:\n\n${summary}${excludeInstruction}`
         }
       ],
-      max_tokens: 100,
+      max_tokens: 150,
       temperature: 0.9
     })
   });
