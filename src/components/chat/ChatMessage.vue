@@ -17,15 +17,23 @@
 <script setup lang="ts">
 import { marked, type Tokens } from 'marked';
 
-// h2をh3に変換するカスタムrenderer
-const renderer = new marked.Renderer();
-renderer.heading = ({ tokens, depth }: Tokens.Heading) => {
-  const text = tokens.map((t) => ('text' in t ? t.text : '')).join('');
-  const newLevel = depth === 2 ? 3 : depth;
-  return `<h${newLevel}>${text}</h${newLevel}>`;
+// カスタムrendererを作成（h2の有無に応じてh3の変換を切り替え）
+const createRenderer = (hasH2: boolean) => {
+  const renderer = new marked.Renderer();
+  renderer.heading = ({ tokens, depth }: Tokens.Heading) => {
+    const text = tokens.map((t) => ('text' in t ? t.text : '')).join('');
+    let newLevel = depth;
+    if (depth === 2) {
+      newLevel = 3;
+    } else if (depth === 3 && hasH2) {
+      newLevel = 4;
+    }
+    return `<h${newLevel}>${text}</h${newLevel}>`;
+  };
+  return renderer;
 };
 
-marked.use({ renderer, breaks: true });
+marked.use({ breaks: true });
 
 interface Message {
   id: string;
@@ -79,7 +87,10 @@ const preprocess = (text: string): string => {
 
 const renderedContent = computed(() => {
   const processed = preprocess(props.message.content);
-  return marked.parse(processed) as string;
+  // h2（##）が存在するかチェック
+  const hasH2 = /^##\s/m.test(processed);
+  const renderer = createRenderer(hasH2);
+  return marked.parse(processed, { renderer }) as string;
 });
 </script>
 
