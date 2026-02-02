@@ -16,17 +16,37 @@
     <div class="flex items-start justify-between">
       <div class="flex-1 min-w-0">
         <!-- 編集モード -->
-        <input
-          v-if="isEditing"
-          ref="editInputRef"
-          v-model="editingName"
-          type="text"
-          class="w-full bg-gray-700 text-white text-sm rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          @blur="finishEditing"
-          @keyup.enter="finishEditing"
-          @keyup.escape="cancelEditing"
-          @click.stop
-        />
+        <div v-if="isEditing" class="flex gap-1">
+          <div class="relative flex-1 min-w-0">
+            <input
+              ref="editInputRef"
+              v-model="editingName"
+              type="text"
+              class="w-full bg-gray-700 text-white text-sm rounded pl-2 pr-7 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              @blur="handleBlur"
+              @keyup.enter="finishEditing"
+              @keyup.escape="cancelEditing"
+              @click.stop
+            />
+            <button
+              @click.stop="finishEditing"
+              class="absolute right-1 top-1/2 -translate-y-1/2 p-0.5 text-green-500 hover:text-green-400"
+              title="決定"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+              </svg>
+            </button>
+          </div>
+          <button
+            @click.stop="generateTitle"
+            :disabled="isGenerating"
+            class="px-2 py-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white text-xs rounded whitespace-nowrap"
+            title="AIでタイトル生成"
+          >
+            {{ isGenerating ? '...' : 'AI' }}
+          </button>
+        </div>
         <!-- 表示モード -->
         <template v-else>
           <div class="font-medium text-sm truncate">{{ chat.name }}</div>
@@ -74,6 +94,7 @@ const props = defineProps<{
   chat: Chat;
   isActive: boolean;
   isDragOver?: boolean;
+  onGenerateTitle?: (chatId: string, excludeTitles?: string[]) => Promise<string | null>;
 }>();
 
 const emit = defineEmits<{
@@ -89,10 +110,13 @@ const emit = defineEmits<{
 const isEditing = ref(false);
 const editingName = ref('');
 const editInputRef = ref<HTMLInputElement | null>(null);
+const isGenerating = ref(false);
+const generatedTitles = ref<string[]>([]);
 
 const startEditing = () => {
   isEditing.value = true;
   editingName.value = props.chat.name;
+  generatedTitles.value = [];
   nextTick(() => {
     if (editInputRef.value) {
       editInputRef.value.focus();
@@ -112,5 +136,30 @@ const finishEditing = () => {
 const cancelEditing = () => {
   isEditing.value = false;
   editingName.value = '';
+};
+
+// blurハンドラー（AI生成ボタンクリック時は終了しない）
+const handleBlur = (event: FocusEvent) => {
+  const relatedTarget = event.relatedTarget as HTMLElement | null;
+  if (relatedTarget?.closest('button')) return;
+  finishEditing();
+};
+
+// AIでタイトル生成
+const generateTitle = async () => {
+  if (!props.onGenerateTitle) return;
+  isGenerating.value = true;
+  try {
+    const title = await props.onGenerateTitle(props.chat.id, generatedTitles.value);
+    if (title) {
+      generatedTitles.value.push(title);
+      editingName.value = title;
+      editInputRef.value?.focus();
+    }
+  } catch (error) {
+    console.error('Failed to generate title:', error);
+  } finally {
+    isGenerating.value = false;
+  }
 };
 </script>

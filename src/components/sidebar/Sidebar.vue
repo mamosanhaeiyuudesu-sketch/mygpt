@@ -24,6 +24,7 @@
         :chat="chat"
         :is-active="chat.id === currentChatId"
         :is-drag-over="dragOverIndex === index"
+        :on-generate-title="props.onGenerateTitle"
         @select="emit('selectChat', chat.id)"
         @delete="emit('deleteChat', chat.id)"
         @rename="(name) => emit('renameChat', chat.id, name)"
@@ -43,10 +44,11 @@ interface Chat {
   lastMessage?: string;
 }
 
-defineProps<{
+const props = defineProps<{
   open: boolean;
   chats: Chat[];
   currentChatId: string | null;
+  onGenerateTitle?: (chatId: string, excludeTitles?: string[]) => Promise<string | null>;
 }>();
 
 const emit = defineEmits<{

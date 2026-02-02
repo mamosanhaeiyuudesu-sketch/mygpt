@@ -12,6 +12,7 @@
       :open="isSidebarOpen"
       :chats="chats"
       :current-chat-id="currentChatId"
+      :on-generate-title="handleGenerateTitle"
       @new-chat="handleNewChat"
       @select-chat="handleSelectChat"
       @delete-chat="handleDeleteChat"
@@ -251,6 +252,36 @@ const handleSaveSettings = async (model: string, systemPrompt: string | null, ve
   } catch (error) {
     console.error('Failed to save settings:', error);
     alert('設定の保存に失敗しました');
+  }
+};
+
+// AIでタイトル生成
+const handleGenerateTitle = async (chatId: string, excludeTitles?: string[]): Promise<string | null> => {
+  try {
+    // localStorageからメッセージを取得
+    const data = localStorage.getItem('mygpt_data');
+    if (!data) return null;
+    const parsed = JSON.parse(data);
+    const chatMessages = parsed.messages?.[chatId] || [];
+    if (chatMessages.length === 0) return null;
+
+    const response = await fetch('/api/generate-title', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: chatMessages.slice(0, 10),
+        excludeTitles: excludeTitles || []
+      })
+    });
+
+    if (response.ok) {
+      const result = await response.json() as { title: string };
+      return result.title;
+    }
+    return null;
+  } catch (error) {
+    console.error('Failed to generate title:', error);
+    return null;
   }
 };
 </script>
