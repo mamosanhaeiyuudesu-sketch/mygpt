@@ -94,10 +94,17 @@ function saveToStorage(data: StoredData): void {
 }
 
 /**
- * ユニークID生成
+ * UUID v4 生成
  */
-function generateId(prefix: string): string {
-  return `${prefix}_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+function generateUUID(): string {
+  return crypto.randomUUID();
+}
+
+/**
+ * メッセージID生成（内部用）
+ */
+function generateMessageId(): string {
+  return `msg_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
 }
 
 export const useChat = () => {
@@ -200,7 +207,7 @@ export const useChat = () => {
         const { conversationId } = await response.json() as { conversationId: string };
 
         const now = Date.now();
-        const chatId = generateId('chat');
+        const chatId = generateUUID();
         const newChat: Chat = {
           id: chatId,
           name: chatName,
@@ -304,7 +311,7 @@ export const useChat = () => {
 
     // ユーザーメッセージを作成して即座に表示
     const userMessage: Message = {
-      id: generateId('msg'),
+      id: generateMessageId(),
       role: 'user',
       content,
       createdAt: now
@@ -351,7 +358,7 @@ export const useChat = () => {
         const { content: assistantContent } = await response.json() as { content: string };
 
         const assistantMessage: Message = {
-          id: generateId('msg'),
+          id: generateMessageId(),
           role: 'assistant',
           content: assistantContent,
           createdAt: Date.now()

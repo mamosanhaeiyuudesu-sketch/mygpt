@@ -88,6 +88,7 @@
 </template>
 
 <script setup lang="ts">
+const route = useRoute();
 const router = useRouter();
 
 const {
@@ -156,6 +157,15 @@ const fetchModels = async () => {
 // 初期化
 onMounted(async () => {
   await Promise.all([fetchChats(), fetchModels()]);
+
+  // URLのIDからチャットを選択
+  const chatId = route.params.id as string;
+  if (chatId && chats.value.some(c => c.id === chatId)) {
+    await selectChat(chatId);
+  } else {
+    // チャットが見つからない場合はホームへ
+    router.replace('/');
+  }
 });
 
 // --- イベントハンドラ ---
