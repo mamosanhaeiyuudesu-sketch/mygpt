@@ -128,3 +128,63 @@ export async function sendMessageToOpenAI(
   console.log('[OpenAI] Response received:', textContent.substring(0, 50));
   return textContent;
 }
+
+/**
+ * Responses API でメッセージをストリーミング送信
+ * @param conversationId - 会話ID（undefinedの場合は文脈なしで単発送信）
+ * @returns ReadableStream<Uint8Array>
+ */
+export async function sendMessageToOpenAIStream(
+  apiKey: string,
+  conversationId: string | undefined,
+  message: string,
+  model: string,
+  systemPrompt?: string,
+  vectorStoreId?: string
+): Promise<Response> {
+  console.log('[OpenAI] Sending streaming message:', { conversationId: conversationId || '(no context)', model, vectorStoreId });
+
+  // Vector Storeが指定されている場合、RAG用の指示を追加
+  let instructions = systemPrompt || DEFAULT_SYSTEM_PROMPT;
+  if (vectorStoreId) {
+    instructions += RAG_INSTRUCTION_SUFFIX;
+  }
+
+  // リクエストボディを構築
+  const requestBody: Record<string, unknown> = {
+    model,
+    input: message,
+    instructions,
+    stream: true
+  };
+
+  // conversationIdがある場合のみ文脈を保持
+  if (conversationId) {
+    requestBody.conversation = conversationId;
+  }
+
+  // Vector Storeが指定されている場合、file_searchツールを追加
+  if (vectorStoreId) {
+    requestBody.tools = [{
+      type: 'file_search',
+      vector_store_ids: [vectorStoreId]
+    }];
+  }
+
+  const response = await fetch('https://api.openai.com/v1/responses', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(requestBody)
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    console.error('[OpenAI] Send streaming message error:', error);
+    throw new Error(`OpenAI API error: ${error}`);
+  }
+
+  return response;
+}

@@ -295,7 +295,48 @@ export const useChat = () => {
   };
 
   /**
-   * メッセージを送信
+   * SSEストリームからテキストを抽出するパーサー
+   */
+  const parseSSEStream = async (
+    reader: ReadableStreamDefaultReader<Uint8Array>,
+    onChunk: (text: string) => void
+  ): Promise<string> => {
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let fullContent = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const data = line.slice(6);
+          if (data === '[DONE]') continue;
+
+          try {
+            const parsed = JSON.parse(data);
+            // Responses APIのストリーミング形式に対応
+            if (parsed.type === 'response.output_text.delta' && parsed.delta) {
+              fullContent += parsed.delta;
+              onChunk(fullContent);
+            }
+          } catch {
+            // JSON解析エラーは無視
+          }
+        }
+      }
+    }
+
+    return fullContent;
+  };
+
+  /**
+   * メッセージを送信（ストリーミング対応）
    */
   const sendMessage = async (content: string) => {
     if (!currentChatId.value || !currentChatModel.value) {
@@ -318,6 +359,15 @@ export const useChat = () => {
     };
     messages.value.push(userMessage);
 
+    // アシスタントメッセージのプレースホルダーを作成
+    const assistantMessage: Message = {
+      id: generateMessageId(),
+      role: 'assistant',
+      content: '',
+      createdAt: Date.now()
+    };
+    messages.value.push(assistantMessage);
+
     if (isLocalEnvironment()) {
       // ローカル: localStorage に保存
       const data = loadFromStorage();
@@ -332,13 +382,13 @@ export const useChat = () => {
       isLoading.value = true;
 
       if (isLocalEnvironment()) {
-        // ローカル: /api/messages を使用
+        // ローカル: /api/messages-stream を使用（ストリーミング）
         const conversationId = currentConversationId.value;
         if (!conversationId) {
           throw new Error('No conversation ID');
         }
 
-        const response = await fetch('/api/messages', {
+        const response = await fetch('/api/messages-stream', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -355,23 +405,35 @@ export const useChat = () => {
           throw new Error('Failed to send message');
         }
 
-        const { content: assistantContent } = await response.json() as { content: string };
+        const reader = response.body?.getReader();
+        if (!reader) {
+          throw new Error('No response body');
+        }
 
-        const assistantMessage: Message = {
-          id: generateMessageId(),
-          role: 'assistant',
-          content: assistantContent,
-          createdAt: Date.now()
-        };
-        messages.value.push(assistantMessage);
+        // ストリーミングでメッセージを更新
+        const finalContent = await parseSSEStream(reader, (text) => {
+          const msgIndex = messages.value.findIndex(m => m.id === assistantMessage.id);
+          if (msgIndex !== -1) {
+            messages.value[msgIndex].content = text;
+          }
+        });
+
+        // 最終コンテンツを確定
+        const msgIndex = messages.value.findIndex(m => m.id === assistantMessage.id);
+        if (msgIndex !== -1) {
+          messages.value[msgIndex].content = finalContent;
+        }
 
         // localStorage に保存
         const updatedData = loadFromStorage();
-        updatedData.messages[chatId].push(assistantMessage);
+        updatedData.messages[chatId].push({
+          ...assistantMessage,
+          content: finalContent
+        });
 
         const chatIndex = updatedData.chats.findIndex(c => c.id === chatId);
         if (chatIndex !== -1) {
-          updatedData.chats[chatIndex].lastMessage = assistantContent.substring(0, 50);
+          updatedData.chats[chatIndex].lastMessage = finalContent.substring(0, 50);
           updatedData.chats[chatIndex].updatedAt = Date.now();
         }
         saveToStorage(updatedData);
@@ -392,20 +454,24 @@ export const useChat = () => {
           throw new Error('Failed to send message');
         }
 
-        const assistantMessage = await response.json() as Message;
-        messages.value.push(assistantMessage);
+        const result = await response.json() as Message;
+        // プレースホルダーを実際の結果で更新
+        const msgIndex = messages.value.findIndex(m => m.id === assistantMessage.id);
+        if (msgIndex !== -1) {
+          messages.value[msgIndex] = result;
+        }
 
         // チャット一覧を更新
         const chatIndex = chats.value.findIndex(c => c.id === chatId);
         if (chatIndex !== -1) {
-          chats.value[chatIndex].lastMessage = assistantMessage.content.substring(0, 50);
+          chats.value[chatIndex].lastMessage = result.content.substring(0, 50);
           chats.value[chatIndex].updatedAt = Date.now();
           chats.value = [...chats.value].sort((a, b) => b.updatedAt - a.updatedAt);
         }
       }
     } catch (error) {
-      // エラー時はユーザーメッセージを削除
-      messages.value = messages.value.filter(m => m.id !== userMessage.id);
+      // エラー時はユーザーメッセージとアシスタントメッセージを削除
+      messages.value = messages.value.filter(m => m.id !== userMessage.id && m.id !== assistantMessage.id);
 
       if (isLocalEnvironment()) {
         const errorData = loadFromStorage();
