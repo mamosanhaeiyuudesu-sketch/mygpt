@@ -6,7 +6,6 @@
   >
     <div class="bg-gray-900 rounded-lg p-6 max-w-md w-full border border-gray-700">
       <h2 class="text-lg font-bold mb-4">チャット設定</h2>
-      <p class="text-sm text-gray-400 mb-4">モデル・システムプロンプト・Vector Storeを変更できます。</p>
 
       <!-- モデル選択 -->
       <div class="mb-4">
@@ -28,7 +27,7 @@
           v-model="editSystemPrompt"
           placeholder="カスタム指示を入力（空欄でデフォルト）"
           rows="3"
-          class="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+          class="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
         ></textarea>
       </div>
 

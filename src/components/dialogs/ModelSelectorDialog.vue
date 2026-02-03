@@ -5,49 +5,43 @@
     @click.self="emit('update:modelValue', false)"
   >
     <div class="bg-gray-900 rounded-lg p-6 max-w-md w-full border border-gray-700">
-      <h2 class="text-lg font-bold mb-4">モデルを選択</h2>
-      <p class="text-sm text-gray-400 mb-4">新しいチャットで使用するモデルを選択してください。</p>
+      <h2 class="text-lg font-bold mb-4">新しいチャット</h2>
 
-      <div class="max-h-48 overflow-y-auto mb-4">
-        <div v-if="isLoadingModels" class="text-center py-4 text-gray-400">
+      <!-- モデル選択 -->
+      <div class="mb-4">
+        <label class="text-sm text-gray-400 block mb-2">モデル</label>
+        <div v-if="isLoadingModels" class="text-center py-2 text-gray-400 text-sm">
           Loading models...
         </div>
-        <div v-else class="space-y-2">
-          <button
-            v-for="model in models"
-            :key="model.id"
-            @click="selectedModel = model.id"
-            class="w-full text-left px-4 py-3 rounded-lg transition-colors border"
-            :class="selectedModel === model.id ? 'border-blue-500 bg-gray-800' : 'border-gray-700 hover:bg-gray-800'"
-          >
-            <div class="flex justify-between items-center">
-              <span class="font-medium">{{ model.name }}</span>
-              <span class="text-xs text-gray-500">{{ model.contextWindow }}</span>
-            </div>
-            <div class="text-xs text-gray-400 mt-1">{{ model.description }}</div>
-            <div class="text-xs text-gray-500 mt-1">{{ model.inputPrice }} / {{ model.outputPrice }}</div>
-          </button>
-        </div>
+        <select
+          v-else
+          v-model="selectedModel"
+          class="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option v-for="model in models" :key="model.id" :value="model.id">
+            {{ model.name }} ({{ model.contextWindow }})
+          </option>
+        </select>
       </div>
 
       <!-- システムプロンプト入力 -->
       <div class="mb-4">
-        <label class="text-sm text-gray-400 block mb-2">システムプロンプト（オプション）</label>
+        <label class="text-sm text-gray-400 block mb-2">システムプロンプト</label>
         <textarea
           v-model="systemPrompt"
           placeholder="カスタム指示を入力（空欄でデフォルト）"
-          rows="2"
-          class="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+          rows="3"
+          class="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
         ></textarea>
       </div>
 
       <!-- Vector Store ID入力 -->
       <div class="mb-4">
-        <label class="text-sm text-gray-400 block mb-2">Vector Store ID（RAG用、オプション）</label>
+        <label class="text-sm text-gray-400 block mb-2">Vector Store ID（RAG用）</label>
         <input
           v-model="vectorStoreId"
           type="text"
-          placeholder="vs_xxxxxxxxxxxxxxxx"
+          placeholder="vs_xxxxxxxxxxxxxxxx（空欄で無効）"
           class="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
@@ -62,7 +56,7 @@
           />
           <span class="text-sm text-gray-400">文脈を保持する</span>
         </label>
-        <p class="text-xs text-gray-500 mt-1 ml-8">OFFにすると毎回高速に応答（会話履歴なし）</p>
+        <p class="text-xs text-gray-500 mt-1 ml-8">OFFにすると会話履歴を使わず、毎回高速に応答します</p>
       </div>
 
       <div class="flex gap-2">
