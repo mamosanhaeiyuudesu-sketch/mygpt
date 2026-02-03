@@ -7,6 +7,31 @@
     <div class="bg-gray-900 rounded-lg p-6 max-w-md w-full border border-gray-700">
       <h2 class="text-lg font-bold mb-4">チャット設定</h2>
 
+      <!-- プリセット選択 -->
+      <div class="mb-4">
+        <label class="text-sm text-gray-400 block mb-2">プリセット</label>
+        <div class="flex gap-2">
+          <select
+            v-model="selectedPresetId"
+            @change="handlePresetChange"
+            class="flex-1 bg-gray-800 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">カスタム</option>
+            <option v-for="preset in presets" :key="preset.id" :value="preset.id">
+              {{ preset.name }}
+            </option>
+          </select>
+          <button
+            v-if="selectedPresetId"
+            @click="handleDeletePreset"
+            class="px-3 py-2 bg-red-600/20 hover:bg-red-600/40 text-red-400 rounded-lg transition-colors text-sm"
+            title="プリセットを削除"
+          >
+            削除
+          </button>
+        </div>
+      </div>
+
       <!-- モデル選択 -->
       <div class="mb-4">
         <label class="text-sm text-gray-400 block mb-2">モデル</label>
@@ -55,6 +80,25 @@
         <p class="text-xs text-gray-500 mt-1 ml-8">OFFにすると会話履歴を使わず、毎回高速に応答します</p>
       </div>
 
+      <!-- プリセット保存 -->
+      <div class="mb-4 pt-3 border-t border-gray-700">
+        <label class="flex items-center gap-3 cursor-pointer">
+          <input
+            v-model="saveAsPreset"
+            type="checkbox"
+            class="w-5 h-5 rounded bg-gray-800 border-gray-600 text-blue-600 focus:ring-blue-500"
+          />
+          <span class="text-sm text-gray-400">この設定をプリセットとして保存</span>
+        </label>
+        <input
+          v-if="saveAsPreset"
+          v-model="presetName"
+          type="text"
+          placeholder="プリセット名を入力"
+          class="w-full mt-2 bg-gray-800 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+
       <div class="flex gap-2">
         <button
           @click="emit('update:modelValue', false)"
@@ -80,6 +124,15 @@ interface Model {
   contextWindow: string;
 }
 
+interface Preset {
+  id: string;
+  name: string;
+  model: string;
+  system_prompt: string | null;
+  vector_store_id: string | null;
+  use_context: boolean;
+}
+
 const props = defineProps<{
   modelValue: boolean;
   models: Model[];
@@ -99,17 +152,98 @@ const editSystemPrompt = ref('');
 const editVectorStoreId = ref('');
 const editUseContext = ref(true);
 
+// プリセット関連
+const presets = ref<Preset[]>([]);
+const selectedPresetId = ref('');
+const saveAsPreset = ref(false);
+const presetName = ref('');
+
+// APIからプリセットを読み込み
+const loadPresets = async () => {
+  try {
+    const response = await fetch('/api/presets');
+    if (response.ok) {
+      const data = await response.json() as { presets: Preset[] };
+      presets.value = data.presets;
+    }
+  } catch (e) {
+    console.error('Failed to load presets:', e);
+  }
+};
+
+// APIでプリセットを作成
+const createPreset = async (name: string, model: string, systemPrompt: string | null, vectorStoreId: string | null, useContext: boolean) => {
+  try {
+    const response = await fetch('/api/presets', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, model, systemPrompt, vectorStoreId, useContext })
+    });
+    if (response.ok) {
+      const data = await response.json() as { preset: Preset };
+      presets.value.push(data.preset);
+    }
+  } catch (e) {
+    console.error('Failed to create preset:', e);
+  }
+};
+
+// プリセット選択時に設定を反映
+const handlePresetChange = () => {
+  if (!selectedPresetId.value) return;
+  const preset = presets.value.find(p => p.id === selectedPresetId.value);
+  if (preset) {
+    editModel.value = preset.model;
+    editSystemPrompt.value = preset.system_prompt || '';
+    editVectorStoreId.value = preset.vector_store_id || '';
+    editUseContext.value = preset.use_context;
+  }
+};
+
+// プリセット削除
+const handleDeletePreset = async () => {
+  if (!selectedPresetId.value) return;
+  if (!confirm('このプリセットを削除しますか？')) return;
+
+  try {
+    const response = await fetch(`/api/presets/${selectedPresetId.value}`, {
+      method: 'DELETE'
+    });
+    if (response.ok) {
+      presets.value = presets.value.filter(p => p.id !== selectedPresetId.value);
+      selectedPresetId.value = '';
+    }
+  } catch (e) {
+    console.error('Failed to delete preset:', e);
+  }
+};
+
 // ダイアログが開かれたときに現在の値をセット
 watch(() => props.modelValue, (isOpen) => {
   if (isOpen) {
+    loadPresets();
     editModel.value = props.currentModel || 'gpt-4o';
     editSystemPrompt.value = props.currentSystemPrompt || '';
     editVectorStoreId.value = props.currentVectorStoreId || '';
     editUseContext.value = props.currentUseContext ?? true;
+    selectedPresetId.value = '';
+    saveAsPreset.value = false;
+    presetName.value = '';
   }
 });
 
-const handleSave = () => {
+const handleSave = async () => {
+  // プリセット保存
+  if (saveAsPreset.value && presetName.value.trim()) {
+    await createPreset(
+      presetName.value.trim(),
+      editModel.value,
+      editSystemPrompt.value.trim() || null,
+      editVectorStoreId.value.trim() || null,
+      editUseContext.value
+    );
+  }
+
   emit('save', editModel.value, editSystemPrompt.value.trim() || null, editVectorStoreId.value.trim() || null, editUseContext.value);
   emit('update:modelValue', false);
 };

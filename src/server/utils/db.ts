@@ -24,10 +24,21 @@ export interface Message {
   created_at: number;
 }
 
+export interface Preset {
+  id: string;
+  name: string;
+  model: string;
+  system_prompt: string | null;
+  vector_store_id: string | null;
+  use_context: boolean;
+  created_at: number;
+}
+
 // インメモリストレージ（ローカル開発用フォールバック）
 const memoryStore = {
   chats: [] as Chat[],
-  messages: [] as Message[]
+  messages: [] as Message[],
+  presets: [] as Preset[]
 };
 
 /**
@@ -264,4 +275,79 @@ export async function createMessage(
   }
 
   return message;
+}
+
+// ========== Preset Operations ==========
+
+/**
+ * 全プリセット取得
+ */
+export async function getAllPresets(event: H3Event): Promise<Preset[]> {
+  const db = getD1(event);
+
+  if (db) {
+    const result = await db.prepare(`
+      SELECT id, name, model, system_prompt, vector_store_id, use_context, created_at
+      FROM presets
+      ORDER BY created_at ASC
+    `).all();
+
+    return ((result.results || []) as Array<Omit<Preset, 'use_context'> & { use_context: number }>).map(p => ({
+      ...p,
+      use_context: p.use_context === 1
+    }));
+  }
+
+  // インメモリ（ローカル開発用）
+  return [...memoryStore.presets].sort((a, b) => a.created_at - b.created_at);
+}
+
+/**
+ * プリセット作成
+ */
+export async function createPreset(
+  event: H3Event,
+  id: string,
+  name: string,
+  model: string,
+  systemPrompt: string | null,
+  vectorStoreId: string | null,
+  useContext: boolean
+): Promise<Preset> {
+  const now = Date.now();
+  const preset: Preset = {
+    id,
+    name,
+    model,
+    system_prompt: systemPrompt,
+    vector_store_id: vectorStoreId,
+    use_context: useContext,
+    created_at: now
+  };
+
+  const db = getD1(event);
+
+  if (db) {
+    await db.prepare(`
+      INSERT INTO presets (id, name, model, system_prompt, vector_store_id, use_context, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).bind(id, name, model, systemPrompt, vectorStoreId, useContext ? 1 : 0, now).run();
+  } else {
+    memoryStore.presets.push(preset);
+  }
+
+  return preset;
+}
+
+/**
+ * プリセット削除
+ */
+export async function deletePreset(event: H3Event, id: string): Promise<void> {
+  const db = getD1(event);
+
+  if (db) {
+    await db.prepare('DELETE FROM presets WHERE id = ?').bind(id).run();
+  } else {
+    memoryStore.presets = memoryStore.presets.filter(p => p.id !== id);
+  }
 }
