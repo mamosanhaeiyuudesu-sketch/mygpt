@@ -32,7 +32,7 @@ export async function createConversation(apiKey: string, name: string): Promise<
   return data.id;
 }
 
-const DEFAULT_SYSTEM_PROMPT = 'あなたは親切なアシスタントです。回答はMarkdown形式で記述してください。コードブロック、リスト、見出しなどを適切に使用して、読みやすく構造化された回答を提供してください。';
+const DEFAULT_SYSTEM_PROMPT = 'あなたは親切なアシスタントです。回答はMarkdown形式で記述してください。コードブロック、リスト、見出しなどを適切に使用して、読みやすく構造化された回答を提供してください。見出し（##や###）は25文字以内で簡潔に記述してください。';
 
 const RAG_INSTRUCTION_SUFFIX = '\n\n重要: ユーザーの質問に答える際は、必ず提供されたファイル検索ツール(file_search)を使用して関連情報を検索し、その結果に基づいて回答してください。検索結果がない場合や関連情報が見つからない場合は、その旨を明記してください。';
 
