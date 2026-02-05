@@ -159,13 +159,15 @@ const fetchModels = async () => {
 onMounted(async () => {
   await Promise.all([fetchChats(), fetchModels()]);
 
-  // URLのIDからチャットを選択
-  const chatId = route.params.id as string;
-  if (chatId && chats.value.some(c => c.id === chatId)) {
-    await selectChat(chatId);
-  } else {
-    // チャットが見つからない場合はホームへ
-    router.replace('/');
+  // URLにIDがある場合はチャットを選択
+  const chatId = route.params.id as string | undefined;
+  if (chatId) {
+    if (chats.value.some(c => c.id === chatId)) {
+      await selectChat(chatId);
+    } else {
+      // チャットが見つからない場合はホームへ
+      router.replace('/chat');
+    }
   }
 });
 
@@ -199,7 +201,7 @@ const handleDeleteChat = async (chatId: string) => {
   try {
     await deleteChat(chatId);
     if (currentChatId.value === null) {
-      router.push('/');
+      router.push('/chat');
     }
   } catch (error) {
     console.error('Failed to delete chat:', error);
