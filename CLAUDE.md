@@ -1,42 +1,42 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+このファイルは、Claude Code (claude.ai/code) がこのリポジトリで作業する際のガイダンスを提供します。
 
-## Commands
+## コマンド
 
 ```bash
-# Install dependencies (yarn is the package manager, v4.9.1)
+# 依存関係のインストール（パッケージマネージャーはyarn v4.9.1）
 yarn install
 
-# Start Nuxt dev server (port 3000)
+# Nuxt開発サーバーを起動（ポート3000）
 yarn dev
 
-# Build for production
+# 本番用ビルド
 yarn build
 
-# Preview production build
+# 本番ビルドのプレビュー
 yarn preview
 
-# Type checking
+# 型チェック
 npx nuxi typecheck
 
-# Prepare Nuxt (generates .nuxt types)
+# Nuxtの準備（.nuxtの型を生成）
 npx nuxt prepare
 ```
 
-### Cloudflare Workers (separate process for local dev)
+### Cloudflare Workers（ローカル開発では別プロセス）
 
-The Workers API (`workers/api.ts`) is a **legacy standalone entry point** — it is not used during local `yarn dev`. The Nuxt server routes under `src/server/api/` handle all API requests locally. `workers/api.ts` is kept for reference but the active backend is the Nuxt server directory.
+Workers API（`workers/api.ts`）は**レガシーなスタンドアロンエントリーポイント**です。ローカルの`yarn dev`では使用されません。`src/server/api/`配下のNuxtサーバールートがローカルでのすべてのAPIリクエストを処理します。`workers/api.ts`は参考用に残していますが、実際に使用されているバックエンドはNuxtサーバーディレクトリです。
 
 ```bash
-# Deploy Workers (production only)
+# Workersをデプロイ（本番環境のみ）
 npx wrangler deploy
 
-# Deploy Nuxt to Cloudflare Pages (production only)
+# NuxtをCloudflare Pagesにデプロイ（本番環境のみ）
 yarn build && npx wrangler pages deploy dist
 ```
 
-### D1 Database (one-time setup)
+### D1データベース（初回セットアップのみ）
 
 ```bash
 npx wrangler d1 create mygpt
@@ -44,77 +44,82 @@ npx wrangler d1 execute mygpt --file=schema.sql
 npx wrangler secret put OPENAI_API_KEY
 ```
 
-## Architecture
+## アーキテクチャ
 
-### Tech Stack
+### 技術スタック
 
-- **Frontend**: Nuxt 3 + Vue 3 (TypeScript), source in `src/`
-- **Backend**: Nuxt server routes (`src/server/api/`) — uses Cloudflare D1 in production, in-memory fallback locally
-- **Database**: Cloudflare D1 (SQLite). Schema in `schema.sql`. Tables: `chats`, `messages`, `presets`
-- **AI**: OpenAI Conversations API (context management) + Responses API (streaming replies)
-- **Styling**: Tailwind CSS with `@tailwindcss/typography` for markdown rendering. Dark theme colors defined in `tailwind.config.js`
+- **フロントエンド**: Nuxt 3 + Vue 3（TypeScript）、ソースは`src/`配下
+- **バックエンド**: Nuxtサーバールート（`src/server/api/`）— 本番ではCloudflare D1、ローカルではインメモリフォールバック
+- **データベース**: Cloudflare D1（SQLite）。スキーマは`schema.sql`。テーブル: `chats`, `messages`, `presets`
+- **AI**: OpenAI Conversations API（コンテキスト管理）+ Responses API（ストリーミング応答）
+- **スタイリング**: Tailwind CSS、Markdownレンダリング用に`@tailwindcss/typography`。ダークテーマの色は`tailwind.config.js`で定義
 
-### Source Layout
+### ソース構成
 
 ```
 src/
 ├── pages/
-│   ├── index.vue              # Redirects to /chat
-│   └── chat/[[id]].vue        # Main chat page (all UI logic lives here)
+│   ├── index.vue              # /chat へリダイレクト
+│   └── chat/[[id]].vue        # メインチャットページ（すべてのUIロジックはここ）
 ├── components/
 │   ├── chat/                  # ChatInput, ChatMessage, ChatHeader, LoadingIndicator
 │   ├── sidebar/               # Sidebar, ChatListItem, MobileHeader
-│   ├── home/                  # HomeView (landing when no chat selected)
+│   ├── home/                  # HomeView（チャット未選択時のランディング）
 │   └── dialogs/               # ModelSelectorDialog, SettingsEditorDialog
 ├── composables/
-│   └── useChat.ts             # Core chat state & logic composable
+│   ├── useChat.ts             # コアのチャット状態・ロジックのcomposable
+│   └── usePresets.ts          # プリセット管理のcomposable
+├── types/
+│   └── index.ts               # 共通型定義
+├── utils/
+│   └── environment.ts         # 環境判定ユーティリティ
 └── server/
-    ├── api/                   # Nuxt server routes (see below)
+    ├── api/                   # Nuxtサーバールート（下記参照）
     └── utils/
-        ├── db.ts              # D1 database operations (+ in-memory fallback)
-        ├── openai.ts          # OpenAI API helpers (create conversation, streaming)
-        └── env.ts             # Environment variable access (CF Workers vs local)
+        ├── db.ts              # D1データベース操作（+ インメモリフォールバック）
+        ├── openai.ts          # OpenAI APIヘルパー（会話作成、ストリーミング）
+        └── env.ts             # 環境変数アクセス（CF Workers vs ローカル）
 ```
 
-### Key Architectural Decisions
+### 主要なアーキテクチャ上の決定
 
-1. **Dual-environment data layer**: `useChat.ts` (composable) and `src/server/utils/db.ts` both branch on environment. Locally (`localhost`), the composable uses `localStorage` for chat/message persistence and calls Nuxt server routes that use an in-memory store. In production, everything goes through D1 via the same server routes.
+1. **デュアル環境データレイヤー**: `useChat.ts`（composable）と`src/server/utils/db.ts`の両方が環境に応じて分岐します。ローカル（`localhost`）では、composableがチャット/メッセージの永続化に`localStorage`を使用し、インメモリストアを使うNuxtサーバールートを呼び出します。本番では、すべて同じサーバールート経由でD1に接続します。
 
-2. **Streaming flow**: Message sending is split into two steps:
-   - `POST /api/chats/:id/messages-stream` (or `/api/messages-stream` locally) — streams the OpenAI Responses API SSE directly back to the client.
-   - `POST /api/chats/:id/messages-save` — called after streaming completes to persist both user and assistant messages to D1.
-   - The composable's `parseSSEStream` parses `response.output_text.delta` events and reactively updates the message array by replacing the entire array (to trigger Vue reactivity).
+2. **ストリーミングフロー**: メッセージ送信は2つのステップに分かれています:
+   - `POST /api/chats/:id/messages-stream`（またはローカルでは`/api/messages-stream`）— OpenAI Responses APIのSSEを直接クライアントにストリーミング
+   - `POST /api/chats/:id/messages-save` — ストリーミング完了後に呼び出され、ユーザーとアシスタントの両方のメッセージをD1に永続化
+   - composableの`parseSSEStream`は`response.output_text.delta`イベントをパースし、配列全体を置き換えることでメッセージ配列をリアクティブに更新（Vueのリアクティビティをトリガーするため）
 
-3. **OpenAI Conversations API for context**: Each chat is backed by an OpenAI Conversation ID. Passing `conversation` in the Responses API request lets OpenAI manage conversation history automatically. When `useContext` is `false`, the conversation ID is omitted, making each message stateless.
+3. **コンテキスト用のOpenAI Conversations API**: 各チャットはOpenAI Conversation IDに紐づいています。Responses APIリクエストで`conversation`を渡すことで、OpenAIが自動的に会話履歴を管理します。`useContext`が`false`の場合、conversation IDは省略され、各メッセージがステートレスになります。
 
-4. **RAG support**: If a `vectorStoreId` is set on a chat, the Responses API request includes a `file_search` tool and appended instructions to use it.
+4. **RAGサポート**: チャットに`vectorStoreId`が設定されている場合、Responses APIリクエストに`file_search`ツールと、それを使用するための追加指示が含まれます。
 
-### Server API Routes
+### サーバーAPIルート
 
-| Route | Handler | Purpose |
+| ルート | ハンドラー | 目的 |
 |---|---|---|
-| `GET /api/chats` | `chats/index.get.ts` | List all chats with last message |
-| `POST /api/chats` | `chats/index.post.ts` | Create chat (creates OpenAI Conversation + DB row) |
-| `PATCH /api/chats/:id` | `chats/[id].patch.ts` | Update name/model/systemPrompt/vectorStoreId |
-| `DELETE /api/chats/:id` | `chats/[id].delete.ts` | Delete chat (CASCADE deletes messages) |
-| `GET /api/chats/:id/messages` | `chats/[id]/messages.get.ts` | Fetch message history from DB |
-| `POST /api/chats/:id/messages-stream` | `chats/[id]/messages-stream.post.ts` | Stream OpenAI response (production path) |
-| `POST /api/chats/:id/messages-save` | `chats/[id]/messages-save.post.ts` | Persist messages after streaming |
-| `POST /api/conversations` | `conversations.post.ts` | Create OpenAI Conversation only (local path) |
-| `POST /api/messages-stream` | `messages-stream.post.ts` | Stream with full params in body (local path) |
-| `POST /api/generate-title` | `generate-title.post.ts` | Generate chat title via Chat Completions API |
-| `GET /api/models` | `models.get.ts` | Static list of 6 available models |
-| `GET/POST/DELETE /api/presets` | `presets/` | CRUD for chat presets |
+| `GET /api/chats` | `chats/index.get.ts` | 最後のメッセージ付きで全チャット一覧取得 |
+| `POST /api/chats` | `chats/index.post.ts` | チャット作成（OpenAI Conversation + DBレコード作成） |
+| `PATCH /api/chats/:id` | `chats/[id].patch.ts` | 名前/モデル/システムプロンプト/vectorStoreIdの更新 |
+| `DELETE /api/chats/:id` | `chats/[id].delete.ts` | チャット削除（メッセージもCASCADE削除） |
+| `GET /api/chats/:id/messages` | `chats/[id]/messages.get.ts` | DBからメッセージ履歴取得 |
+| `POST /api/chats/:id/messages-stream` | `chats/[id]/messages-stream.post.ts` | OpenAI応答をストリーミング（本番パス） |
+| `POST /api/chats/:id/messages-save` | `chats/[id]/messages-save.post.ts` | ストリーミング後にメッセージを永続化 |
+| `POST /api/conversations` | `conversations.post.ts` | OpenAI Conversationのみ作成（ローカルパス） |
+| `POST /api/messages-stream` | `messages-stream.post.ts` | ボディに全パラメータを含めてストリーミング（ローカルパス） |
+| `POST /api/generate-title` | `generate-title.post.ts` | Chat Completions APIでチャットタイトル生成 |
+| `GET /api/models` | `models.get.ts` | 利用可能な6つのモデルの静的リスト |
+| `GET/POST/DELETE /api/presets` | `presets/` | チャットプリセットのCRUD |
 
-### Component Notes
+### コンポーネントノート
 
-- `chat/[[id]].vue` is the central page component. It owns all event handlers and wires `useChat()` to the UI. The optional `[id]` segment allows `/chat` (no selection) and `/chat/:id` (chat selected).
-- `components` have `pathPrefix: false` in nuxt config, so they are imported by bare name (e.g., `<Sidebar>` not `<SidebarSidebar>`).
-- `ChatMessage.vue` uses `marked` to render assistant messages as Markdown.
+- `chat/[[id]].vue`が中心となるページコンポーネント。すべてのイベントハンドラーを持ち、`useChat()`をUIに接続します。オプショナルな`[id]`セグメントにより、`/chat`（未選択）と`/chat/:id`（チャット選択済み）の両方を許可します。
+- `components`はnuxt configで`pathPrefix: false`に設定されているため、短い名前でインポートされます（例: `<SidebarSidebar>`ではなく`<Sidebar>`）。
+- `ChatMessage.vue`は`marked`を使用してアシスタントメッセージをMarkdownとしてレンダリングします。
 
-### Environment & Config
+### 環境と設定
 
-- `nuxt.config.ts`: `srcDir` is `src/`, nitro preset is `cloudflare-module`.
-- OpenAI API key: accessed via `getOpenAIKey()` in server routes. In production it comes from `event.context.cloudflare.env.NUXT_OPENAI_API_KEY`; locally from `runtimeConfig.openaiApiKey` (set via `NUXT_OPENAI_API_KEY` env var).
-- `tsconfig.json` includes `@cloudflare/workers-types` for D1Database types.
-- localStorage retention: chats older than 730 days are auto-pruned on load.
+- `nuxt.config.ts`: `srcDir`は`src/`、nitroプリセットは`cloudflare-module`。
+- OpenAI APIキー: サーバールートで`getOpenAIKey()`経由でアクセス。本番では`event.context.cloudflare.env.NUXT_OPENAI_API_KEY`から、ローカルでは`runtimeConfig.openaiApiKey`から取得（`NUXT_OPENAI_API_KEY`環境変数で設定）。
+- `tsconfig.json`にはD1Database型用の`@cloudflare/workers-types`が含まれます。
+- localStorageの保持期間: 730日以上前のチャットは読み込み時に自動的に削除されます。
