@@ -440,13 +440,14 @@ export const useChat = () => {
 
         chats.value = updatedData.chats.sort((a, b) => b.updatedAt - a.updatedAt);
       } else {
-        // デプロイ: /api/chats/:id/messages を使用（D1に保存）
-        const response = await fetch(`/api/chats/${chatId}/messages`, {
+        // デプロイ: /api/chats/:id/messages-stream を使用（ストリーミング）
+        const response = await fetch(`/api/chats/${chatId}/messages-stream`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             message: content,
-            model
+            model,
+            useContext
           })
         });
 
@@ -454,17 +455,39 @@ export const useChat = () => {
           throw new Error('Failed to send message');
         }
 
-        const result = await response.json() as Message;
-        // プレースホルダーを実際の結果で更新
+        const reader = response.body?.getReader();
+        if (!reader) {
+          throw new Error('No response body');
+        }
+
+        // ストリーミングでメッセージを更新
+        const finalContent = await parseSSEStream(reader, (text) => {
+          const msgIndex = messages.value.findIndex(m => m.id === assistantMessage.id);
+          if (msgIndex !== -1) {
+            messages.value[msgIndex].content = text;
+          }
+        });
+
+        // 最終コンテンツを確定
         const msgIndex = messages.value.findIndex(m => m.id === assistantMessage.id);
         if (msgIndex !== -1) {
-          messages.value[msgIndex] = result;
+          messages.value[msgIndex].content = finalContent;
         }
+
+        // D1にメッセージを保存
+        await fetch(`/api/chats/${chatId}/messages-save`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userMessage: content,
+            assistantMessage: finalContent
+          })
+        });
 
         // チャット一覧を更新
         const chatIndex = chats.value.findIndex(c => c.id === chatId);
         if (chatIndex !== -1) {
-          chats.value[chatIndex].lastMessage = result.content.substring(0, 50);
+          chats.value[chatIndex].lastMessage = finalContent.substring(0, 50);
           chats.value[chatIndex].updatedAt = Date.now();
           chats.value = [...chats.value].sort((a, b) => b.updatedAt - a.updatedAt);
         }
