@@ -3,45 +3,15 @@
  * ローカル環境: localStorage を使用
  * デプロイ環境: API (D1) を使用
  */
+import type { Chat, Message, StoredData } from '~/types';
+import { isLocalEnvironment } from '~/utils/environment';
 
-// 型定義
-export interface Chat {
-  id: string;
-  name: string;
-  conversationId: string; // OpenAI Conversation ID
-  model: string; // 使用するOpenAIモデル
-  systemPrompt?: string; // カスタムシステムプロンプト
-  vectorStoreId?: string; // OpenAI Vector Store ID (RAG用)
-  useContext: boolean; // 文脈保持するかどうか（デフォルトtrue）
-  lastMessage?: string;
-  createdAt: number;
-  updatedAt: number;
-}
-
-export interface Message {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  createdAt: number;
-}
-
-interface StoredData {
-  chats: Chat[];
-  messages: Record<string, Message[]>; // chatId -> messages
-}
+// 型を再エクスポート（既存コードとの互換性のため）
+export type { Chat, Message };
 
 const STORAGE_KEY = 'mygpt_data';
 const RETENTION_DAYS = 730; // 2年 = 730日
 const RETENTION_MS = RETENTION_DAYS * 24 * 60 * 60 * 1000;
-
-/**
- * ローカル環境かどうかを判定
- */
-function isLocalEnvironment(): boolean {
-  if (typeof window === 'undefined') return true;
-  const hostname = window.location.hostname;
-  return hostname === 'localhost' || hostname === '127.0.0.1';
-}
 
 /**
  * localStorage からデータを読み込む（期限切れのチャットを自動削除）

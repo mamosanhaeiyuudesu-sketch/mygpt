@@ -123,26 +123,8 @@
 </template>
 
 <script setup lang="ts">
-interface Model {
-  id: string;
-  name: string;
-  inputPrice: string;
-  outputPrice: string;
-  contextWindow: string;
-  description: string;
-}
-
-interface Preset {
-  id: string;
-  name: string;
-  model: string;
-  system_prompt: string | null;
-  vector_store_id: string | null;
-  use_context: boolean;
-}
-
-const PRESETS_STORAGE_KEY = 'mygpt_presets';
-const isDev = import.meta.dev;
+import type { Model } from '~/types';
+import { usePresets } from '~/composables/usePresets';
 
 const props = defineProps<{
   modelValue: boolean;
@@ -156,6 +138,10 @@ const emit = defineEmits<{
   create: [model: string, systemPrompt?: string, vectorStoreId?: string, useContext?: boolean];
 }>();
 
+// プリセット管理
+const { presets, loadPresets, createPreset, deletePreset, getPresetById } = usePresets();
+
+// フォーム状態
 const selectedModel = ref(props.defaultModel || 'gpt-4o');
 const systemPrompt = ref('');
 const vectorStoreId = ref('');
@@ -167,83 +153,26 @@ const initialSystemPrompt = ref('');
 const initialVectorStoreId = ref('');
 const initialUseContext = ref(true);
 
-// プリセット関連
-const presets = ref<Preset[]>([]);
+// プリセット選択状態
 const selectedPresetId = ref('');
 const saveAsPreset = ref(false);
 const presetName = ref('');
 
-// プリセットを読み込み
-const loadPresets = async () => {
-  try {
-    if (isDev) {
-      // ローカル開発: LocalStorage
-      const data = localStorage.getItem(PRESETS_STORAGE_KEY);
-      if (data) {
-        presets.value = JSON.parse(data);
-      }
-    } else {
-      // 本番: API
-      const response = await fetch('/api/presets');
-      if (response.ok) {
-        const data = await response.json() as { presets: Preset[] };
-        presets.value = data.presets;
-      }
-    }
-  } catch (e) {
-    console.error('Failed to load presets:', e);
-  }
-};
-
-// プリセットを作成
-const createPreset = async (name: string, model: string, systemPromptVal: string | null, vectorStoreIdVal: string | null, useContextVal: boolean) => {
-  try {
-    const newPreset: Preset = {
-      id: crypto.randomUUID(),
-      name,
-      model,
-      system_prompt: systemPromptVal,
-      vector_store_id: vectorStoreIdVal,
-      use_context: useContextVal,
-    };
-
-    if (isDev) {
-      // ローカル開発: LocalStorage
-      presets.value.push(newPreset);
-      localStorage.setItem(PRESETS_STORAGE_KEY, JSON.stringify(presets.value));
-    } else {
-      // 本番: API
-      const response = await fetch('/api/presets', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, model, systemPrompt: systemPromptVal, vectorStoreId: vectorStoreIdVal, useContext: useContextVal })
-      });
-      if (response.ok) {
-        const data = await response.json() as { preset: Preset };
-        presets.value.push(data.preset);
-      }
-    }
-  } catch (e) {
-    console.error('Failed to create preset:', e);
-  }
-};
-
 // プリセット選択時に設定を反映
 const handlePresetChange = () => {
   if (!selectedPresetId.value) {
-    // カスタムに戻す場合は初期値を復元
     selectedModel.value = initialModel.value;
     systemPrompt.value = initialSystemPrompt.value;
     vectorStoreId.value = initialVectorStoreId.value;
     useContext.value = initialUseContext.value;
     return;
   }
-  const preset = presets.value.find(p => p.id === selectedPresetId.value);
+  const preset = getPresetById(selectedPresetId.value);
   if (preset) {
     selectedModel.value = preset.model;
-    systemPrompt.value = preset.system_prompt || '';
-    vectorStoreId.value = preset.vector_store_id || '';
-    useContext.value = preset.use_context;
+    systemPrompt.value = preset.systemPrompt || '';
+    vectorStoreId.value = preset.vectorStoreId || '';
+    useContext.value = preset.useContext;
   }
 };
 
@@ -252,24 +181,9 @@ const handleDeletePreset = async () => {
   if (!selectedPresetId.value) return;
   if (!confirm('このプリセットを削除しますか？')) return;
 
-  try {
-    if (isDev) {
-      // ローカル開発: LocalStorage
-      presets.value = presets.value.filter(p => p.id !== selectedPresetId.value);
-      localStorage.setItem(PRESETS_STORAGE_KEY, JSON.stringify(presets.value));
-      selectedPresetId.value = '';
-    } else {
-      // 本番: API
-      const response = await fetch(`/api/presets/${selectedPresetId.value}`, {
-        method: 'DELETE'
-      });
-      if (response.ok) {
-        presets.value = presets.value.filter(p => p.id !== selectedPresetId.value);
-        selectedPresetId.value = '';
-      }
-    }
-  } catch (e) {
-    console.error('Failed to delete preset:', e);
+  const success = await deletePreset(selectedPresetId.value);
+  if (success) {
+    selectedPresetId.value = '';
   }
 };
 
@@ -277,12 +191,10 @@ const handleDeletePreset = async () => {
 watch(() => props.modelValue, (isOpen) => {
   if (isOpen) {
     loadPresets();
-    // 初期値を保存
     initialModel.value = props.defaultModel || 'gpt-4o';
     initialSystemPrompt.value = '';
     initialVectorStoreId.value = '';
     initialUseContext.value = true;
-    // 編集用にも設定
     selectedModel.value = initialModel.value;
     systemPrompt.value = initialSystemPrompt.value;
     vectorStoreId.value = initialVectorStoreId.value;
@@ -296,7 +208,6 @@ watch(() => props.modelValue, (isOpen) => {
 const handleCreate = async () => {
   if (!selectedModel.value) return;
 
-  // プリセット保存
   if (saveAsPreset.value && presetName.value.trim()) {
     await createPreset(
       presetName.value.trim(),
