@@ -162,16 +162,8 @@ export const useChat = () => {
       try {
         const response = await fetch('/api/chats');
         if (response.ok) {
-          const data = await response.json() as { chats: Array<{ id: string; name: string; lastMessage: string; updatedAt: number }> };
-          chats.value = data.chats.map(c => ({
-            id: c.id,
-            name: c.name,
-            conversationId: '', // APIから取得時は不要（selectChatで取得）
-            model: '', // APIから取得時は不要
-            lastMessage: c.lastMessage,
-            createdAt: c.updatedAt,
-            updatedAt: c.updatedAt
-          }));
+          const data = await response.json() as { chats: Chat[] };
+          chats.value = data.chats;
         }
       } catch (error) {
         console.error('Failed to fetch chats:', error);
@@ -414,14 +406,19 @@ export const useChat = () => {
         const finalContent = await parseSSEStream(reader, (text) => {
           const msgIndex = messages.value.findIndex(m => m.id === assistantMessage.id);
           if (msgIndex !== -1) {
-            messages.value[msgIndex].content = text;
+            // リアクティビティを確実にトリガーするため新しい配列を作成
+            messages.value = messages.value.map((m, i) =>
+              i === msgIndex ? { ...m, content: text } : m
+            );
           }
         });
 
         // 最終コンテンツを確定
         const msgIndex = messages.value.findIndex(m => m.id === assistantMessage.id);
         if (msgIndex !== -1) {
-          messages.value[msgIndex].content = finalContent;
+          messages.value = messages.value.map((m, i) =>
+            i === msgIndex ? { ...m, content: finalContent } : m
+          );
         }
 
         // localStorage に保存
@@ -464,14 +461,19 @@ export const useChat = () => {
         const finalContent = await parseSSEStream(reader, (text) => {
           const msgIndex = messages.value.findIndex(m => m.id === assistantMessage.id);
           if (msgIndex !== -1) {
-            messages.value[msgIndex].content = text;
+            // リアクティビティを確実にトリガーするため新しい配列を作成
+            messages.value = messages.value.map((m, i) =>
+              i === msgIndex ? { ...m, content: text } : m
+            );
           }
         });
 
         // 最終コンテンツを確定
         const msgIndex = messages.value.findIndex(m => m.id === assistantMessage.id);
         if (msgIndex !== -1) {
-          messages.value[msgIndex].content = finalContent;
+          messages.value = messages.value.map((m, i) =>
+            i === msgIndex ? { ...m, content: finalContent } : m
+          );
         }
 
         // D1にメッセージを保存

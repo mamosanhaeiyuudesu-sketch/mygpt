@@ -9,7 +9,13 @@ export default defineEventHandler(async (event) => {
   const chats = allChats.map(chat => ({
     id: chat.id,
     name: chat.name,
+    conversationId: chat.conversation_id,
+    model: chat.model || 'gpt-4o',
+    systemPrompt: chat.system_prompt || null,
+    vectorStoreId: chat.vector_store_id || null,
+    useContext: chat.use_context !== false,
     lastMessage: chat.last_message || '',
+    createdAt: chat.created_at,
     updatedAt: chat.updated_at
   }));
 

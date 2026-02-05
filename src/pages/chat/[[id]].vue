@@ -228,8 +228,9 @@ const handleReorderChats = async (fromIndex: number, toIndex: number) => {
 const handleNewChatWithMessage = async (message: string, model: string, systemPrompt?: string, vectorStoreId?: string, useContext?: boolean) => {
   try {
     const chatId = await createChat(model, undefined, systemPrompt, vectorStoreId, useContext ?? true);
+    // URLを静かに更新（ページ遷移なし）
     if (chatId) {
-      router.push(`/chat/${chatId}`);
+      history.replaceState(null, '', `/chat/${chatId}`);
     }
     await sendMessage(message);
   } catch (error) {
