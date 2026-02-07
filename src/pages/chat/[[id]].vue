@@ -55,9 +55,12 @@
             <ChatMessage
               v-for="message in messages"
               :key="message.id"
+              :ref="(el) => setMessageRef(message.id, el)"
               :message="message"
             />
             <LoadingIndicator v-if="isLoading" />
+            <!-- スペーサー：最後のメッセージを画面上部にスクロールできるようにする -->
+            <div class="h-[calc(100vh-200px)]"></div>
           </div>
         </div>
 
@@ -131,6 +134,30 @@ const isSidebarOpen = ref(false);
 
 // メッセージコンテナ
 const messagesContainer = ref<HTMLElement | null>(null);
+
+// メッセージ要素のref管理
+const messageRefs = ref<Map<string, HTMLElement>>(new Map());
+const setMessageRef = (id: string, el: unknown) => {
+  if (el && (el as { $el?: HTMLElement }).$el) {
+    messageRefs.value.set(id, (el as { $el: HTMLElement }).$el);
+  }
+};
+
+// メッセージを画面上部にスクロール
+const scrollToMessage = (messageId: string) => {
+  nextTick(() => {
+    const el = messageRefs.value.get(messageId);
+    if (el && messagesContainer.value) {
+      const containerRect = messagesContainer.value.getBoundingClientRect();
+      const elRect = el.getBoundingClientRect();
+      const scrollOffset = elRect.top - containerRect.top + messagesContainer.value.scrollTop - 10;
+      messagesContainer.value.scrollTo({
+        top: scrollOffset,
+        behavior: 'smooth'
+      });
+    }
+  });
+};
 
 /**
  * OpenAI のモデル一覧を取得
@@ -232,7 +259,30 @@ const handleNewChatWithMessage = async (message: string, model: string, systemPr
     if (chatId) {
       history.replaceState(null, '', `/chat/${chatId}`);
     }
-    await sendMessage(message);
+
+    // sendMessageを開始（awaitせずにストリーミング開始直後にスクロール）
+    const sendPromise = sendMessage(message);
+
+    // 次のティックでスクロール（ユーザーメッセージが追加された直後）
+    await nextTick();
+    const userMessage = messages.value[messages.value.length - 2];
+    if (userMessage && userMessage.role === 'user') {
+      scrollToMessage(userMessage.id);
+    }
+
+    // ストリーミングの完了を待つ
+    await sendPromise;
+
+    // ストリーミング完了後、自動でタイトルを生成
+    if (chatId) {
+      const excludeTitles = chats.value
+        .filter(c => c.id !== chatId)
+        .map(c => c.name);
+      const generatedTitle = await handleGenerateTitle(chatId, excludeTitles);
+      if (generatedTitle) {
+        await renameChat(chatId, generatedTitle);
+      }
+    }
   } catch (error) {
     console.error('Failed to create chat with message:', error);
     alert('チャットの作成に失敗しました');
@@ -241,7 +291,30 @@ const handleNewChatWithMessage = async (message: string, model: string, systemPr
 
 const handleSendMessage = async (message: string) => {
   try {
-    await sendMessage(message);
+    // sendMessageを開始（awaitせずにストリーミング開始直後にスクロール）
+    const sendPromise = sendMessage(message);
+
+    // 次のティックでスクロール（ユーザーメッセージが追加された直後）
+    await nextTick();
+    const userMessage = messages.value[messages.value.length - 2];
+    if (userMessage && userMessage.role === 'user') {
+      scrollToMessage(userMessage.id);
+    }
+
+    // ストリーミングの完了を待つ
+    await sendPromise;
+
+    // タイトルが「New Chat」の場合、自動でタイトルを生成
+    const currentChat = chats.value.find(c => c.id === currentChatId.value);
+    if (currentChat && currentChat.name === 'New Chat') {
+      const excludeTitles = chats.value
+        .filter(c => c.id !== currentChatId.value)
+        .map(c => c.name);
+      const generatedTitle = await handleGenerateTitle(currentChatId.value!, excludeTitles);
+      if (generatedTitle) {
+        await renameChat(currentChatId.value!, generatedTitle);
+      }
+    }
   } catch (error) {
     console.error('Failed to send message:', error);
     alert('メッセージの送信に失敗しました');
