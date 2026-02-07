@@ -27,6 +27,41 @@ function getUserFromStorage(): User | null {
 }
 
 /**
+ * localStorage から保存されたアカウント一覧を取得
+ */
+function getSavedAccountsFromStorage(): Record<string, User> {
+  if (typeof window === 'undefined') return {};
+  try {
+    const data = localStorage.getItem(STORAGE_KEY);
+    if (data) {
+      const parsed = JSON.parse(data);
+      return parsed.savedAccounts || {};
+    }
+  } catch (e) {
+    console.error('Failed to load saved accounts from localStorage:', e);
+  }
+  return {};
+}
+
+/**
+ * localStorage にアカウントを保存
+ */
+function saveAccountToStorage(user: User): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const data = localStorage.getItem(STORAGE_KEY);
+    const parsed = data ? JSON.parse(data) : { chats: [], messages: {}, savedAccounts: {} };
+    if (!parsed.savedAccounts) {
+      parsed.savedAccounts = {};
+    }
+    parsed.savedAccounts[user.name] = user;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+  } catch (e) {
+    console.error('Failed to save account to localStorage:', e);
+  }
+}
+
+/**
  * localStorage にユーザーを保存
  */
 function saveUserToStorage(user: User): void {
@@ -42,23 +77,29 @@ function saveUserToStorage(user: User): void {
 }
 
 /**
- * localStorage からユーザーを削除
+ * localStorage から現在のログインユーザーをクリア（アカウント情報は残す）
  */
-function removeUserFromStorage(): void {
+function clearCurrentUserFromStorage(): void {
   if (typeof window === 'undefined') return;
   try {
     const data = localStorage.getItem(STORAGE_KEY);
     if (data) {
       const parsed = JSON.parse(data);
       delete parsed.user;
-      // チャットとメッセージもクリア
-      parsed.chats = [];
-      parsed.messages = {};
+      // savedAccountsは残す
       localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
     }
   } catch (e) {
-    console.error('Failed to remove user from localStorage:', e);
+    console.error('Failed to clear current user from localStorage:', e);
   }
+}
+
+/**
+ * 名前でアカウントを検索
+ */
+function findAccountByName(name: string): User | null {
+  const savedAccounts = getSavedAccountsFromStorage();
+  return savedAccounts[name] || null;
 }
 
 /**
@@ -133,10 +174,10 @@ export const useAccount = () => {
     try {
       if (isLocalEnvironment()) {
         // ローカル: localStorage に保存
-        // 重複チェック（同じ localStorage 内）
-        const existingUser = getUserFromStorage();
-        if (existingUser && existingUser.name === name) {
-          return { error: 'このアカウント名は既に使用されています' };
+        // 重複チェック（savedAccounts内）
+        const existingAccount = findAccountByName(name);
+        if (existingAccount) {
+          return { error: 'すでに作成されたアカウントです' };
         }
 
         const user: User = {
@@ -145,6 +186,9 @@ export const useAccount = () => {
           createdAt: Date.now()
         };
 
+        // savedAccountsに保存
+        saveAccountToStorage(user);
+        // 現在のユーザーとして設定
         saveUserToStorage(user);
         currentUser.value = user;
 
@@ -176,6 +220,53 @@ export const useAccount = () => {
   };
 
   /**
+   * ログイン
+   * @param name - ユーザー名
+   * @returns ログインしたユーザー or エラー
+   */
+  const login = async (name: string): Promise<{ user?: User; error?: string }> => {
+    isLoading.value = true;
+
+    try {
+      if (isLocalEnvironment()) {
+        // ローカル: savedAccounts から検索
+        const existingAccount = findAccountByName(name);
+        if (!existingAccount) {
+          return { error: 'そのアカウントはありません' };
+        }
+
+        // 現在のユーザーとして設定
+        saveUserToStorage(existingAccount);
+        currentUser.value = existingAccount;
+
+        return { user: existingAccount };
+      } else {
+        // デプロイ: API 経由でログイン
+        const response = await fetch('/api/users/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name })
+        });
+
+        if (response.ok) {
+          const data = await response.json() as { user: User };
+          currentUser.value = data.user;
+          return { user: data.user };
+        } else if (response.status === 404) {
+          return { error: 'そのアカウントはありません' };
+        } else {
+          return { error: 'ログインに失敗しました' };
+        }
+      }
+    } catch (error) {
+      console.error('Failed to login:', error);
+      return { error: 'ログインに失敗しました' };
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
+  /**
    * ログアウト
    */
   const logout = async (): Promise<void> => {
@@ -183,8 +274,8 @@ export const useAccount = () => {
 
     try {
       if (isLocalEnvironment()) {
-        // ローカル: localStorage から削除
-        removeUserFromStorage();
+        // ローカル: 現在のログイン状態をクリア（アカウント情報は残す）
+        clearCurrentUserFromStorage();
       } else {
         // デプロイ: API 経由で Cookie 削除
         await fetch('/api/users/logout', { method: 'POST' });
@@ -208,6 +299,7 @@ export const useAccount = () => {
     // Methods
     initialize,
     createAccount,
+    login,
     logout
   };
 };
