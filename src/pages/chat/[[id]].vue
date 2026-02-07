@@ -476,13 +476,10 @@ const handleSaveSettings = async (model: string, systemPrompt: string | null, ve
 };
 
 // AIでタイトル生成
-const handleGenerateTitle = async (chatId: string, excludeTitles?: string[]): Promise<string | null> => {
+const handleGenerateTitle = async (_chatId: string, excludeTitles?: string[]): Promise<string | null> => {
   try {
-    // localStorageからメッセージを取得
-    const data = localStorage.getItem('mygpt_data');
-    if (!data) return null;
-    const parsed = JSON.parse(data);
-    const chatMessages = parsed.messages?.[chatId] || [];
+    // 現在のメッセージを使用（ローカル・リモート両対応）
+    const chatMessages = messages.value;
     if (chatMessages.length === 0) return null;
 
     const response = await fetch('/api/generate-title', {
