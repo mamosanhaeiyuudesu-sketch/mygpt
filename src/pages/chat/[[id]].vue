@@ -123,8 +123,10 @@ interface Model {
   contextWindow: string;
   description: string;
 }
+const config = useRuntimeConfig();
+const defaultModel = config.public.defaultModel as string || 'gpt-4o-mini';
 const availableModels = ref<Model[]>([]);
-const selectedModel = ref<string>('gpt-4o');
+const selectedModel = ref<string>(defaultModel);
 const isLoadingModels = ref(false);
 const showModelSelector = ref(false);
 const showSettingsEditor = ref(false);
@@ -169,8 +171,9 @@ const fetchModels = async () => {
     if (response.ok) {
       const data = await response.json() as { models: Model[] };
       availableModels.value = data.models;
-      if (data.models.some(m => m.id === 'gpt-4o')) {
-        selectedModel.value = 'gpt-4o';
+      // 環境変数のデフォルトモデルがあればそれを使用、なければリストの最初
+      if (data.models.some(m => m.id === defaultModel)) {
+        selectedModel.value = defaultModel;
       } else if (data.models.length > 0) {
         selectedModel.value = data.models[0].id;
       }

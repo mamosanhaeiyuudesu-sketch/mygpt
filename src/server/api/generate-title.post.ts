@@ -11,6 +11,8 @@ interface Message {
 export default defineEventHandler(async (event) => {
   const body = await readBody(event);
   const apiKey = getOpenAIKey(event);
+  const config = useRuntimeConfig(event);
+  const defaultModel = config.defaultModel as string || 'gpt-4o-mini';
 
   if (!body?.messages || !Array.isArray(body.messages) || body.messages.length === 0) {
     throw createError({
@@ -41,7 +43,7 @@ export default defineEventHandler(async (event) => {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'gpt-4o',
+      model: defaultModel,
       messages: [
         {
           role: 'system',

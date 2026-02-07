@@ -25,7 +25,13 @@ export default defineNuxtConfig({
   // Runtime configuration
   runtimeConfig: {
     // サーバー側のみ（NUXT_OPENAI_API_KEY 環境変数で設定）
-    openaiApiKey: ''
+    openaiApiKey: '',
+    // サーバー側のみ（NUXT_DEFAULT_MODEL 環境変数で設定）
+    defaultModel: 'gpt-4o-mini',
+    // クライアント側でも使用可能
+    public: {
+      defaultModel: 'gpt-4o-mini'
+    }
   },
 
   // App configuration
