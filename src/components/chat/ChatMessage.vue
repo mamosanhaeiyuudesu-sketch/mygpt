@@ -5,12 +5,40 @@
       <div class="bg-zinc-800 rounded-2xl px-3 py-2 md:px-4 md:py-3 max-w-[85%] md:max-w-[80%]">
         <div class="whitespace-pre-wrap text-sm md:text-base">{{ message.content }}</div>
       </div>
-      <div class="text-xs text-zinc-500 mt-1 mr-1">{{ formattedTime }}</div>
+      <div class="flex items-center gap-2 mt-1 mr-1">
+        <button
+          @click="copyToClipboard"
+          class="text-zinc-500 hover:text-zinc-300 transition-colors"
+          :title="copied ? 'コピーしました' : 'コピー'"
+        >
+          <svg v-if="!copied" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+          </svg>
+          <svg v-else class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+        </button>
+        <span class="text-xs text-zinc-500">{{ formattedTime }}</span>
+      </div>
     </div>
 
     <!-- アシスタントメッセージ -->
     <div v-else>
       <div class="prose prose-invert prose-sm md:prose-base max-w-2xl" v-html="renderedContent"></div>
+      <div class="mt-2">
+        <button
+          @click="copyToClipboard"
+          class="text-zinc-500 hover:text-zinc-300 transition-colors"
+          :title="copied ? 'コピーしました' : 'コピー'"
+        >
+          <svg v-if="!copied" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+          </svg>
+          <svg v-else class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -46,6 +74,22 @@ interface Message {
 const props = defineProps<{
   message: Message;
 }>();
+
+// コピー状態
+const copied = ref(false);
+
+// クリップボードにコピー
+const copyToClipboard = async () => {
+  try {
+    await navigator.clipboard.writeText(props.message.content);
+    copied.value = true;
+    setTimeout(() => {
+      copied.value = false;
+    }, 2000);
+  } catch (e) {
+    console.error('Failed to copy:', e);
+  }
+};
 
 // 日時フォーマット（例: 2/7 23:11）
 const formattedTime = computed(() => {
