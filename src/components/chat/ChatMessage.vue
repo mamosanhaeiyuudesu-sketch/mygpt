@@ -1,10 +1,11 @@
 <template>
   <div class="mb-6">
     <!-- ユーザーメッセージ -->
-    <div v-if="message.role === 'user'" class="flex justify-end">
+    <div v-if="message.role === 'user'" class="flex flex-col items-end">
       <div class="bg-zinc-800 rounded-2xl px-3 py-2 md:px-4 md:py-3 max-w-[85%] md:max-w-[80%]">
         <div class="whitespace-pre-wrap text-sm md:text-base">{{ message.content }}</div>
       </div>
+      <div class="text-xs text-zinc-500 mt-1 mr-1">{{ formattedTime }}</div>
     </div>
 
     <!-- アシスタントメッセージ -->
@@ -39,11 +40,23 @@ interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
+  createdAt?: number;
 }
 
 const props = defineProps<{
   message: Message;
 }>();
+
+// 日時フォーマット（例: 2/7 23:11）
+const formattedTime = computed(() => {
+  if (!props.message.createdAt) return '';
+  const date = new Date(props.message.createdAt);
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  const hours = date.getHours();
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  return `${month}/${day} ${hours}:${minutes}`;
+});
 
 // 読点で改行（行の3割を超えた位置の最初の読点で改行）
 const breakAtComma = (line: string): string => {

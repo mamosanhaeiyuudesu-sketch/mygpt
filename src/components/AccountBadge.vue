@@ -1,5 +1,5 @@
 <template>
-  <div class="relative">
+  <div class="relative" style="top: -10px">
     <button
       @click="isOpen = !isOpen"
       class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 transition-colors text-sm"
