@@ -3,11 +3,28 @@
  * ローカル環境: localStorage を使用
  * デプロイ環境: API (D1) を使用
  */
-import type { Chat, Message, StoredData } from '~/types';
+import type { Chat, Message, StoredData, User } from '~/types';
 import { isLocalEnvironment } from '~/utils/environment';
 
 // 型を再エクスポート（既存コードとの互換性のため）
 export type { Chat, Message };
+
+/**
+ * localStorage からユーザーを取得
+ */
+function getUserFromStorage(): User | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const data = localStorage.getItem('mygpt_data');
+    if (data) {
+      const parsed = JSON.parse(data);
+      return parsed.user || null;
+    }
+  } catch (e) {
+    console.error('Failed to load user from localStorage:', e);
+  }
+  return null;
+}
 
 const STORAGE_KEY = 'mygpt_data';
 const RETENTION_DAYS = 730; // 2年 = 730日
@@ -124,11 +141,18 @@ export const useChat = () => {
    */
   const fetchChats = async () => {
     if (isLocalEnvironment()) {
-      // ローカル: localStorage から読み込む
+      // ローカル: localStorage から読み込む（ユーザーでフィルタ）
+      const user = getUserFromStorage();
+      if (!user) {
+        chats.value = [];
+        return;
+      }
       const data = loadFromStorage();
-      chats.value = data.chats.sort((a, b) => b.updatedAt - a.updatedAt);
+      chats.value = data.chats
+        .filter(chat => chat.userId === user.id)
+        .sort((a, b) => b.updatedAt - a.updatedAt);
     } else {
-      // デプロイ: API から読み込む
+      // デプロイ: API から読み込む（APIがユーザーでフィルタ）
       try {
         const response = await fetch('/api/chats');
         if (response.ok) {
@@ -156,6 +180,11 @@ export const useChat = () => {
 
       if (isLocalEnvironment()) {
         // ローカル: OpenAI Conversation作成 + localStorage保存
+        const user = getUserFromStorage();
+        if (!user) {
+          throw new Error('ログインが必要です');
+        }
+
         const response = await fetch('/api/conversations', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -172,6 +201,7 @@ export const useChat = () => {
         const chatId = generateUUID();
         const newChat: Chat = {
           id: chatId,
+          userId: user.id,
           name: chatName,
           conversationId,
           model,
@@ -203,11 +233,12 @@ export const useChat = () => {
           throw new Error('Failed to create chat');
         }
 
-        const { chatId, conversationId } = await response.json() as { chatId: string; conversationId: string };
+        const { chatId, conversationId, userId } = await response.json() as { chatId: string; conversationId: string; userId: string };
 
         const now = Date.now();
         const newChat: Chat = {
           id: chatId,
+          userId,
           name: chatName,
           conversationId,
           model,

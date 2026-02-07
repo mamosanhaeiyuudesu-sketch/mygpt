@@ -2,9 +2,17 @@
  * 共通型定義
  */
 
+// ユーザー
+export interface User {
+  id: string;
+  name: string;
+  createdAt: number;
+}
+
 // チャット
 export interface Chat {
   id: string;
+  userId: string;
   name: string;
   conversationId: string;
   model: string;
@@ -47,6 +55,7 @@ export interface Model {
 
 // ローカルストレージ用データ構造
 export interface StoredData {
+  user?: User;
   chats: Chat[];
   messages: Record<string, Message[]>;
 }
@@ -89,6 +98,10 @@ export interface CreatePresetRequest {
   useContext?: boolean;
 }
 
+export interface CreateUserRequest {
+  name: string;
+}
+
 // API レスポンス型
 export interface CreateChatResponse {
   chatId: string;
@@ -109,4 +122,12 @@ export interface GetPresetsResponse {
 
 export interface GenerateTitleResponse {
   title: string;
+}
+
+export interface CreateUserResponse {
+  user: User;
+}
+
+export interface GetUserResponse {
+  user: User;
 }

@@ -4,7 +4,14 @@
  */
 import type { H3Event } from 'h3';
 
+export interface User {
+  id: string;
+  name: string;
+  created_at: number;
+}
+
 export interface Chat {
+  user_id: string;
   id: string;
   conversation_id: string;
   name: string;
@@ -36,6 +43,7 @@ export interface Preset {
 
 // インメモリストレージ（ローカル開発用フォールバック）
 const memoryStore = {
+  users: [] as User[],
   chats: [] as Chat[],
   messages: [] as Message[],
   presets: [] as Preset[]
@@ -56,12 +64,75 @@ export function generateId(prefix: string): string {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
 }
 
+// ========== User Operations ==========
+
+/**
+ * ユーザー取得（ID）
+ */
+export async function getUserById(event: H3Event, id: string): Promise<User | null> {
+  const db = getD1(event);
+
+  if (db) {
+    const result = await db.prepare(
+      'SELECT * FROM users WHERE id = ?'
+    ).bind(id).first() as User | null;
+    return result;
+  }
+
+  return memoryStore.users.find(u => u.id === id) || null;
+}
+
+/**
+ * ユーザー取得（名前）
+ */
+export async function getUserByName(event: H3Event, name: string): Promise<User | null> {
+  const db = getD1(event);
+
+  if (db) {
+    const result = await db.prepare(
+      'SELECT * FROM users WHERE name = ?'
+    ).bind(name).first() as User | null;
+    return result;
+  }
+
+  return memoryStore.users.find(u => u.name === name) || null;
+}
+
+/**
+ * ユーザー作成
+ */
+export async function createUser(
+  event: H3Event,
+  id: string,
+  name: string
+): Promise<User> {
+  const now = Date.now();
+  const user: User = {
+    id,
+    name,
+    created_at: now
+  };
+
+  const db = getD1(event);
+
+  if (db) {
+    await db.prepare(`
+      INSERT INTO users (id, name, created_at)
+      VALUES (?, ?, ?)
+    `).bind(id, name, now).run();
+  } else {
+    memoryStore.users.push(user);
+  }
+
+  return user;
+}
+
 // ========== Chat Operations ==========
 
 /**
- * 全チャット取得
+ * 全チャット取得（ユーザーIDでフィルタ）
  */
-export async function getAllChats(event: H3Event): Promise<(Chat & { last_message?: string })[]> {
+export async function getAllChats(event: H3Event, userId: string): Promise<(Chat & { last_message?: string })[]> {
   const db = getD1(event);
 
   if (db) {
@@ -69,21 +140,27 @@ export async function getAllChats(event: H3Event): Promise<(Chat & { last_messag
     const result = await db.prepare(`
       SELECT
         c.id,
+        c.user_id,
         c.conversation_id,
         c.name,
+        c.model,
+        c.system_prompt,
         c.vector_store_id,
+        c.use_context,
         c.created_at,
         c.updated_at,
         (SELECT content FROM messages WHERE chat_id = c.id ORDER BY created_at DESC LIMIT 1) as last_message
       FROM chats c
+      WHERE c.user_id = ?
       ORDER BY c.updated_at DESC
-    `).all();
+    `).bind(userId).all();
 
     return (result.results || []) as (Chat & { last_message?: string })[];
   }
 
   // インメモリ（ローカル開発用）
   return memoryStore.chats
+    .filter(chat => chat.user_id === userId)
     .sort((a, b) => b.updated_at - a.updated_at)
     .map(chat => {
       const lastMsg = memoryStore.messages
@@ -99,6 +176,7 @@ export async function getAllChats(event: H3Event): Promise<(Chat & { last_messag
 export async function createChat(
   event: H3Event,
   id: string,
+  userId: string,
   conversationId: string,
   name: string,
   model?: string,
@@ -109,6 +187,7 @@ export async function createChat(
   const now = Date.now();
   const chat: Chat = {
     id,
+    user_id: userId,
     conversation_id: conversationId,
     name,
     model: model || null,
@@ -123,9 +202,9 @@ export async function createChat(
 
   if (db) {
     await db.prepare(`
-      INSERT INTO chats (id, conversation_id, name, model, system_prompt, vector_store_id, use_context, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).bind(id, conversationId, name, model || null, systemPrompt || null, vectorStoreId || null, useContext ? 1 : 0, now, now).run();
+      INSERT INTO chats (id, user_id, conversation_id, name, model, system_prompt, vector_store_id, use_context, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(id, userId, conversationId, name, model || null, systemPrompt || null, vectorStoreId || null, useContext ? 1 : 0, now, now).run();
   } else {
     memoryStore.chats.push(chat);
   }

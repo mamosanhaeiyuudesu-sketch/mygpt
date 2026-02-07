@@ -3,11 +3,23 @@
  */
 import { getAllChats } from '~/server/utils/db';
 
+const USER_COOKIE_NAME = 'mygpt_user_id';
+
 export default defineEventHandler(async (event) => {
-  const allChats = await getAllChats(event);
+  const userId = getCookie(event, USER_COOKIE_NAME);
+
+  if (!userId) {
+    throw createError({
+      statusCode: 401,
+      message: 'ログインが必要です'
+    });
+  }
+
+  const allChats = await getAllChats(event, userId);
 
   const chats = allChats.map(chat => ({
     id: chat.id,
+    userId: chat.user_id,
     name: chat.name,
     conversationId: chat.conversation_id,
     model: chat.model || 'gpt-4o',

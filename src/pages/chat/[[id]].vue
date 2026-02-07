@@ -113,12 +113,30 @@
       :current-use-context="currentChatUseContext"
       @save="handleSaveSettings"
     />
+
+    <!-- アカウント設定ダイアログ -->
+    <AccountSetupDialog
+      v-model="showAccountSetup"
+      @created="handleAccountCreated"
+    />
+
+    <!-- アカウントバッジ（右上固定） -->
+    <div v-if="currentUser" class="fixed top-2 right-2 md:top-4 md:right-4 z-50">
+      <AccountBadge
+        :user-name="currentUser.name"
+        @logout="handleLogout"
+      />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 const route = useRoute();
 const router = useRouter();
+
+// アカウント管理
+const { currentUser, initialize: initializeAccount, logout } = useAccount();
+const showAccountSetup = ref(false);
 
 const {
   chats,
@@ -288,6 +306,14 @@ const fetchModels = async () => {
 
 // 初期化
 onMounted(async () => {
+  // まずアカウントを確認
+  const user = await initializeAccount();
+  if (!user) {
+    // ユーザーがいない場合はアカウント作成ダイアログを表示
+    showAccountSetup.value = true;
+    return;
+  }
+
   await Promise.all([fetchChats(), fetchModels()]);
 
   // URLにIDがある場合はチャットを選択
@@ -354,6 +380,20 @@ const handleReorderChats = async (fromIndex: number, toIndex: number) => {
   } catch (error) {
     console.error('Failed to reorder chats:', error);
   }
+};
+
+// アカウント作成完了時
+const handleAccountCreated = async () => {
+  // チャットとモデルを読み込む
+  await Promise.all([fetchChats(), fetchModels()]);
+};
+
+// ログアウト
+const handleLogout = async () => {
+  if (!confirm('ログアウトしますか？')) return;
+  await logout();
+  // ページをリロードしてアカウント作成ダイアログを表示
+  window.location.reload();
 };
 
 const handleNewChatWithMessage = async (message: string, model: string, systemPrompt?: string, vectorStoreId?: string, useContext?: boolean) => {

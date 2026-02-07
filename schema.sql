@@ -1,10 +1,21 @@
 -- MyGPT Database Schema
 -- Cloudflare D1 (SQLite) database schema for chat management
 
+-- ユーザーテーブル
+CREATE TABLE users (
+  id TEXT PRIMARY KEY,
+  name TEXT UNIQUE NOT NULL,
+  created_at INTEGER NOT NULL
+);
+
+-- ユーザー名の一意性インデックス
+CREATE INDEX idx_users_name ON users(name);
+
 -- チャットテーブル
 -- 各チャットはOpenAI Conversation IDと紐付けられる
 CREATE TABLE chats (
   id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,                 -- 所属するユーザーID
   conversation_id TEXT UNIQUE NOT NULL,  -- OpenAI Conversations API の conversation ID
   name TEXT NOT NULL,                    -- チャット名（ユーザーが編集可能）
   model TEXT,                            -- 使用するOpenAIモデル
@@ -12,11 +23,12 @@ CREATE TABLE chats (
   vector_store_id TEXT,                  -- Vector Store ID（RAG用）
   use_context INTEGER NOT NULL DEFAULT 1, -- 文脈を保持するか (0: false, 1: true)
   created_at INTEGER NOT NULL,           -- UNIXタイムスタンプ (ミリ秒)
-  updated_at INTEGER NOT NULL            -- UNIXタイムスタンプ (ミリ秒)
+  updated_at INTEGER NOT NULL,           -- UNIXタイムスタンプ (ミリ秒)
+  FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- 更新日時でソートするためのインデックス（チャット一覧表示用）
-CREATE INDEX idx_chats_updated_at ON chats(updated_at DESC);
+-- ユーザーごとのチャット一覧取得用インデックス
+CREATE INDEX idx_chats_user_updated ON chats(user_id, updated_at DESC);
 
 -- メッセージテーブル
 -- ユーザーとアシスタント両方のメッセージを保存
