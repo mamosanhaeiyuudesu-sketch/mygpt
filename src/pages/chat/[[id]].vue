@@ -51,6 +51,31 @@
 
         <!-- メッセージ一覧 -->
         <div ref="messagesContainer" class="flex-1 overflow-y-auto">
+          <!-- 質問ナビゲーション矢印（スクロールしても固定） -->
+          <div class="sticky top-2 z-10 h-0">
+            <div class="absolute right-2 md:right-4 flex flex-col gap-1">
+              <button
+                :disabled="!canGoPrevious"
+                class="w-8 h-8 flex items-center justify-center rounded bg-gray-700/80 hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                title="前の質問へ"
+                @click="goToPreviousQuestion"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+                </svg>
+              </button>
+              <button
+                :disabled="!canGoNext"
+                class="w-8 h-8 flex items-center justify-center rounded bg-gray-700/80 hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                title="次の質問へ"
+                @click="goToNextQuestion"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+            </div>
+          </div>
           <div class="max-w-3xl mx-auto px-3 md:px-4 py-4 md:py-8">
             <ChatMessage
               v-for="message in messages"
@@ -159,6 +184,82 @@ const scrollToMessage = (messageId: string) => {
       });
     }
   });
+};
+
+// 質問（ユーザーメッセージ）のナビゲーション
+const userMessages = computed(() => messages.value.filter(m => m.role === 'user'));
+const currentQuestionIndex = ref(0);
+
+// 現在表示中の質問を検出（スクロール位置から）
+const updateCurrentQuestionIndex = () => {
+  if (!messagesContainer.value || userMessages.value.length === 0) return;
+
+  const containerTop = messagesContainer.value.getBoundingClientRect().top;
+  let closestIndex = 0;
+  let closestDistance = Infinity;
+
+  userMessages.value.forEach((msg, index) => {
+    const el = messageRefs.value.get(msg.id);
+    if (el) {
+      const elTop = el.getBoundingClientRect().top;
+      const distance = Math.abs(elTop - containerTop);
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestIndex = index;
+      }
+    }
+  });
+
+  currentQuestionIndex.value = closestIndex;
+};
+
+// スクロールイベントでインデックスを更新
+let scrollTimeout: ReturnType<typeof setTimeout> | null = null;
+const handleScroll = () => {
+  if (scrollTimeout) clearTimeout(scrollTimeout);
+  scrollTimeout = setTimeout(updateCurrentQuestionIndex, 100);
+};
+
+// スクロールリスナーの設定
+watch(messagesContainer, (container, oldContainer) => {
+  if (oldContainer) {
+    oldContainer.removeEventListener('scroll', handleScroll);
+  }
+  if (container) {
+    container.addEventListener('scroll', handleScroll);
+  }
+});
+
+onUnmounted(() => {
+  if (messagesContainer.value) {
+    messagesContainer.value.removeEventListener('scroll', handleScroll);
+  }
+});
+
+// ナビゲーション可否
+const canGoPrevious = computed(() => userMessages.value.length > 0 && currentQuestionIndex.value > 0);
+const canGoNext = computed(() => userMessages.value.length > 0 && currentQuestionIndex.value < userMessages.value.length - 1);
+
+// 前の質問へ移動
+const goToPreviousQuestion = () => {
+  if (!canGoPrevious.value) return;
+  const prevIndex = currentQuestionIndex.value - 1;
+  const prevMessage = userMessages.value[prevIndex];
+  if (prevMessage) {
+    currentQuestionIndex.value = prevIndex;
+    scrollToMessage(prevMessage.id);
+  }
+};
+
+// 次の質問へ移動
+const goToNextQuestion = () => {
+  if (!canGoNext.value) return;
+  const nextIndex = currentQuestionIndex.value + 1;
+  const nextMessage = userMessages.value[nextIndex];
+  if (nextMessage) {
+    currentQuestionIndex.value = nextIndex;
+    scrollToMessage(nextMessage.id);
+  }
 };
 
 /**
