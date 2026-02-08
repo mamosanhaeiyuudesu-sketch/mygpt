@@ -81,6 +81,25 @@ const translations: Record<Language, Record<string, string>> = {
     'error.messageSend': 'メッセージの送信に失敗しました',
     'error.settingsSave': '設定の保存に失敗しました',
 
+    // PresetManager
+    'presetManager.title': 'プリセット管理',
+    'presetManager.add': '新規プリセット',
+    'presetManager.edit': '編集',
+    'presetManager.delete': '削除',
+    'presetManager.deleteConfirm': 'このプリセットを削除しますか？',
+    'presetManager.save': '保存',
+    'presetManager.cancel': 'キャンセル',
+    'presetManager.name': 'プリセット名',
+    'presetManager.name.placeholder': 'プリセット名を入力',
+    'presetManager.model': 'モデル',
+    'presetManager.systemPrompt': 'システムプロンプト',
+    'presetManager.systemPrompt.placeholder': 'カスタム指示を入力（空欄でデフォルト）',
+    'presetManager.vectorStoreId': 'Vector Store ID（RAG用）',
+    'presetManager.vectorStoreId.placeholder': 'vs_xxxxxxxxxxxxxxxx（空欄で無効）',
+    'presetManager.useContext': '文脈を保持する',
+    'presetManager.empty': 'プリセットがありません',
+    'presetManager.close': '閉じる',
+
     // Language
     'language': '言語',
   },
@@ -160,6 +179,25 @@ const translations: Record<Language, Record<string, string>> = {
     'error.messageSend': '메시지 전송에 실패했습니다',
     'error.settingsSave': '설정 저장에 실패했습니다',
 
+    // PresetManager
+    'presetManager.title': '프리셋 관리',
+    'presetManager.add': '새 프리셋',
+    'presetManager.edit': '편집',
+    'presetManager.delete': '삭제',
+    'presetManager.deleteConfirm': '이 프리셋을 삭제하시겠습니까?',
+    'presetManager.save': '저장',
+    'presetManager.cancel': '취소',
+    'presetManager.name': '프리셋 이름',
+    'presetManager.name.placeholder': '프리셋 이름 입력',
+    'presetManager.model': '모델',
+    'presetManager.systemPrompt': '시스템 프롬프트',
+    'presetManager.systemPrompt.placeholder': '커스텀 지시 입력 (빈칸이면 기본값)',
+    'presetManager.vectorStoreId': 'Vector Store ID (RAG용)',
+    'presetManager.vectorStoreId.placeholder': 'vs_xxxxxxxxxxxxxxxx (빈칸이면 비활성)',
+    'presetManager.useContext': '컨텍스트 유지',
+    'presetManager.empty': '프리셋이 없습니다',
+    'presetManager.close': '닫기',
+
     // Language
     'language': '언어',
   },
@@ -238,6 +276,25 @@ const translations: Record<Language, Record<string, string>> = {
     'error.chatDelete': 'Failed to delete chat',
     'error.messageSend': 'Failed to send message',
     'error.settingsSave': 'Failed to save settings',
+
+    // PresetManager
+    'presetManager.title': 'Preset Manager',
+    'presetManager.add': 'New Preset',
+    'presetManager.edit': 'Edit',
+    'presetManager.delete': 'Delete',
+    'presetManager.deleteConfirm': 'Delete this preset?',
+    'presetManager.save': 'Save',
+    'presetManager.cancel': 'Cancel',
+    'presetManager.name': 'Preset Name',
+    'presetManager.name.placeholder': 'Enter preset name',
+    'presetManager.model': 'Model',
+    'presetManager.systemPrompt': 'System Prompt',
+    'presetManager.systemPrompt.placeholder': 'Enter custom instructions (blank for default)',
+    'presetManager.vectorStoreId': 'Vector Store ID (for RAG)',
+    'presetManager.vectorStoreId.placeholder': 'vs_xxxxxxxxxxxxxxxx (blank to disable)',
+    'presetManager.useContext': 'Keep Context',
+    'presetManager.empty': 'No presets',
+    'presetManager.close': 'Close',
 
     // Language
     'language': 'Language',

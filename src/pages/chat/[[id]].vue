@@ -120,12 +120,19 @@
       @created="handleAccountCreated"
     />
 
+    <!-- プリセット管理ダイアログ -->
+    <PresetManagerDialog
+      v-model="showPresetManager"
+      :models="availableModels"
+    />
+
     <!-- アカウントバッジ（右上固定） -->
     <div v-if="currentUser" class="fixed top-2 right-2 md:top-4 md:right-4 z-50">
       <AccountBadge
         :user-name="currentUser.name"
         @logout="handleLogout"
         @language-change="handleLanguageChange"
+        @open-preset-manager="showPresetManager = true"
       />
     </div>
   </div>
@@ -175,6 +182,7 @@ const selectedModel = ref<string>(defaultModel);
 const isLoadingModels = ref(false);
 const showModelSelector = ref(false);
 const showSettingsEditor = ref(false);
+const showPresetManager = ref(false);
 
 // モバイル用サイドバー状態
 const isSidebarOpen = ref(false);

@@ -105,6 +105,51 @@ export const usePresets = () => {
   };
 
   /**
+   * プリセットを更新する
+   */
+  const updatePreset = async (
+    id: string,
+    name: string,
+    model: string,
+    systemPrompt: string | null,
+    vectorStoreId: string | null,
+    useContext: boolean
+  ): Promise<boolean> => {
+    try {
+      const index = presets.value.findIndex(p => p.id === id);
+      if (index === -1) return false;
+
+      const updated: Preset = {
+        ...presets.value[index],
+        name,
+        model,
+        systemPrompt,
+        vectorStoreId,
+        useContext
+      };
+
+      if (isDevelopment()) {
+        presets.value[index] = updated;
+        localStorage.setItem(PRESETS_STORAGE_KEY, JSON.stringify(presets.value));
+        return true;
+      } else {
+        const response = await fetch(`/api/presets/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, model, systemPrompt, vectorStoreId, useContext })
+        });
+        if (response.ok) {
+          presets.value[index] = updated;
+          return true;
+        }
+      }
+    } catch (e) {
+      console.error('Failed to update preset:', e);
+    }
+    return false;
+  };
+
+  /**
    * IDでプリセットを取得する
    */
   const getPresetById = (id: string): Preset | undefined => {
@@ -116,6 +161,7 @@ export const usePresets = () => {
     isLoading: readonly(isLoading),
     loadPresets,
     createPreset,
+    updatePreset,
     deletePreset,
     getPresetById
   };
