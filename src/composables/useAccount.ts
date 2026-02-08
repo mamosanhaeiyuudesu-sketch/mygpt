@@ -139,17 +139,13 @@ export const useAccount = () => {
         // ローカル: localStorage から取得
         currentUser.value = getUserFromStorage();
       } else {
-        // デプロイ: Cookie + API から取得
-        const userId = getUserIdFromCookie();
-        if (userId) {
-          const response = await fetch('/api/users/me');
-          if (response.ok) {
-            const data = await response.json() as { user: User };
-            currentUser.value = data.user;
-          } else {
-            // Cookie はあるがユーザーが存在しない → Cookie 無効
-            currentUser.value = null;
-          }
+        // デプロイ: API から取得（httpOnly Cookie はサーバーが自動的に読み取る）
+        const response = await fetch('/api/users/me');
+        if (response.ok) {
+          const data = await response.json() as { user: User };
+          currentUser.value = data.user;
+        } else {
+          currentUser.value = null;
         }
       }
     } catch (error) {
