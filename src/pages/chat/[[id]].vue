@@ -30,7 +30,7 @@
 
       <!-- チャット未選択時 -->
       <HomeView
-        v-if="!currentChatId"
+        v-if="isPageReady && !currentChatId"
         v-model:selected-model="selectedModel"
         :models="availableModels"
         :is-loading-models="isLoadingModels"
@@ -39,7 +39,7 @@
       />
 
       <!-- チャット選択時 -->
-      <template v-else>
+      <template v-else-if="isPageReady && currentChatId">
         <!-- チャットヘッダー -->
         <ChatHeader
           :model="currentChatModel || ''"
@@ -184,6 +184,9 @@ const showModelSelector = ref(false);
 const showSettingsEditor = ref(false);
 const showPresetManager = ref(false);
 
+// ページ初期化完了フラグ
+const isPageReady = ref(false);
+
 // モバイル用サイドバー状態
 const isSidebarOpen = ref(false);
 
@@ -321,6 +324,7 @@ onMounted(async () => {
   if (!user) {
     // ユーザーがいない場合はアカウント作成ダイアログを表示
     showAccountSetup.value = true;
+    isPageReady.value = true;
     return;
   }
 
@@ -341,6 +345,8 @@ onMounted(async () => {
       router.replace('/chat');
     }
   }
+
+  isPageReady.value = true;
 });
 
 // --- イベントハンドラ ---
