@@ -29,5 +29,15 @@ export default defineEventHandler(async (event) => {
     body.useContext ?? true
   );
 
-  return { preset };
+  return {
+    preset: {
+      id: preset.id,
+      name: preset.name,
+      model: preset.model,
+      systemPrompt: preset.system_prompt,
+      vectorStoreId: preset.vector_store_id,
+      useContext: preset.use_context,
+      createdAt: preset.created_at
+    }
+  };
 });
