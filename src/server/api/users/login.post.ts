@@ -2,9 +2,7 @@
  * POST /api/users/login - 既存ユーザーでログイン
  */
 import { getUserByName } from '~/server/utils/db';
-
-const USER_COOKIE_NAME = 'mygpt_user_id';
-const COOKIE_MAX_AGE = 60 * 60 * 24 * 365 * 2; // 2年
+import { USER_COOKIE_NAME, COOKIE_MAX_AGE } from '~/server/utils/constants';
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event);
@@ -13,7 +11,7 @@ export default defineEventHandler(async (event) => {
   if (!name) {
     throw createError({
       statusCode: 400,
-      message: 'アカウント名は必須です'
+      statusMessage: 'アカウント名は必須です'
     });
   }
 
@@ -22,7 +20,7 @@ export default defineEventHandler(async (event) => {
   if (!user) {
     throw createError({
       statusCode: 404,
-      message: 'アカウントが見つかりません'
+      statusMessage: 'アカウントが見つかりません'
     });
   }
 

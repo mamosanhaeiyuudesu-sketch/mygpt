@@ -10,14 +10,14 @@ export default defineEventHandler(async (event) => {
   if (!id) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Chat ID is required'
+      statusMessage: 'チャットIDが必要です'
     });
   }
 
   if (!body?.userMessage || !body?.assistantMessage) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'userMessage and assistantMessage are required'
+      statusMessage: 'ユーザーメッセージとアシスタントメッセージが必要です'
     });
   }
 
@@ -26,7 +26,7 @@ export default defineEventHandler(async (event) => {
   if (!chat) {
     throw createError({
       statusCode: 404,
-      statusMessage: 'Chat not found'
+      statusMessage: 'チャットが見つかりません'
     });
   }
 

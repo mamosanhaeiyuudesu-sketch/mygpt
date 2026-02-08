@@ -13,14 +13,14 @@ export default defineEventHandler(async (event) => {
   if (!id) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Chat ID is required'
+      statusMessage: 'チャットIDが必要です'
     });
   }
 
   if (!body?.message) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Message is required'
+      statusMessage: 'メッセージが必要です'
     });
   }
 
@@ -29,7 +29,7 @@ export default defineEventHandler(async (event) => {
   if (!chat) {
     throw createError({
       statusCode: 404,
-      statusMessage: 'Chat not found'
+      statusMessage: 'チャットが見つかりません'
     });
   }
 

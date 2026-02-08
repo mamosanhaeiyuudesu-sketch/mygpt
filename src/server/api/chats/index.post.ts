@@ -4,8 +4,7 @@
 import { generateId, createChat } from '~/server/utils/db';
 import { createConversation } from '~/server/utils/openai';
 import { getOpenAIKey } from '~/server/utils/env';
-
-const USER_COOKIE_NAME = 'mygpt_user_id';
+import { USER_COOKIE_NAME } from '~/server/utils/constants';
 
 export default defineEventHandler(async (event) => {
   const userId = getCookie(event, USER_COOKIE_NAME);
@@ -13,7 +12,7 @@ export default defineEventHandler(async (event) => {
   if (!userId) {
     throw createError({
       statusCode: 401,
-      message: 'ログインが必要です'
+      statusMessage: 'ログインが必要です'
     });
   }
 

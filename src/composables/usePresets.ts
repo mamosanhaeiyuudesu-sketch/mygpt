@@ -3,7 +3,7 @@
  * ローカル開発: localStorage を使用
  * 本番環境: API を使用
  */
-import { isDevelopment } from '~/utils/environment';
+import { isLocalEnvironment } from '~/utils/environment';
 import type { Preset } from '~/types';
 
 const PRESETS_STORAGE_KEY = 'mygpt_presets';
@@ -18,7 +18,7 @@ export const usePresets = () => {
   const loadPresets = async () => {
     try {
       isLoading.value = true;
-      if (isDevelopment()) {
+      if (isLocalEnvironment()) {
         const data = localStorage.getItem(PRESETS_STORAGE_KEY);
         if (data) {
           presets.value = JSON.parse(data);
@@ -58,7 +58,7 @@ export const usePresets = () => {
         createdAt: Date.now()
       };
 
-      if (isDevelopment()) {
+      if (isLocalEnvironment()) {
         presets.value.push(newPreset);
         localStorage.setItem(PRESETS_STORAGE_KEY, JSON.stringify(presets.value));
         return newPreset;
@@ -85,7 +85,7 @@ export const usePresets = () => {
    */
   const deletePreset = async (id: string): Promise<boolean> => {
     try {
-      if (isDevelopment()) {
+      if (isLocalEnvironment()) {
         presets.value = presets.value.filter(p => p.id !== id);
         localStorage.setItem(PRESETS_STORAGE_KEY, JSON.stringify(presets.value));
         return true;
@@ -128,7 +128,7 @@ export const usePresets = () => {
         useContext
       };
 
-      if (isDevelopment()) {
+      if (isLocalEnvironment()) {
         presets.value[index] = updated;
         localStorage.setItem(PRESETS_STORAGE_KEY, JSON.stringify(presets.value));
         return true;

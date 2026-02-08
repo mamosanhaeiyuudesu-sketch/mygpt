@@ -2,8 +2,7 @@
  * PATCH /api/users/language - ユーザーの言語設定を更新
  */
 import { getUserById, updateUserLanguage } from '~/server/utils/db';
-
-const USER_COOKIE_NAME = 'mygpt_user_id';
+import { USER_COOKIE_NAME } from '~/server/utils/constants';
 
 export default defineEventHandler(async (event) => {
   const userId = getCookie(event, USER_COOKIE_NAME);
@@ -11,7 +10,7 @@ export default defineEventHandler(async (event) => {
   if (!userId) {
     throw createError({
       statusCode: 401,
-      message: 'ログインが必要です'
+      statusMessage: 'ログインが必要です'
     });
   }
 
@@ -21,7 +20,7 @@ export default defineEventHandler(async (event) => {
   if (!language || !['ja', 'ko', 'en'].includes(language)) {
     throw createError({
       statusCode: 400,
-      message: '無効な言語コードです'
+      statusMessage: '無効な言語コードです'
     });
   }
 
@@ -30,7 +29,7 @@ export default defineEventHandler(async (event) => {
   if (!user) {
     throw createError({
       statusCode: 404,
-      message: 'ユーザーが見つかりません'
+      statusMessage: 'ユーザーが見つかりません'
     });
   }
 

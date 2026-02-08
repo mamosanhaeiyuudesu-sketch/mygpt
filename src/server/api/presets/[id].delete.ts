@@ -6,7 +6,7 @@ export default defineEventHandler(async (event) => {
   if (!id) {
     throw createError({
       statusCode: 400,
-      message: 'Preset ID is required'
+      statusMessage: 'プリセットIDが必要です'
     });
   }
 

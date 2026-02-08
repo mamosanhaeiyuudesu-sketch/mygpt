@@ -9,7 +9,7 @@ export default defineEventHandler(async (event) => {
   if (!id) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Chat ID is required'
+      statusMessage: 'チャットIDが必要です'
     });
   }
 

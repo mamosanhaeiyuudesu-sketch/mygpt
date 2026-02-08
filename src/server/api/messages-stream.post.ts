@@ -11,21 +11,21 @@ export default defineEventHandler(async (event) => {
   if (!body?.conversationId) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'conversationId is required'
+      statusMessage: '会話IDが必要です'
     });
   }
 
   if (!body?.message) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'message is required'
+      statusMessage: 'メッセージが必要です'
     });
   }
 
   if (!body?.model) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'model is required'
+      statusMessage: 'モデルが必要です'
     });
   }
 

@@ -5,118 +5,14 @@
  */
 import type { User, Language } from '~/types';
 import { isLocalEnvironment } from '~/utils/environment';
-
-const STORAGE_KEY = 'mygpt_data';
-const USER_COOKIE_NAME = 'mygpt_user_id';
-
-/**
- * localStorage からユーザーを取得
- */
-function getUserFromStorage(): User | null {
-  if (typeof window === 'undefined') return null;
-  try {
-    const data = localStorage.getItem(STORAGE_KEY);
-    if (data) {
-      const parsed = JSON.parse(data);
-      return parsed.user || null;
-    }
-  } catch (e) {
-    console.error('Failed to load user from localStorage:', e);
-  }
-  return null;
-}
-
-/**
- * localStorage から保存されたアカウント一覧を取得
- */
-function getSavedAccountsFromStorage(): Record<string, User> {
-  if (typeof window === 'undefined') return {};
-  try {
-    const data = localStorage.getItem(STORAGE_KEY);
-    if (data) {
-      const parsed = JSON.parse(data);
-      return parsed.savedAccounts || {};
-    }
-  } catch (e) {
-    console.error('Failed to load saved accounts from localStorage:', e);
-  }
-  return {};
-}
-
-/**
- * localStorage にアカウントを保存
- */
-function saveAccountToStorage(user: User): void {
-  if (typeof window === 'undefined') return;
-  try {
-    const data = localStorage.getItem(STORAGE_KEY);
-    const parsed = data ? JSON.parse(data) : { chats: [], messages: {}, savedAccounts: {} };
-    if (!parsed.savedAccounts) {
-      parsed.savedAccounts = {};
-    }
-    parsed.savedAccounts[user.name] = user;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
-  } catch (e) {
-    console.error('Failed to save account to localStorage:', e);
-  }
-}
-
-/**
- * localStorage にユーザーを保存
- */
-function saveUserToStorage(user: User): void {
-  if (typeof window === 'undefined') return;
-  try {
-    const data = localStorage.getItem(STORAGE_KEY);
-    const parsed = data ? JSON.parse(data) : { chats: [], messages: {} };
-    parsed.user = user;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
-  } catch (e) {
-    console.error('Failed to save user to localStorage:', e);
-  }
-}
-
-/**
- * localStorage から現在のログインユーザーをクリア（アカウント情報は残す）
- */
-function clearCurrentUserFromStorage(): void {
-  if (typeof window === 'undefined') return;
-  try {
-    const data = localStorage.getItem(STORAGE_KEY);
-    if (data) {
-      const parsed = JSON.parse(data);
-      delete parsed.user;
-      // savedAccountsは残す
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
-    }
-  } catch (e) {
-    console.error('Failed to clear current user from localStorage:', e);
-  }
-}
-
-/**
- * 名前でアカウントを検索
- */
-function findAccountByName(name: string): User | null {
-  const savedAccounts = getSavedAccountsFromStorage();
-  return savedAccounts[name] || null;
-}
-
-/**
- * Cookie からユーザーIDを取得
- */
-function getUserIdFromCookie(): string | null {
-  if (typeof document === 'undefined') return null;
-  const match = document.cookie.match(new RegExp(`(^| )${USER_COOKIE_NAME}=([^;]+)`));
-  return match ? match[2] : null;
-}
-
-/**
- * UUID v4 生成
- */
-function generateUUID(): string {
-  return crypto.randomUUID();
-}
+import {
+  getUserFromStorage,
+  saveAccountToStorage,
+  saveUserToStorage,
+  clearCurrentUserFromStorage,
+  findAccountByName,
+  generateUUID
+} from '~/utils/storage';
 
 // グローバル状態（シングルトン）
 const currentUser = ref<User | null>(null);

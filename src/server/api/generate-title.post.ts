@@ -17,7 +17,7 @@ export default defineEventHandler(async (event) => {
   if (!body?.messages || !Array.isArray(body.messages) || body.messages.length === 0) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'messages is required'
+      statusMessage: 'メッセージが必要です'
     });
   }
 
@@ -64,7 +64,7 @@ export default defineEventHandler(async (event) => {
     console.error('[OpenAI] Generate title error:', error);
     throw createError({
       statusCode: 500,
-      statusMessage: 'Failed to generate title'
+      statusMessage: 'タイトル生成に失敗しました'
     });
   }
 

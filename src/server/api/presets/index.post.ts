@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
   if (!body.name || !body.model) {
     throw createError({
       statusCode: 400,
-      message: 'name and model are required'
+      statusMessage: '名前とモデルは必須です'
     });
   }
 

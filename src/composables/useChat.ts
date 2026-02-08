@@ -3,96 +3,10 @@
  * ローカル環境: localStorage を使用
  * デプロイ環境: API (D1) を使用
  */
-import type { Chat, Message, StoredData, User } from '~/types';
+import type { Chat, Message } from '~/types';
 import { isLocalEnvironment } from '~/utils/environment';
-
-// 型を再エクスポート（既存コードとの互換性のため）
-export type { Chat, Message };
-
-/**
- * localStorage からユーザーを取得
- */
-function getUserFromStorage(): User | null {
-  if (typeof window === 'undefined') return null;
-  try {
-    const data = localStorage.getItem('mygpt_data');
-    if (data) {
-      const parsed = JSON.parse(data);
-      return parsed.user || null;
-    }
-  } catch (e) {
-    console.error('Failed to load user from localStorage:', e);
-  }
-  return null;
-}
-
-const STORAGE_KEY = 'mygpt_data';
-const RETENTION_DAYS = 730; // 2年 = 730日
-const RETENTION_MS = RETENTION_DAYS * 24 * 60 * 60 * 1000;
-
-/**
- * localStorage からデータを読み込む（期限切れのチャットを自動削除）
- */
-function loadFromStorage(): StoredData {
-  if (typeof window === 'undefined') {
-    return { chats: [], messages: {} };
-  }
-  try {
-    const data = localStorage.getItem(STORAGE_KEY);
-    if (data) {
-      const parsed = JSON.parse(data) as StoredData;
-      const now = Date.now();
-      const cutoffTime = now - RETENTION_MS;
-
-      // 期限切れのチャットをフィルタリング
-      const expiredChatIds = parsed.chats
-        .filter(chat => chat.updatedAt < cutoffTime)
-        .map(chat => chat.id);
-
-      if (expiredChatIds.length > 0) {
-        console.log(`[Storage] Removing ${expiredChatIds.length} expired chats`);
-        parsed.chats = parsed.chats.filter(chat => chat.updatedAt >= cutoffTime);
-        // 期限切れチャットのメッセージも削除
-        for (const chatId of expiredChatIds) {
-          delete parsed.messages[chatId];
-        }
-        // クリーンアップしたデータを保存
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
-      }
-
-      return parsed;
-    }
-  } catch (e) {
-    console.error('Failed to load from localStorage:', e);
-  }
-  return { chats: [], messages: {} };
-}
-
-/**
- * localStorage にデータを保存
- */
-function saveToStorage(data: StoredData): void {
-  if (typeof window === 'undefined') return;
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  } catch (e) {
-    console.error('Failed to save to localStorage:', e);
-  }
-}
-
-/**
- * UUID v4 生成
- */
-function generateUUID(): string {
-  return crypto.randomUUID();
-}
-
-/**
- * メッセージID生成（内部用）
- */
-function generateMessageId(): string {
-  return `msg_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
-}
+import { getUserFromStorage, loadFromStorage, saveToStorage, generateUUID, generateMessageId } from '~/utils/storage';
+import { parseSSEStream, updateMessageContent } from '~/composables/useChatStream';
 
 export const useChat = () => {
   // 状態管理
@@ -288,47 +202,6 @@ export const useChat = () => {
   };
 
   /**
-   * SSEストリームからテキストを抽出するパーサー
-   */
-  const parseSSEStream = async (
-    reader: ReadableStreamDefaultReader<Uint8Array>,
-    onChunk: (text: string) => void
-  ): Promise<string> => {
-    const decoder = new TextDecoder();
-    let buffer = '';
-    let fullContent = '';
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop() || '';
-
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          const data = line.slice(6);
-          if (data === '[DONE]') continue;
-
-          try {
-            const parsed = JSON.parse(data);
-            // Responses APIのストリーミング形式に対応
-            if (parsed.type === 'response.output_text.delta' && parsed.delta) {
-              fullContent += parsed.delta;
-              onChunk(fullContent);
-            }
-          } catch {
-            // JSON解析エラーは無視
-          }
-        }
-      }
-    }
-
-    return fullContent;
-  };
-
-  /**
    * メッセージを送信（ストリーミング対応）
    */
   const sendMessage = async (content: string) => {
@@ -405,22 +278,9 @@ export const useChat = () => {
 
         // ストリーミングでメッセージを更新
         const finalContent = await parseSSEStream(reader, (text) => {
-          const msgIndex = messages.value.findIndex(m => m.id === assistantMessage.id);
-          if (msgIndex !== -1) {
-            // リアクティビティを確実にトリガーするため新しい配列を作成
-            messages.value = messages.value.map((m, i) =>
-              i === msgIndex ? { ...m, content: text } : m
-            );
-          }
+          updateMessageContent(messages, assistantMessage.id, text);
         });
-
-        // 最終コンテンツを確定
-        const msgIndex = messages.value.findIndex(m => m.id === assistantMessage.id);
-        if (msgIndex !== -1) {
-          messages.value = messages.value.map((m, i) =>
-            i === msgIndex ? { ...m, content: finalContent } : m
-          );
-        }
+        updateMessageContent(messages, assistantMessage.id, finalContent);
 
         // localStorage に保存
         const updatedData = loadFromStorage();
@@ -460,22 +320,9 @@ export const useChat = () => {
 
         // ストリーミングでメッセージを更新
         const finalContent = await parseSSEStream(reader, (text) => {
-          const msgIndex = messages.value.findIndex(m => m.id === assistantMessage.id);
-          if (msgIndex !== -1) {
-            // リアクティビティを確実にトリガーするため新しい配列を作成
-            messages.value = messages.value.map((m, i) =>
-              i === msgIndex ? { ...m, content: text } : m
-            );
-          }
+          updateMessageContent(messages, assistantMessage.id, text);
         });
-
-        // 最終コンテンツを確定
-        const msgIndex = messages.value.findIndex(m => m.id === assistantMessage.id);
-        if (msgIndex !== -1) {
-          messages.value = messages.value.map((m, i) =>
-            i === msgIndex ? { ...m, content: finalContent } : m
-          );
-        }
+        updateMessageContent(messages, assistantMessage.id, finalContent);
 
         // D1にメッセージを保存
         await fetch(`/api/chats/${chatId}/messages-save`, {

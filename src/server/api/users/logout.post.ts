@@ -1,7 +1,7 @@
 /**
  * POST /api/users/logout - ログアウト
  */
-const USER_COOKIE_NAME = 'mygpt_user_id';
+import { USER_COOKIE_NAME } from '~/server/utils/constants';
 
 export default defineEventHandler(async (event) => {
   // Cookie を削除
