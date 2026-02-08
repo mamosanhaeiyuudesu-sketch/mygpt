@@ -7,55 +7,15 @@
     <div class="bg-gray-900 rounded-lg p-6 max-w-md w-full border border-gray-700">
       <h2 class="text-lg font-bold mb-4">{{ t('settings.title') }}</h2>
 
-      <!-- モデル選択 -->
-      <div class="mb-4">
-        <label class="text-sm text-gray-400 block mb-2">{{ t('settings.model') }}</label>
-        <select
-          v-model="editModel"
-          class="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <option v-for="model in models" :key="model.id" :value="model.id">
-            {{ model.name }} ({{ model.contextWindow }})
-          </option>
-        </select>
-      </div>
+      <ChatSettingsForm
+        :models="models"
+        v-model:model="editModel"
+        v-model:system-prompt="editSystemPrompt"
+        v-model:vector-store-id="editVectorStoreId"
+        v-model:use-context="editUseContext"
+      />
 
-      <!-- システムプロンプト入力 -->
-      <div class="mb-4">
-        <label class="text-sm text-gray-400 block mb-2">{{ t('model.systemPrompt') }}</label>
-        <textarea
-          v-model="editSystemPrompt"
-          :placeholder="t('settings.systemPrompt.placeholder')"
-          rows="3"
-          class="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
-        ></textarea>
-      </div>
-
-      <!-- Vector Store ID入力 -->
-      <div class="mb-4">
-        <label class="text-sm text-gray-400 block mb-2">{{ t('settings.vectorStoreId.label') }}</label>
-        <input
-          v-model="editVectorStoreId"
-          type="text"
-          :placeholder="t('settings.vectorStoreId.placeholder')"
-          class="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-      </div>
-
-      <!-- 文脈保持設定 -->
-      <div class="mb-4">
-        <label class="flex items-center gap-3 cursor-pointer">
-          <input
-            v-model="editUseContext"
-            type="checkbox"
-            class="w-5 h-5 rounded bg-gray-800 border-gray-600 text-blue-600 focus:ring-blue-500"
-          />
-          <span class="text-sm text-gray-400">{{ t('settings.useContext') }}</span>
-        </label>
-        <p class="text-xs text-gray-500 mt-1 ml-8">{{ t('settings.useContext.description') }}</p>
-      </div>
-
-      <div class="flex gap-2">
+      <div class="flex gap-2 mt-4">
         <button
           @click="emit('update:modelValue', false)"
           class="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"

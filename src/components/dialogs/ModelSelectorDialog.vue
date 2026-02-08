@@ -5,73 +5,43 @@
     @click.self="emit('update:modelValue', false)"
   >
     <div class="bg-gray-900 rounded-lg p-6 max-w-md w-full border border-gray-700">
-      <h2 class="text-lg font-bold mb-4">新しいチャット</h2>
-
-      <!-- モデル選択 -->
-      <div class="mb-4">
-        <label class="text-sm text-gray-400 block mb-2">モデル</label>
-        <div v-if="isLoadingModels" class="text-center py-2 text-gray-400 text-sm">
-          Loading models...
-        </div>
+      <!-- ヘッダー：タイトル + プリセット選択 -->
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-bold">{{ t('sidebar.newChat') }}</h2>
         <select
-          v-else
-          v-model="selectedModel"
-          class="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          v-model="selectedPresetId"
+          @change="handlePresetChange"
+          class="bg-gray-800 text-white rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 max-w-[180px]"
         >
-          <option v-for="model in models" :key="model.id" :value="model.id">
-            {{ model.name }} ({{ model.contextWindow }})
+          <option value="">{{ t('settings.preset.custom') }}</option>
+          <option v-for="preset in presets" :key="preset.id" :value="preset.id">
+            {{ preset.name }}
           </option>
         </select>
       </div>
 
-      <!-- システムプロンプト入力 -->
-      <div class="mb-4">
-        <label class="text-sm text-gray-400 block mb-2">システムプロンプト</label>
-        <textarea
-          v-model="systemPrompt"
-          placeholder="カスタム指示を入力（空欄でデフォルト）"
-          rows="3"
-          class="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
-        ></textarea>
-      </div>
+      <ChatSettingsForm
+        :models="models"
+        v-model:model="selectedModel"
+        v-model:system-prompt="systemPrompt"
+        v-model:vector-store-id="vectorStoreId"
+        v-model:use-context="useContext"
+        :is-loading-models="isLoadingModels"
+      />
 
-      <!-- Vector Store ID入力 -->
-      <div class="mb-4">
-        <label class="text-sm text-gray-400 block mb-2">Vector Store ID（RAG用）</label>
-        <input
-          v-model="vectorStoreId"
-          type="text"
-          placeholder="vs_xxxxxxxxxxxxxxxx（空欄で無効）"
-          class="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-      </div>
-
-      <!-- 文脈保持設定 -->
-      <div class="mb-4">
-        <label class="flex items-center gap-3 cursor-pointer">
-          <input
-            v-model="useContext"
-            type="checkbox"
-            class="w-5 h-5 rounded bg-gray-800 border-gray-600 text-blue-600 focus:ring-blue-500"
-          />
-          <span class="text-sm text-gray-400">文脈を保持する</span>
-        </label>
-        <p class="text-xs text-gray-500 mt-1 ml-8">OFFにすると会話履歴を使わず、毎回高速に応答します</p>
-      </div>
-
-      <div class="flex gap-2">
+      <div class="flex gap-2 mt-4">
         <button
           @click="emit('update:modelValue', false)"
           class="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
         >
-          キャンセル
+          {{ t('button.cancel') }}
         </button>
         <button
           @click="handleCreate"
           :disabled="!selectedModel"
           class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed rounded-lg transition-colors"
         >
-          作成
+          {{ t('model.create') }}
         </button>
       </div>
     </div>
@@ -80,6 +50,7 @@
 
 <script setup lang="ts">
 import type { Model } from '~/types';
+import { usePresets } from '~/composables/usePresets';
 
 const props = defineProps<{
   modelValue: boolean;
@@ -93,21 +64,44 @@ const emit = defineEmits<{
   create: [model: string, systemPrompt?: string, vectorStoreId?: string, useContext?: boolean];
 }>();
 
+const { t } = useI18n();
+const { presets, loadPresets, getPresetById } = usePresets();
+
 // フォーム状態
 const selectedModel = ref(props.defaultModel || 'gpt-4o');
 const systemPrompt = ref('');
 const vectorStoreId = ref('');
 const useContext = ref(true);
+const selectedPresetId = ref('');
 
 // ダイアログが開かれたときにリセット
 watch(() => props.modelValue, (isOpen) => {
   if (isOpen) {
+    loadPresets();
     selectedModel.value = props.defaultModel || 'gpt-4o';
     systemPrompt.value = '';
     vectorStoreId.value = '';
     useContext.value = true;
+    selectedPresetId.value = '';
   }
 });
+
+const handlePresetChange = () => {
+  if (!selectedPresetId.value) {
+    selectedModel.value = props.defaultModel || 'gpt-4o';
+    systemPrompt.value = '';
+    vectorStoreId.value = '';
+    useContext.value = true;
+    return;
+  }
+  const preset = getPresetById(selectedPresetId.value);
+  if (preset) {
+    selectedModel.value = preset.model;
+    systemPrompt.value = preset.systemPrompt || '';
+    vectorStoreId.value = preset.vectorStoreId || '';
+    useContext.value = preset.useContext;
+  }
+};
 
 const handleCreate = () => {
   if (!selectedModel.value) return;
