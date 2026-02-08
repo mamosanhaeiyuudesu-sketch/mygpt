@@ -7,6 +7,7 @@ import type { H3Event } from 'h3';
 export interface User {
   id: string;
   name: string;
+  language?: string;
   created_at: number;
 }
 
@@ -125,6 +126,26 @@ export async function createUser(
   }
 
   return user;
+}
+
+/**
+ * ユーザー言語設定を更新
+ */
+export async function updateUserLanguage(
+  event: H3Event,
+  id: string,
+  language: string
+): Promise<void> {
+  const db = getD1(event);
+
+  if (db) {
+    await db.prepare(
+      'UPDATE users SET language = ? WHERE id = ?'
+    ).bind(language, id).run();
+  } else {
+    const user = memoryStore.users.find(u => u.id === id);
+    if (user) user.language = language;
+  }
 }
 
 // ========== Chat Operations ==========

@@ -4,18 +4,18 @@
     class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4"
   >
     <div class="bg-gray-900 rounded-lg p-6 max-w-md w-full border border-gray-700">
-      <h2 class="text-lg font-bold mb-2">アカウント</h2>
+      <h2 class="text-lg font-bold mb-2">{{ t('account') }}</h2>
       <p class="text-sm text-gray-400 mb-6">
-        アカウント名を入力してログインまたは新規作成してください。
+        {{ t('account.description') }}
       </p>
 
       <!-- アカウント名入力 -->
       <div class="mb-4">
-        <label class="text-sm text-gray-400 block mb-2">アカウント名</label>
+        <label class="text-sm text-gray-400 block mb-2">{{ t('account.name') }}</label>
         <input
           v-model="accountName"
           type="text"
-          placeholder="名前を入力"
+          :placeholder="t('account.name.placeholder')"
           class="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           @keydown.enter="handleLogin"
           autofocus
@@ -33,14 +33,14 @@
           :disabled="!accountName.trim() || isProcessing"
           class="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed rounded-lg transition-colors"
         >
-          {{ isProcessing ? '処理中...' : 'ログイン' }}
+          {{ isProcessing ? t('account.processing') : t('account.login') }}
         </button>
         <button
           @click="handleCreate"
           :disabled="!accountName.trim() || isProcessing"
           class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed rounded-lg transition-colors"
         >
-          {{ isProcessing ? '処理中...' : '作成' }}
+          {{ isProcessing ? t('account.processing') : t('account.create') }}
         </button>
       </div>
     </div>
@@ -58,6 +58,7 @@ const emit = defineEmits<{
 }>();
 
 const { createAccount, login } = useAccount();
+const { t } = useI18n();
 
 const accountName = ref('');
 const errorMessage = ref('');

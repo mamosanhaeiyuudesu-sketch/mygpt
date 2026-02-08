@@ -3,7 +3,7 @@
  * ローカル環境: localStorage を使用
  * デプロイ環境: API (D1 + Cookie) を使用
  */
-import type { User } from '~/types';
+import type { User, Language } from '~/types';
 import { isLocalEnvironment } from '~/utils/environment';
 
 const STORAGE_KEY = 'mygpt_data';
@@ -267,6 +267,38 @@ export const useAccount = () => {
   };
 
   /**
+   * 言語設定を更新
+   * @param language - 言語コード
+   */
+  const updateLanguage = async (language: Language): Promise<void> => {
+    if (!currentUser.value) return;
+
+    try {
+      if (isLocalEnvironment()) {
+        // ローカル: localStorage を更新
+        const updatedUser = { ...currentUser.value, language };
+        saveUserToStorage(updatedUser);
+        saveAccountToStorage(updatedUser);
+        currentUser.value = updatedUser;
+      } else {
+        // デプロイ: API 経由で更新
+        const response = await fetch('/api/users/language', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ language })
+        });
+
+        if (response.ok) {
+          const data = await response.json() as { user: User };
+          currentUser.value = data.user;
+        }
+      }
+    } catch (error) {
+      console.error('Failed to update language:', error);
+    }
+  };
+
+  /**
    * ログアウト
    */
   const logout = async (): Promise<void> => {
@@ -300,6 +332,7 @@ export const useAccount = () => {
     initialize,
     createAccount,
     login,
+    updateLanguage,
     logout
   };
 };

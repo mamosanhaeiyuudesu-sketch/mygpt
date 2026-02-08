@@ -5,7 +5,7 @@
         <textarea
           ref="textareaRef"
           v-model="localMessage"
-          placeholder="メッセージを入力..."
+          :placeholder="t('chat.input.placeholder')"
           rows="1"
           class="flex-1 bg-gray-800 text-white rounded-lg px-3 py-2 md:px-4 md:py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none max-h-32 overflow-y-auto"
           :disabled="disabled"
@@ -17,7 +17,7 @@
           :disabled="!localMessage.trim() || disabled"
           class="px-4 py-2 md:px-6 md:py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed rounded-lg transition-colors shrink-0"
         >
-          Send
+          {{ t('chat.input.send') }}
         </button>
       </form>
     </div>
@@ -32,6 +32,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   submit: [message: string];
 }>();
+
+const { t } = useI18n();
 
 const localMessage = ref('');
 const textareaRef = ref<HTMLTextAreaElement | null>(null);

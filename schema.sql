@@ -5,6 +5,7 @@
 CREATE TABLE users (
   id TEXT PRIMARY KEY,
   name TEXT UNIQUE NOT NULL,
+  language TEXT NOT NULL DEFAULT 'ja', -- ユーザーの言語設定
   created_at INTEGER NOT NULL
 );
 

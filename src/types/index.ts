@@ -2,10 +2,14 @@
  * 共通型定義
  */
 
+// 言語
+export type Language = 'ja' | 'ko' | 'en';
+
 // ユーザー
 export interface User {
   id: string;
   name: string;
+  language?: Language;
   createdAt: number;
 }
 

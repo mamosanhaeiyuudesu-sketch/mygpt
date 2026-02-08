@@ -5,18 +5,18 @@
     @click.self="emit('update:modelValue', false)"
   >
     <div class="bg-gray-900 rounded-lg p-6 max-w-md w-full border border-gray-700">
-      <h2 class="text-lg font-bold mb-4">チャット設定</h2>
+      <h2 class="text-lg font-bold mb-4">{{ t('settings.title') }}</h2>
 
       <!-- プリセット選択 -->
       <div class="mb-4">
-        <label class="text-sm text-gray-400 block mb-2">プリセット</label>
+        <label class="text-sm text-gray-400 block mb-2">{{ t('settings.preset') }}</label>
         <div class="flex gap-2">
           <select
             v-model="selectedPresetId"
             @change="handlePresetChange"
             class="flex-1 bg-gray-800 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="">カスタム</option>
+            <option value="">{{ t('settings.preset.custom') }}</option>
             <option v-for="preset in presets" :key="preset.id" :value="preset.id">
               {{ preset.name }}
             </option>
@@ -25,16 +25,16 @@
             v-if="selectedPresetId"
             @click="handleDeletePreset"
             class="px-3 py-2 bg-red-600/20 hover:bg-red-600/40 text-red-400 rounded-lg transition-colors text-sm"
-            title="プリセットを削除"
+            :title="t('settings.preset.delete')"
           >
-            削除
+            {{ t('settings.preset.delete') }}
           </button>
         </div>
       </div>
 
       <!-- モデル選択 -->
       <div class="mb-4">
-        <label class="text-sm text-gray-400 block mb-2">モデル</label>
+        <label class="text-sm text-gray-400 block mb-2">{{ t('settings.model') }}</label>
         <select
           v-model="editModel"
           class="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -47,10 +47,10 @@
 
       <!-- システムプロンプト入力 -->
       <div class="mb-4">
-        <label class="text-sm text-gray-400 block mb-2">システムプロンプト</label>
+        <label class="text-sm text-gray-400 block mb-2">{{ t('model.systemPrompt') }}</label>
         <textarea
           v-model="editSystemPrompt"
-          placeholder="カスタム指示を入力（空欄でデフォルト）"
+          :placeholder="t('settings.systemPrompt.placeholder')"
           rows="3"
           class="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
         ></textarea>
@@ -58,11 +58,11 @@
 
       <!-- Vector Store ID入力 -->
       <div class="mb-4">
-        <label class="text-sm text-gray-400 block mb-2">Vector Store ID（RAG用）</label>
+        <label class="text-sm text-gray-400 block mb-2">{{ t('settings.vectorStoreId.label') }}</label>
         <input
           v-model="editVectorStoreId"
           type="text"
-          placeholder="vs_xxxxxxxxxxxxxxxx（空欄で無効）"
+          :placeholder="t('settings.vectorStoreId.placeholder')"
           class="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
@@ -75,9 +75,9 @@
             type="checkbox"
             class="w-5 h-5 rounded bg-gray-800 border-gray-600 text-blue-600 focus:ring-blue-500"
           />
-          <span class="text-sm text-gray-400">文脈を保持する</span>
+          <span class="text-sm text-gray-400">{{ t('settings.useContext') }}</span>
         </label>
-        <p class="text-xs text-gray-500 mt-1 ml-8">OFFにすると会話履歴を使わず、毎回高速に応答します</p>
+        <p class="text-xs text-gray-500 mt-1 ml-8">{{ t('settings.useContext.description') }}</p>
       </div>
 
       <!-- プリセット保存 -->
@@ -88,13 +88,13 @@
             type="checkbox"
             class="w-5 h-5 rounded bg-gray-800 border-gray-600 text-blue-600 focus:ring-blue-500"
           />
-          <span class="text-sm text-gray-400">この設定をプリセットとして保存</span>
+          <span class="text-sm text-gray-400">{{ t('settings.saveAsPreset') }}</span>
         </label>
         <input
           v-if="saveAsPreset"
           v-model="presetName"
           type="text"
-          placeholder="プリセット名を入力"
+          :placeholder="t('settings.presetName.placeholder')"
           class="w-full mt-2 bg-gray-800 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
@@ -104,14 +104,14 @@
           @click="emit('update:modelValue', false)"
           class="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
         >
-          キャンセル
+          {{ t('button.cancel') }}
         </button>
         <button
           @click="handleSave"
           :disabled="saveAsPreset && !presetName.trim()"
           class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed rounded-lg transition-colors"
         >
-          保存
+          {{ t('settings.save') }}
         </button>
       </div>
     </div>
@@ -138,6 +138,7 @@ const emit = defineEmits<{
 
 // プリセット管理
 const { presets, loadPresets, createPreset, deletePreset, getPresetById } = usePresets();
+const { t } = useI18n();
 
 // フォーム状態
 const editModel = ref('');
@@ -177,7 +178,7 @@ const handlePresetChange = () => {
 // プリセット削除
 const handleDeletePreset = async () => {
   if (!selectedPresetId.value) return;
-  if (!confirm('このプリセットを削除しますか？')) return;
+  if (!confirm(t('settings.preset.deleteConfirm'))) return;
 
   const success = await deletePreset(selectedPresetId.value);
   if (success) {

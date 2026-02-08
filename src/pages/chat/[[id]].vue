@@ -125,6 +125,7 @@
       <AccountBadge
         :user-name="currentUser.name"
         @logout="handleLogout"
+        @language-change="handleLanguageChange"
       />
     </div>
   </div>
@@ -135,7 +136,8 @@ const route = useRoute();
 const router = useRouter();
 
 // アカウント管理
-const { currentUser, initialize: initializeAccount, logout } = useAccount();
+const { currentUser, initialize: initializeAccount, logout, updateLanguage } = useAccount();
+const { t, setLanguage } = useI18n();
 const showAccountSetup = ref(false);
 
 const {
@@ -314,6 +316,11 @@ onMounted(async () => {
     return;
   }
 
+  // ユーザーの言語設定を反映
+  if (user.language) {
+    setLanguage(user.language);
+  }
+
   await Promise.all([fetchChats(), fetchModels()]);
 
   // URLにIDがある場合はチャットを選択
@@ -349,12 +356,12 @@ const handleCreateChatFromDialog = async (model: string, systemPrompt?: string, 
     isSidebarOpen.value = false;
   } catch (error) {
     console.error('Failed to create chat:', error);
-    alert('チャットの作成に失敗しました');
+    alert(t('error.chatCreate'));
   }
 };
 
 const handleDeleteChat = async (chatId: string) => {
-  if (!confirm('このチャットを削除しますか?')) return;
+  if (!confirm(t('sidebar.deleteChat.confirm'))) return;
   try {
     await deleteChat(chatId);
     if (currentChatId.value === null) {
@@ -362,7 +369,7 @@ const handleDeleteChat = async (chatId: string) => {
     }
   } catch (error) {
     console.error('Failed to delete chat:', error);
-    alert('チャットの削除に失敗しました');
+    alert(t('error.chatDelete'));
   }
 };
 
@@ -390,10 +397,15 @@ const handleAccountCreated = async () => {
 
 // ログアウト
 const handleLogout = async () => {
-  if (!confirm('ログアウトしますか？')) return;
+  if (!confirm(t('logout.confirm'))) return;
   await logout();
   // ページをリロードしてアカウント作成ダイアログを表示
   window.location.reload();
+};
+
+// 言語変更
+const handleLanguageChange = async (language: 'ja' | 'ko' | 'en') => {
+  await updateLanguage(language);
 };
 
 const handleNewChatWithMessage = async (message: string, model: string, systemPrompt?: string, vectorStoreId?: string, useContext?: boolean) => {
@@ -429,7 +441,7 @@ const handleNewChatWithMessage = async (message: string, model: string, systemPr
     }
   } catch (error) {
     console.error('Failed to create chat with message:', error);
-    alert('チャットの作成に失敗しました');
+    alert(t('error.chatCreate'));
   }
 };
 
@@ -461,7 +473,7 @@ const handleSendMessage = async (message: string) => {
     }
   } catch (error) {
     console.error('Failed to send message:', error);
-    alert('メッセージの送信に失敗しました');
+    alert(t('error.messageSend'));
   }
 };
 
@@ -471,7 +483,7 @@ const handleSaveSettings = async (model: string, systemPrompt: string | null, ve
     await updateChatSettings(currentChatId.value, model, systemPrompt, vectorStoreId, useContext);
   } catch (error) {
     console.error('Failed to save settings:', error);
-    alert('設定の保存に失敗しました');
+    alert(t('error.settingsSave'));
   }
 };
 
