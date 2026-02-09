@@ -1,7 +1,7 @@
 /**
  * GET /api/chats - チャット一覧取得
  */
-import { getAllChats } from '~/server/utils/db';
+import { getAllChats } from '~/server/utils/db/chats';
 import { USER_COOKIE_NAME } from '~/server/utils/constants';
 
 export default defineEventHandler(async (event) => {

@@ -1,7 +1,7 @@
 /**
  * PATCH /api/users/language - ユーザーの言語設定を更新
  */
-import { getUserById, updateUserLanguage } from '~/server/utils/db';
+import { getUserById, updateUserLanguage } from '~/server/utils/db/users';
 import { USER_COOKIE_NAME } from '~/server/utils/constants';
 
 export default defineEventHandler(async (event) => {

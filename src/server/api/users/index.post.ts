@@ -1,7 +1,8 @@
 /**
  * POST /api/users - 新しいユーザー作成
  */
-import { generateId, createUser, getUserByName } from '~/server/utils/db';
+import { generateId } from '~/server/utils/db/common';
+import { createUser, getUserByName } from '~/server/utils/db/users';
 import { USER_COOKIE_NAME, COOKIE_MAX_AGE } from '~/server/utils/constants';
 
 export default defineEventHandler(async (event) => {

@@ -1,4 +1,4 @@
-import { getAllPresets } from '../../utils/db';
+import { getAllPresets } from '../../utils/db/presets';
 
 export default defineEventHandler(async (event) => {
   const presets = await getAllPresets(event);

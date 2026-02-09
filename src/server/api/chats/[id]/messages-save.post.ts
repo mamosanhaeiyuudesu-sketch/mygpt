@@ -1,7 +1,9 @@
 /**
  * POST /api/chats/:id/messages-save - メッセージをD1に保存
  */
-import { getChat, generateId, createMessage, updateChatTimestamp } from '~/server/utils/db';
+import { generateId } from '~/server/utils/db/common';
+import { getChat, updateChatTimestamp } from '~/server/utils/db/chats';
+import { createMessage } from '~/server/utils/db/messages';
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id');

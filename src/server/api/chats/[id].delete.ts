@@ -1,7 +1,7 @@
 /**
  * DELETE /api/chats/:id - チャット削除
  */
-import { deleteChat } from '~/server/utils/db';
+import { deleteChat } from '~/server/utils/db/chats';
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id');

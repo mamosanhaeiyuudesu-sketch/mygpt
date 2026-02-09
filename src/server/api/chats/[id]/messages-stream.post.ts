@@ -1,7 +1,7 @@
 /**
  * POST /api/chats/:id/messages-stream - ストリーミングメッセージ送信
  */
-import { getChat } from '~/server/utils/db';
+import { getChat } from '~/server/utils/db/chats';
 import { sendMessageToOpenAIStream } from '~/server/utils/openai';
 import { getOpenAIKey } from '~/server/utils/env';
 

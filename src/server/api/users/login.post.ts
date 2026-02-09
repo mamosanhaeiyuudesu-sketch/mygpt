@@ -1,7 +1,7 @@
 /**
  * POST /api/users/login - 既存ユーザーでログイン
  */
-import { getUserByName } from '~/server/utils/db';
+import { getUserByName } from '~/server/utils/db/users';
 import { USER_COOKIE_NAME, COOKIE_MAX_AGE } from '~/server/utils/constants';
 
 export default defineEventHandler(async (event) => {

@@ -1,7 +1,7 @@
 /**
  * PATCH /api/chats/:id - チャット設定変更（名前・モデル・システムプロンプト・Vector Store ID）
  */
-import { updateChatName, updateChatSettings } from '~/server/utils/db';
+import { updateChatName, updateChatSettings } from '~/server/utils/db/chats';
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id');

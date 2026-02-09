@@ -1,7 +1,7 @@
 /**
  * GET /api/chats/:id/messages - メッセージ履歴取得
  */
-import { getMessages } from '~/server/utils/db';
+import { getMessages } from '~/server/utils/db/messages';
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id');

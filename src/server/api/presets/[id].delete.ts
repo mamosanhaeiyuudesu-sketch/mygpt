@@ -1,4 +1,4 @@
-import { deletePreset } from '../../utils/db';
+import { deletePreset } from '../../utils/db/presets';
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id');

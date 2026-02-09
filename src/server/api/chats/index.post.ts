@@ -1,7 +1,8 @@
 /**
  * POST /api/chats - 新しいチャット作成
  */
-import { generateId, createChat } from '~/server/utils/db';
+import { generateId } from '~/server/utils/db/common';
+import { createChat } from '~/server/utils/db/chats';
 import { createConversation } from '~/server/utils/openai';
 import { getOpenAIKey } from '~/server/utils/env';
 import { USER_COOKIE_NAME } from '~/server/utils/constants';
