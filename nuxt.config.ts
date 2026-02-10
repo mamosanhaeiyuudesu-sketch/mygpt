@@ -28,6 +28,8 @@ export default defineNuxtConfig({
     openaiApiKey: '',
     // サーバー側のみ（NUXT_DEFAULT_MODEL 環境変数で設定）
     defaultModel: 'gpt-4o-mini',
+    // サーバー側のみ（NUXT_APP_PASSWORD 環境変数で設定）
+    appPassword: '',
     // クライアント側でも使用可能
     public: {
       defaultModel: 'gpt-4o-mini'

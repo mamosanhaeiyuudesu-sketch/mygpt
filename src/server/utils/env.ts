@@ -6,6 +6,7 @@ import type { H3Event } from 'h3';
 
 interface CloudflareEnv {
   NUXT_OPENAI_API_KEY?: string;
+  NUXT_APP_PASSWORD?: string;
   DB?: D1Database;
 }
 
@@ -28,6 +29,19 @@ export function getOpenAIKey(event: H3Event): string {
   }
 
   throw new Error('OpenAI API key not configured');
+}
+
+/**
+ * アプリパスワードを取得
+ */
+export function getAppPassword(event: H3Event): string {
+  const cfEnv = (event.context.cloudflare?.env as CloudflareEnv) || {};
+  if (cfEnv.NUXT_APP_PASSWORD) {
+    return cfEnv.NUXT_APP_PASSWORD;
+  }
+
+  const config = useRuntimeConfig();
+  return config.appPassword || '';
 }
 
 /**

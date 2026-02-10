@@ -103,6 +103,11 @@ const translations: Record<Language, Record<string, string>> = {
     'presetManager.empty': 'プリセットがありません',
     'presetManager.close': '閉じる',
 
+    // Auth
+    'auth.placeholder': 'パスワードを入力',
+    'auth.login': 'ログイン',
+    'auth.error': 'パスワードが正しくありません',
+
     // Diary
     'diary.startRecording': '録音開始',
     'diary.stopRecording': '録音停止',
@@ -213,6 +218,11 @@ const translations: Record<Language, Record<string, string>> = {
     'presetManager.empty': '프리셋이 없습니다',
     'presetManager.close': '닫기',
 
+    // Auth
+    'auth.placeholder': '비밀번호 입력',
+    'auth.login': '로그인',
+    'auth.error': '비밀번호가 올바르지 않습니다',
+
     // Diary
     'diary.startRecording': '녹음 시작',
     'diary.stopRecording': '녹음 중지',
@@ -322,6 +332,11 @@ const translations: Record<Language, Record<string, string>> = {
     'presetManager.useContext': 'Keep Context',
     'presetManager.empty': 'No presets',
     'presetManager.close': 'Close',
+
+    // Auth
+    'auth.placeholder': 'Enter password',
+    'auth.login': 'Login',
+    'auth.error': 'Incorrect password',
 
     // Diary
     'diary.startRecording': 'Start Recording',
