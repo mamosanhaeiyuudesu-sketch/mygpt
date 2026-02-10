@@ -122,6 +122,12 @@ const translations: Record<Language, Record<string, string>> = {
 
     // Language
     'language': '言語',
+
+    // Font Size
+    'fontSize': '文字サイズ',
+    'fontSize.small': '小',
+    'fontSize.medium': '中',
+    'fontSize.large': '大',
   },
   ko: {
     // AccountBadge
@@ -240,6 +246,12 @@ const translations: Record<Language, Record<string, string>> = {
 
     // Language
     'language': '언어',
+
+    // Font Size
+    'fontSize': '글자 크기',
+    'fontSize.small': '소',
+    'fontSize.medium': '중',
+    'fontSize.large': '대',
   },
   en: {
     // AccountBadge
@@ -358,11 +370,20 @@ const translations: Record<Language, Record<string, string>> = {
 
     // Language
     'language': 'Language',
+
+    // Font Size
+    'fontSize': 'Font Size',
+    'fontSize.small': 'S',
+    'fontSize.medium': 'M',
+    'fontSize.large': 'L',
   },
 };
 
+export type FontSize = 'small' | 'medium' | 'large';
+
 // グローバル状態
 const currentLanguage = ref<Language>('ja');
+const currentFontSize = ref<FontSize>('medium');
 
 export const useI18n = () => {
   /**
@@ -388,10 +409,48 @@ export const useI18n = () => {
     { value: 'en', label: 'En' },
   ];
 
+  /**
+   * 文字サイズを設定（モバイル用）
+   */
+  const setFontSize = (size: FontSize) => {
+    currentFontSize.value = size;
+    if (typeof document !== 'undefined') {
+      document.documentElement.dataset.fontSize = size;
+    }
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('mygpt_fontSize', size);
+    }
+  };
+
+  /**
+   * 保存済みの文字サイズを復元
+   */
+  const initFontSize = () => {
+    if (typeof localStorage !== 'undefined') {
+      const saved = localStorage.getItem('mygpt_fontSize') as FontSize | null;
+      if (saved && ['small', 'medium', 'large'].includes(saved)) {
+        setFontSize(saved);
+      }
+    }
+  };
+
+  /**
+   * 文字サイズオプション
+   */
+  const fontSizeOptions: { value: FontSize; labelKey: string }[] = [
+    { value: 'small', labelKey: 'fontSize.small' },
+    { value: 'medium', labelKey: 'fontSize.medium' },
+    { value: 'large', labelKey: 'fontSize.large' },
+  ];
+
   return {
     t,
     currentLanguage: readonly(currentLanguage),
     setLanguage,
     languageOptions,
+    currentFontSize: readonly(currentFontSize),
+    setFontSize,
+    initFontSize,
+    fontSizeOptions,
   };
 };

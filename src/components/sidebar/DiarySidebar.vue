@@ -92,6 +92,26 @@
           </div>
         </div>
 
+        <!-- 文字サイズ（モバイルのみ表示） -->
+        <div class="px-3 py-2 border-b border-gray-700 md:hidden">
+          <div class="text-xs text-gray-400 mb-1">{{ t('fontSize') }}</div>
+          <div class="flex gap-1">
+            <button
+              v-for="option in fontSizeOptions"
+              :key="option.value"
+              @click="setFontSize(option.value)"
+              :class="[
+                'px-2 py-1 text-xs rounded transition-colors',
+                currentFontSize === option.value
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              ]"
+            >
+              {{ t(option.labelKey) }}
+            </button>
+          </div>
+        </div>
+
         <!-- ログアウト -->
         <button
           @click="handleLogout"
@@ -145,7 +165,7 @@ const emit = defineEmits<{
   languageChange: [language: Language];
 }>();
 
-const { t, currentLanguage, languageOptions, setLanguage } = useI18n();
+const { t, currentLanguage, languageOptions, setLanguage, currentFontSize, setFontSize, fontSizeOptions } = useI18n();
 
 const isMenuOpen = ref(false);
 

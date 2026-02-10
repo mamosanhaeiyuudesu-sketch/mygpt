@@ -7,9 +7,23 @@ html {
   font-size: 18px;
 }
 
+/* 文字サイズ設定（モバイルのみ） */
+html[data-font-size="small"] {
+  font-size: 15px;
+}
+html[data-font-size="medium"] {
+  font-size: 18px;
+}
+html[data-font-size="large"] {
+  font-size: 21px;
+}
+
 /* md以上（768px〜）では通常サイズに戻す */
 @media (min-width: 768px) {
-  html {
+  html,
+  html[data-font-size="small"],
+  html[data-font-size="medium"],
+  html[data-font-size="large"] {
     font-size: 16px;
   }
 }

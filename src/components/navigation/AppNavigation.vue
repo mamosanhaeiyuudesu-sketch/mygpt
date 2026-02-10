@@ -39,7 +39,7 @@ defineEmits<{
   accountCreated: [];
 }>();
 
-const { t, setLanguage } = useI18n();
+const { t, setLanguage, initFontSize } = useI18n();
 const { initialize: initializeAccount } = useAccount();
 const route = useRoute();
 
@@ -78,7 +78,10 @@ const initAccount = async () => {
   }
 };
 
-onMounted(() => initAccount());
+onMounted(() => {
+  initAccount();
+  initFontSize();
+});
 
 defineExpose({ showAccountSetup });
 </script>
