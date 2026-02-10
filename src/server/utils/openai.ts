@@ -32,6 +32,38 @@ export async function createConversation(apiKey: string, name: string): Promise<
   return data.id;
 }
 
+/**
+ * 音声ファイルを文字起こし（Whisper API）
+ * POST /v1/audio/transcriptions
+ */
+export async function transcribeAudio(apiKey: string, audioBuffer: Uint8Array, filename: string): Promise<string> {
+  console.log('[OpenAI] Transcribing audio:', { filename });
+
+  const formData = new FormData();
+  const blob = new Blob([new Uint8Array(audioBuffer)]);
+  formData.append('file', blob, filename);
+  formData.append('model', 'whisper-1');
+  formData.append('language', 'ja');
+
+  const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    console.error('[OpenAI] Transcription error:', error);
+    throw new Error(`OpenAI Transcription API error: ${error}`);
+  }
+
+  const data = await response.json() as { text: string };
+  console.log('[OpenAI] Transcription complete:', data.text.substring(0, 100));
+  return data.text;
+}
+
 const DEFAULT_SYSTEM_PROMPT = `あなたは親切なアシスタントです。回答はMarkdown形式で記述してください。
 
 ## 出力の構造化ルール

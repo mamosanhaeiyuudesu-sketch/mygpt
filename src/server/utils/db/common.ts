@@ -42,12 +42,21 @@ export interface Preset {
   created_at: number;
 }
 
+export interface DiaryEntry {
+  id: string;
+  user_id: string;
+  content: string;
+  duration: number | null;
+  created_at: number;
+}
+
 // インメモリストレージ（ローカル開発用フォールバック）
 export const memoryStore = {
   users: [] as User[],
   chats: [] as Chat[],
   messages: [] as Message[],
-  presets: [] as Preset[]
+  presets: [] as Preset[],
+  diaryEntries: [] as DiaryEntry[]
 };
 
 /**

@@ -1,5 +1,11 @@
 <template>
   <div class="flex h-screen bg-gray-900 text-white">
+    <!-- アプリナビゲーション -->
+    <AppNavigation
+      @account-created="handleAccountCreated(fetchChats)"
+      @open-preset-manager="showPresetManager = true"
+    />
+
     <!-- モバイル用オーバーレイ -->
     <div
       v-if="isSidebarOpen"
@@ -21,7 +27,7 @@
     />
 
     <!-- メインエリア -->
-    <div class="flex-1 flex flex-col md:ml-0 bg-[#212121]">
+    <div class="flex-1 flex flex-col md:ml-0 pb-14 md:pb-0 bg-[#212121]">
       <!-- モバイル用ヘッダー -->
       <MobileHeader
         :model="currentChatModel"
@@ -114,27 +120,11 @@
       @save="handleSaveSettings"
     />
 
-    <!-- アカウント設定ダイアログ -->
-    <AccountSetupDialog
-      v-model="showAccountSetup"
-      @created="handleAccountCreated(fetchChats)"
-    />
-
     <!-- プリセット管理ダイアログ -->
     <PresetManagerDialog
       v-model="showPresetManager"
       :models="availableModels"
     />
-
-    <!-- アカウントバッジ（右上固定） -->
-    <div v-if="currentUser" class="fixed top-2 right-2 md:top-4 md:right-4 z-50">
-      <AccountBadge
-        :user-name="currentUser.name"
-        @logout="handleLogout"
-        @language-change="handleLanguageChange"
-        @open-preset-manager="showPresetManager = true"
-      />
-    </div>
   </div>
 </template>
 
@@ -143,7 +133,7 @@ import { useQuestionNavigation } from '~/composables/useQuestionNavigation';
 import { useChatPage } from '~/composables/useChatPage';
 
 // アカウント管理
-const { currentUser, initialize: initializeAccount, logout, updateLanguage } = useAccount();
+const { initialize: initializeAccount } = useAccount();
 const { t, setLanguage } = useI18n();
 
 const {
@@ -175,12 +165,12 @@ const {
   availableModels, selectedModel, isLoadingModels,
   initialize, handleSelectChat, handleNewChat, handleCreateChatFromDialog,
   handleDeleteChat, handleRenameChat, handleReorderChats, handleAccountCreated,
-  handleLogout, handleLanguageChange, handleGenerateTitle,
+  handleGenerateTitle,
   handleNewChatWithMessage, handleSendMessage, handleSaveSettings
 } = useChatPage({
   chats, currentChatId, messages, isLoading,
   createChat, selectChat, sendMessage, deleteChat, renameChat, updateChatSettings, reorderChats,
-  currentUser, initializeAccount, logout, updateLanguage,
+  initializeAccount,
   t, setLanguage,
   isSidebarOpen, showModelSelector, showSettingsEditor, showAccountSetup, isPageReady,
   scrollToMessage

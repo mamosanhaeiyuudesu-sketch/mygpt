@@ -59,3 +59,17 @@ CREATE TABLE presets (
 
 -- プリセット作成日時でソートするためのインデックス
 CREATE INDEX idx_presets_created_at ON presets(created_at);
+
+-- 日記エントリテーブル
+-- 音声入力で文字起こしした日記を保存
+CREATE TABLE diary_entries (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  content TEXT NOT NULL,                 -- 文字起こしされたテキスト
+  duration INTEGER,                      -- 録音秒数
+  created_at INTEGER NOT NULL,           -- UNIXタイムスタンプ (ミリ秒)
+  FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- ユーザーごとの日記一覧取得用インデックス
+CREATE INDEX idx_diary_entries_user_created ON diary_entries(user_id, created_at DESC);

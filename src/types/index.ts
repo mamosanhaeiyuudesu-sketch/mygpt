@@ -36,6 +36,15 @@ export interface Message {
   createdAt: number;
 }
 
+// 日記エントリ
+export interface DiaryEntry {
+  id: string;
+  userId: string;
+  content: string;
+  duration?: number; // 録音秒数
+  createdAt: number;
+}
+
 // プリセット
 export interface Preset {
   id: string;
@@ -100,6 +109,19 @@ export interface CreatePresetRequest {
   systemPrompt?: string | null;
   vectorStoreId?: string | null;
   useContext?: boolean;
+}
+
+export interface CreateDiaryEntryRequest {
+  content: string;
+  duration?: number;
+}
+
+export interface GetDiaryEntriesResponse {
+  entries: DiaryEntry[];
+}
+
+export interface TranscribeResponse {
+  text: string;
 }
 
 export interface CreateUserRequest {

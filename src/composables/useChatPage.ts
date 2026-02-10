@@ -20,10 +20,7 @@ interface UseChatPageOptions {
   reorderChats: (fromIndex: number, toIndex: number) => Promise<void>;
 
   // useAccount()
-  currentUser: Ref<{ name: string } | null>;
   initializeAccount: () => Promise<{ language?: Language } | null>;
-  logout: () => Promise<void>;
-  updateLanguage: (language: 'ja' | 'ko' | 'en') => Promise<void>;
 
   // useI18n()
   t: (key: string) => string;
@@ -44,7 +41,7 @@ export function useChatPage(options: UseChatPageOptions) {
   const {
     chats, currentChatId, messages,
     createChat, selectChat, sendMessage, deleteChat, renameChat, updateChatSettings, reorderChats,
-    initializeAccount, logout, updateLanguage,
+    initializeAccount,
     t, setLanguage,
     isSidebarOpen, showModelSelector, showSettingsEditor, showAccountSetup, isPageReady,
     scrollToMessage
@@ -170,16 +167,6 @@ export function useChatPage(options: UseChatPageOptions) {
     await Promise.all([fetchChats(), fetchModels()]);
   };
 
-  const handleLogout = async () => {
-    if (!confirm(t('logout.confirm'))) return;
-    await logout();
-    window.location.reload();
-  };
-
-  const handleLanguageChange = async (language: 'ja' | 'ko' | 'en') => {
-    await updateLanguage(language);
-  };
-
   // AIでタイトル生成
   const handleGenerateTitle = async (_chatId: string, excludeTitles?: string[]): Promise<string | null> => {
     try {
@@ -292,8 +279,6 @@ export function useChatPage(options: UseChatPageOptions) {
     handleRenameChat,
     handleReorderChats,
     handleAccountCreated,
-    handleLogout,
-    handleLanguageChange,
     handleGenerateTitle,
     handleNewChatWithMessage,
     handleSendMessage,

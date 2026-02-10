@@ -74,6 +74,9 @@ const translations: Record<Language, Record<string, string>> = {
     // Navigation
     'nav.prevQuestion': '前の質問へ',
     'nav.nextQuestion': '次の質問へ',
+    'nav.chat': 'チャット',
+    'nav.diary': '音声日記',
+    'nav.mindmap': '心の地図',
 
     // Errors
     'error.chatCreate': 'チャットの作成に失敗しました',
@@ -99,6 +102,15 @@ const translations: Record<Language, Record<string, string>> = {
     'presetManager.useContext': '文脈を保持する',
     'presetManager.empty': 'プリセットがありません',
     'presetManager.close': '閉じる',
+
+    // Diary
+    'diary.startRecording': '録音開始',
+    'diary.stopRecording': '録音停止',
+    'diary.transcribing': '文字起こし中...',
+    'diary.empty': 'まだ日記がありません',
+    'diary.deleteConfirm': 'この日記を削除しますか？',
+    'diary.micPermissionError': 'マイクの使用許可が必要です',
+    'diary.seconds': '秒',
 
     // Language
     'language': '言語',
@@ -172,6 +184,9 @@ const translations: Record<Language, Record<string, string>> = {
     // Navigation
     'nav.prevQuestion': '이전 질문으로',
     'nav.nextQuestion': '다음 질문으로',
+    'nav.chat': '채팅',
+    'nav.diary': '음성일기',
+    'nav.mindmap': '마음의 지도',
 
     // Errors
     'error.chatCreate': '채팅 생성에 실패했습니다',
@@ -197,6 +212,15 @@ const translations: Record<Language, Record<string, string>> = {
     'presetManager.useContext': '컨텍스트 유지',
     'presetManager.empty': '프리셋이 없습니다',
     'presetManager.close': '닫기',
+
+    // Diary
+    'diary.startRecording': '녹음 시작',
+    'diary.stopRecording': '녹음 중지',
+    'diary.transcribing': '텍스트 변환 중...',
+    'diary.empty': '아직 일기가 없습니다',
+    'diary.deleteConfirm': '이 일기를 삭제하시겠습니까?',
+    'diary.micPermissionError': '마이크 사용 권한이 필요합니다',
+    'diary.seconds': '초',
 
     // Language
     'language': '언어',
@@ -270,6 +294,9 @@ const translations: Record<Language, Record<string, string>> = {
     // Navigation
     'nav.prevQuestion': 'Previous question',
     'nav.nextQuestion': 'Next question',
+    'nav.chat': 'Chat',
+    'nav.diary': 'Voice Diary',
+    'nav.mindmap': 'Mind Map',
 
     // Errors
     'error.chatCreate': 'Failed to create chat',
@@ -295,6 +322,15 @@ const translations: Record<Language, Record<string, string>> = {
     'presetManager.useContext': 'Keep Context',
     'presetManager.empty': 'No presets',
     'presetManager.close': 'Close',
+
+    // Diary
+    'diary.startRecording': 'Start Recording',
+    'diary.stopRecording': 'Stop Recording',
+    'diary.transcribing': 'Transcribing...',
+    'diary.empty': 'No diary entries yet',
+    'diary.deleteConfirm': 'Delete this diary entry?',
+    'diary.micPermissionError': 'Microphone permission is required',
+    'diary.seconds': 'sec',
 
     // Language
     'language': 'Language',
