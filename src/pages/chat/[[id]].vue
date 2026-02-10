@@ -3,7 +3,6 @@
     <!-- アプリナビゲーション -->
     <AppNavigation
       @account-created="handleAccountCreated(fetchChats)"
-      @open-preset-manager="showPresetManager = true"
     />
 
     <!-- モバイル用オーバーレイ -->
@@ -19,11 +18,15 @@
       :chats="chats"
       :current-chat-id="currentChatId"
       :on-generate-title="handleGenerateTitle"
+      :user-name="currentUser?.name"
       @new-chat="handleNewChat"
       @select-chat="handleSelectChat"
       @delete-chat="handleDeleteChat"
       @rename-chat="handleRenameChat"
       @reorder-chats="handleReorderChats"
+      @logout="handleLogout"
+      @language-change="handleLanguageChange"
+      @open-preset-manager="showPresetManager = true"
     />
 
     <!-- メインエリア -->
@@ -133,7 +136,7 @@ import { useQuestionNavigation } from '~/composables/useQuestionNavigation';
 import { useChatPage } from '~/composables/useChatPage';
 
 // アカウント管理
-const { initialize: initializeAccount } = useAccount();
+const { currentUser, initialize: initializeAccount, logout, updateLanguage } = useAccount();
 const { t, setLanguage } = useI18n();
 
 const {
@@ -175,6 +178,18 @@ const {
   isSidebarOpen, showModelSelector, showSettingsEditor, showAccountSetup, isPageReady,
   scrollToMessage
 });
+
+// ログアウト
+const handleLogout = async () => {
+  if (!confirm(t('logout.confirm'))) return;
+  await logout();
+  window.location.reload();
+};
+
+// 言語変更
+const handleLanguageChange = async (language: import('~/types').Language) => {
+  await updateLanguage(language);
+};
 
 // 初期化
 onMounted(() => initialize(fetchChats));

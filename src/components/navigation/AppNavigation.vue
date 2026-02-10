@@ -27,16 +27,6 @@
     </NuxtLink>
   </nav>
 
-  <!-- アカウントバッジ（右上固定） -->
-  <div v-if="currentUser" class="fixed top-4 right-2 md:top-4 md:right-4 z-50">
-    <AccountBadge
-      :user-name="currentUser.name"
-      @logout="handleLogout"
-      @language-change="handleLanguageChange"
-      @open-preset-manager="$emit('openPresetManager')"
-    />
-  </div>
-
   <!-- アカウント設定ダイアログ -->
   <AccountSetupDialog
     v-model="showAccountSetup"
@@ -45,15 +35,12 @@
 </template>
 
 <script setup lang="ts">
-import type { Language } from '~/types';
-
 defineEmits<{
-  openPresetManager: [];
   accountCreated: [];
 }>();
 
 const { t, setLanguage } = useI18n();
-const { currentUser, initialize: initializeAccount, logout, updateLanguage } = useAccount();
+const { initialize: initializeAccount } = useAccount();
 const route = useRoute();
 
 const showAccountSetup = ref(false);
@@ -89,16 +76,6 @@ const initAccount = async () => {
   } else if (user.language) {
     setLanguage(user.language);
   }
-};
-
-const handleLogout = async () => {
-  if (!confirm(t('logout.confirm'))) return;
-  await logout();
-  window.location.reload();
-};
-
-const handleLanguageChange = async (language: Language) => {
-  await updateLanguage(language);
 };
 
 onMounted(() => initAccount());

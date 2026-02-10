@@ -18,11 +18,14 @@
       :is-recording="isRecording"
       :is-transcribing="isTranscribing"
       :recording-duration="recordingDuration"
+      :user-name="currentUser?.name"
       @select-entry="handleSelectEntry"
       @delete-entry="handleDeleteEntry"
       @rename-entry="handleRenameEntry"
       @start-recording="handleStartRecording"
       @stop-recording="handleStopRecording"
+      @logout="handleLogout"
+      @language-change="handleLanguageChange"
     />
 
     <!-- メインエリア -->
@@ -65,6 +68,7 @@
 
 <script setup lang="ts">
 const { t } = useI18n();
+const { currentUser, logout, updateLanguage } = useAccount();
 const {
   entries,
   currentEntryId,
@@ -111,6 +115,18 @@ const handleDeleteEntry = async (id: string) => {
 
 const handleRenameEntry = async (id: string, title: string) => {
   await renameEntry(id, title);
+};
+
+// ログアウト
+const handleLogout = async () => {
+  if (!confirm(t('logout.confirm'))) return;
+  await logout();
+  window.location.reload();
+};
+
+// 言語変更
+const handleLanguageChange = async (language: import('~/types').Language) => {
+  await updateLanguage(language);
 };
 
 const formatDate = (timestamp: number): string => {
