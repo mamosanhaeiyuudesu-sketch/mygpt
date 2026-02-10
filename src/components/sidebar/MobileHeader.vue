@@ -8,15 +8,18 @@
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
       </svg>
     </button>
-    <span class="ml-3 font-semibold">MyGPT</span>
+    <span class="ml-3 font-semibold">{{ title }}</span>
     <span v-if="model" class="ml-2 text-xs text-gray-400 bg-gray-800 px-2 py-1 rounded">{{ model }}</span>
   </div>
 </template>
 
 <script setup lang="ts">
-defineProps<{
+withDefaults(defineProps<{
+  title?: string;
   model?: string | null;
-}>();
+}>(), {
+  title: 'MyGPT',
+});
 
 const emit = defineEmits<{
   openSidebar: [];

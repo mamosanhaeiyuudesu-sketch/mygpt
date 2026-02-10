@@ -28,17 +28,10 @@
     <!-- メインエリア -->
     <div class="flex-1 flex flex-col md:ml-0 pb-14 md:pb-0 bg-[#212121]">
       <!-- モバイル用ヘッダー -->
-      <div class="md:hidden flex items-center py-[4px] px-3 border-b border-gray-800">
-        <button
-          @click="isSidebarOpen = true"
-          class="p-1 hover:bg-gray-800 rounded-lg"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
-        <span class="ml-3 font-semibold">{{ t('nav.diary') }}</span>
-      </div>
+      <MobileHeader
+        :title="t('nav.diary')"
+        @open-sidebar="isSidebarOpen = true"
+      />
 
       <!-- エントリ未選択時 -->
       <div v-if="!currentEntryId" class="flex-1 flex flex-col items-center justify-center">
