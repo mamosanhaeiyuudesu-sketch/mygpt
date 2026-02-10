@@ -30,6 +30,7 @@ export default defineEventHandler(async (event) => {
   return {
     id: entry.id,
     userId: entry.user_id,
+    title: entry.title,
     content: entry.content,
     duration: entry.duration,
     createdAt: entry.created_at,

@@ -1,82 +1,68 @@
 <template>
   <div class="flex h-screen bg-gray-900 text-white">
+    <!-- アプリナビゲーション -->
     <AppNavigation />
-    <div class="flex-1 flex flex-col pb-14 md:pb-0">
-      <!-- 録音エリア（上部） -->
-      <div class="flex flex-col items-center pt-8 pb-6 border-b border-gray-800">
-        <!-- マイクボタン / 停止ボタン -->
-        <div v-if="!isRecording && !isTranscribing">
-          <button
-            @click="handleStartRecording"
-            class="w-20 h-20 rounded-full bg-red-600 hover:bg-red-500 transition-colors flex items-center justify-center shadow-lg"
-            :title="t('diary.startRecording')"
-          >
-            <svg class="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
-              <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
-            </svg>
-          </button>
-          <p class="text-gray-500 text-sm mt-3 text-center">{{ t('diary.startRecording') }}</p>
-        </div>
 
-        <!-- 録音中 -->
-        <div v-if="isRecording" class="flex flex-col items-center">
-          <button
-            @click="handleStopRecording"
-            class="w-20 h-20 rounded-full bg-gray-700 hover:bg-gray-600 transition-colors flex items-center justify-center shadow-lg animate-pulse"
-            :title="t('diary.stopRecording')"
-          >
-            <svg class="w-10 h-10 text-red-500" fill="currentColor" viewBox="0 0 24 24">
-              <rect x="6" y="6" width="12" height="12" rx="2" />
-            </svg>
-          </button>
-          <p class="text-red-400 text-sm mt-3 font-mono">
-            {{ formatDuration(recordingDuration) }}
-          </p>
-          <p class="text-gray-500 text-xs mt-1">{{ t('diary.stopRecording') }}</p>
-        </div>
+    <!-- モバイル用オーバーレイ -->
+    <div
+      v-if="isSidebarOpen"
+      class="fixed inset-0 bg-black/50 z-40 md:hidden"
+      @click="isSidebarOpen = false"
+    ></div>
 
-        <!-- 文字起こし中 -->
-        <div v-if="isTranscribing" class="flex flex-col items-center">
-          <div class="w-20 h-20 rounded-full bg-gray-800 flex items-center justify-center">
-            <svg class="w-10 h-10 text-blue-400 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke-width="4" />
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-            </svg>
-          </div>
-          <p class="text-blue-400 text-sm mt-3">{{ t('diary.transcribing') }}</p>
-        </div>
+    <!-- サイドバー（録音ボタン + エントリ一覧） -->
+    <DiarySidebar
+      :open="isSidebarOpen"
+      :entries="entries"
+      :current-entry-id="currentEntryId"
+      :is-recording="isRecording"
+      :is-transcribing="isTranscribing"
+      :recording-duration="recordingDuration"
+      @select-entry="handleSelectEntry"
+      @delete-entry="handleDeleteEntry"
+      @rename-entry="handleRenameEntry"
+      @start-recording="handleStartRecording"
+      @stop-recording="handleStopRecording"
+    />
+
+    <!-- メインエリア -->
+    <div class="flex-1 flex flex-col md:ml-0 pb-14 md:pb-0 bg-[#212121]">
+      <!-- モバイル用ヘッダー -->
+      <div class="md:hidden flex items-center p-3 border-b border-gray-800">
+        <button
+          @click="isSidebarOpen = true"
+          class="p-2 hover:bg-gray-800 rounded-lg"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+        <span class="ml-3 font-semibold">{{ t('nav.diary') }}</span>
       </div>
 
-      <!-- 過去ログ一覧 -->
-      <div class="flex-1 overflow-y-auto px-4 py-4">
-        <div v-if="entries.length === 0" class="flex items-center justify-center h-full">
-          <p class="text-gray-600">{{ t('diary.empty') }}</p>
+      <!-- エントリ未選択時 -->
+      <div v-if="!currentEntryId" class="flex-1 flex flex-col items-center justify-center">
+        <svg class="w-16 h-16 text-gray-700 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+        </svg>
+        <p class="text-gray-600 text-sm">{{ t('diary.empty') }}</p>
+      </div>
+
+      <!-- エントリ選択時：詳細表示 -->
+      <div v-else-if="currentEntry" class="flex-1 flex flex-col overflow-hidden">
+        <!-- ヘッダー -->
+        <div class="px-4 py-3 border-b border-gray-800">
+          <div class="text-xs text-gray-500">
+            {{ formatDate(currentEntry.createdAt) }}
+            <span v-if="currentEntry.duration" class="ml-2 text-gray-600">({{ formatDurationShort(currentEntry.duration) }})</span>
+          </div>
+          <h2 class="font-medium text-sm mt-1">{{ currentEntry.title }}</h2>
         </div>
 
-        <div v-else class="max-w-2xl mx-auto space-y-3">
-          <div
-            v-for="entry in entries"
-            :key="entry.id"
-            class="bg-gray-800 rounded-lg p-4 group"
-          >
-            <div class="flex items-start justify-between mb-2">
-              <span class="text-xs text-gray-500">
-                {{ formatDate(entry.createdAt) }}
-                <span v-if="entry.duration" class="ml-2 text-gray-600">
-                  ({{ entry.duration }}{{ t('diary.seconds') }})
-                </span>
-              </span>
-              <button
-                @click="handleDelete(entry.id)"
-                class="opacity-0 group-hover:opacity-100 transition-opacity text-gray-600 hover:text-red-400 p-1"
-              >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-              </button>
-            </div>
-            <p class="text-gray-200 text-sm whitespace-pre-wrap">{{ entry.content }}</p>
+        <!-- コンテンツ -->
+        <div class="flex-1 overflow-y-auto px-4 py-4">
+          <div class="max-w-2xl mx-auto">
+            <p class="text-gray-200 text-sm whitespace-pre-wrap leading-relaxed">{{ currentEntry.content }}</p>
           </div>
         </div>
       </div>
@@ -88,18 +74,29 @@
 const { t } = useI18n();
 const {
   entries,
+  currentEntryId,
+  currentEntry,
   isRecording,
   isTranscribing,
   recordingDuration,
   loadEntries,
+  selectEntry,
   startRecording,
   stopRecording,
+  renameEntry,
   deleteEntry,
 } = useDiary();
+
+const isSidebarOpen = ref(false);
 
 onMounted(() => {
   loadEntries();
 });
+
+const handleSelectEntry = (id: string) => {
+  selectEntry(id);
+  isSidebarOpen.value = false;
+};
 
 const handleStartRecording = async () => {
   try {
@@ -113,16 +110,14 @@ const handleStopRecording = async () => {
   await stopRecording();
 };
 
-const handleDelete = async (id: string) => {
+const handleDeleteEntry = async (id: string) => {
   if (confirm(t('diary.deleteConfirm'))) {
     await deleteEntry(id);
   }
 };
 
-const formatDuration = (seconds: number): string => {
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+const handleRenameEntry = async (id: string, title: string) => {
+  await renameEntry(id, title);
 };
 
 const formatDate = (timestamp: number): string => {
@@ -133,5 +128,11 @@ const formatDate = (timestamp: number): string => {
   const hours = d.getHours().toString().padStart(2, '0');
   const minutes = d.getMinutes().toString().padStart(2, '0');
   return `${year}/${month}/${day} ${hours}:${minutes}`;
+};
+
+const formatDurationShort = (seconds: number): string => {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return m > 0 ? `${m}m${s}s` : `${s}s`;
 };
 </script>

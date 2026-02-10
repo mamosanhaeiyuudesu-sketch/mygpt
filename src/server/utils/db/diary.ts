@@ -28,14 +28,17 @@ export async function createDiaryEntry(
   event: H3Event,
   userId: string,
   content: string,
-  duration?: number
+  duration?: number,
+  title?: string
 ): Promise<DiaryEntry> {
   const db = getD1(event);
   const id = generateId('diary');
   const now = Date.now();
+  const entryTitle = title || content.substring(0, 30).replace(/\n/g, ' ');
   const entry: DiaryEntry = {
     id,
     user_id: userId,
+    title: entryTitle,
     content,
     duration: duration ?? null,
     created_at: now,
@@ -43,13 +46,26 @@ export async function createDiaryEntry(
 
   if (db) {
     await db.prepare(
-      'INSERT INTO diary_entries (id, user_id, content, duration, created_at) VALUES (?, ?, ?, ?, ?)'
-    ).bind(id, userId, content, duration ?? null, now).run();
+      'INSERT INTO diary_entries (id, user_id, title, content, duration, created_at) VALUES (?, ?, ?, ?, ?, ?)'
+    ).bind(id, userId, entryTitle, content, duration ?? null, now).run();
   } else {
     memoryStore.diaryEntries.push(entry);
   }
 
   return entry;
+}
+
+/**
+ * 日記エントリのタイトルを更新
+ */
+export async function renameDiaryEntry(event: H3Event, entryId: string, title: string): Promise<void> {
+  const db = getD1(event);
+  if (db) {
+    await db.prepare('UPDATE diary_entries SET title = ? WHERE id = ?').bind(title, entryId).run();
+  } else {
+    const entry = memoryStore.diaryEntries.find(e => e.id === entryId);
+    if (entry) entry.title = title;
+  }
 }
 
 /**

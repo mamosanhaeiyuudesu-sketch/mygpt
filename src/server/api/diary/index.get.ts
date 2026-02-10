@@ -20,6 +20,7 @@ export default defineEventHandler(async (event) => {
     entries: entries.map(e => ({
       id: e.id,
       userId: e.user_id,
+      title: e.title,
       content: e.content,
       duration: e.duration,
       createdAt: e.created_at,

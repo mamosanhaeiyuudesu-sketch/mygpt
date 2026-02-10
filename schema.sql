@@ -65,6 +65,7 @@ CREATE INDEX idx_presets_created_at ON presets(created_at);
 CREATE TABLE diary_entries (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
+  title TEXT NOT NULL DEFAULT '',        -- 日記タイトル
   content TEXT NOT NULL,                 -- 文字起こしされたテキスト
   duration INTEGER,                      -- 録音秒数
   created_at INTEGER NOT NULL,           -- UNIXタイムスタンプ (ミリ秒)

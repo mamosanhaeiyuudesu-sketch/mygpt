@@ -40,6 +40,7 @@ export interface Message {
 export interface DiaryEntry {
   id: string;
   userId: string;
+  title: string;
   content: string;
   duration?: number; // 録音秒数
   createdAt: number;

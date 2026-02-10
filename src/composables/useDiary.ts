@@ -3,13 +3,14 @@
  * 録音 → 文字起こし → 保存のフローを管理
  * デュアル環境対応（localStorage / API）
  */
-import { ref, readonly } from 'vue';
+import { ref, readonly, computed } from 'vue';
 import type { DiaryEntry } from '~/types';
 import { isLocalEnvironment } from '~/utils/environment';
 import { loadDiaryEntries, saveDiaryEntries } from '~/utils/diaryStorage';
 import { getUserFromStorage } from '~/utils/storage';
 
 const entries = ref<DiaryEntry[]>([]);
+const currentEntryId = ref<string | null>(null);
 const isRecording = ref(false);
 const isTranscribing = ref(false);
 const recordingDuration = ref(0);
@@ -19,6 +20,10 @@ let audioChunks: Blob[] = [];
 let durationTimer: ReturnType<typeof setInterval> | null = null;
 
 export function useDiary() {
+  const currentEntry = computed(() =>
+    entries.value.find(e => e.id === currentEntryId.value) || null
+  );
+
   const loadEntries = async () => {
     if (isLocalEnvironment()) {
       const user = getUserFromStorage();
@@ -34,6 +39,10 @@ export function useDiary() {
         entries.value = data.entries;
       }
     }
+  };
+
+  const selectEntry = (entryId: string | null) => {
+    currentEntryId.value = entryId;
   };
 
   const startRecording = async () => {
@@ -101,27 +110,34 @@ export function useDiary() {
         return;
       }
 
-      // Save entry
-      await saveEntry(text, duration);
+      // Save entry and select it
+      const newEntry = await saveEntry(text, duration);
+      if (newEntry) {
+        currentEntryId.value = newEntry.id;
+      }
     } finally {
       isTranscribing.value = false;
     }
   };
 
-  const saveEntry = async (content: string, duration?: number) => {
+  const saveEntry = async (content: string, duration?: number): Promise<DiaryEntry | null> => {
+    const title = content.substring(0, 30).replace(/\n/g, ' ');
+
     if (isLocalEnvironment()) {
       const user = getUserFromStorage();
-      if (!user) return;
+      if (!user) return null;
 
       const entry: DiaryEntry = {
         id: `diary_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`,
         userId: user.id,
+        title,
         content,
         duration,
         createdAt: Date.now(),
       };
       entries.value = [entry, ...entries.value];
       saveDiaryEntries(user.id, entries.value);
+      return entry;
     } else {
       const res = await fetch('/api/diary', {
         method: 'POST',
@@ -131,6 +147,30 @@ export function useDiary() {
       if (res.ok) {
         const entry = (await res.json()) as DiaryEntry;
         entries.value = [entry, ...entries.value];
+        return entry;
+      }
+    }
+    return null;
+  };
+
+  const renameEntry = async (entryId: string, title: string) => {
+    if (isLocalEnvironment()) {
+      const user = getUserFromStorage();
+      if (!user) return;
+      entries.value = entries.value.map(e =>
+        e.id === entryId ? { ...e, title } : e
+      );
+      saveDiaryEntries(user.id, entries.value);
+    } else {
+      const res = await fetch(`/api/diary/${entryId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title }),
+      });
+      if (res.ok) {
+        entries.value = entries.value.map(e =>
+          e.id === entryId ? { ...e, title } : e
+        );
       }
     }
   };
@@ -147,16 +187,24 @@ export function useDiary() {
         entries.value = entries.value.filter(e => e.id !== entryId);
       }
     }
+    // If deleted entry was selected, deselect
+    if (currentEntryId.value === entryId) {
+      currentEntryId.value = null;
+    }
   };
 
   return {
     entries: readonly(entries),
+    currentEntryId: readonly(currentEntryId),
+    currentEntry,
     isRecording: readonly(isRecording),
     isTranscribing: readonly(isTranscribing),
     recordingDuration: readonly(recordingDuration),
     loadEntries,
+    selectEntry,
     startRecording,
     stopRecording,
+    renameEntry,
     deleteEntry,
   };
 }

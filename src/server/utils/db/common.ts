@@ -45,6 +45,7 @@ export interface Preset {
 export interface DiaryEntry {
   id: string;
   user_id: string;
+  title: string;
   content: string;
   duration: number | null;
   created_at: number;
