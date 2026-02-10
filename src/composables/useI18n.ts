@@ -67,6 +67,8 @@ const translations: Record<Language, Record<string, string>> = {
     'header.rag': 'RAG有効（Vector Store）',
     'header.fast': '文脈なし（高速モード）',
     'header.editSettings': '設定を編集',
+    'header.showDetails': '詳細',
+    'header.hideDetails': '閉じる',
 
     // Common
     'button.cancel': 'キャンセル',
@@ -182,6 +184,8 @@ const translations: Record<Language, Record<string, string>> = {
     'header.rag': 'RAG 활성화 (Vector Store)',
     'header.fast': '컨텍스트 없음 (고속 모드)',
     'header.editSettings': '설정 편집',
+    'header.showDetails': '상세',
+    'header.hideDetails': '닫기',
 
     // Common
     'button.cancel': '취소',
@@ -297,6 +301,8 @@ const translations: Record<Language, Record<string, string>> = {
     'header.rag': 'RAG enabled (Vector Store)',
     'header.fast': 'No context (fast mode)',
     'header.editSettings': 'Edit Settings',
+    'header.showDetails': 'Details',
+    'header.hideDetails': 'Hide',
 
     // Common
     'button.cancel': 'Cancel',
