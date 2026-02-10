@@ -28,7 +28,7 @@
   </nav>
 
   <!-- アカウントバッジ（右上固定） -->
-  <div v-if="currentUser" class="fixed top-3 right-2 md:top-4 md:right-4 z-50">
+  <div v-if="currentUser" class="fixed top-4 right-2 md:top-4 md:right-4 z-50">
     <AccountBadge
       :user-name="currentUser.name"
       @logout="handleLogout"
