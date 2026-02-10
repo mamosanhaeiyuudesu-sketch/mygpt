@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* モバイルでベースフォントサイズを大きくする（デフォルト16px → 18px） */
+html {
+  font-size: 18px;
+}
+
+/* md以上（768px〜）では通常サイズに戻す */
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}

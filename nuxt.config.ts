@@ -4,6 +4,9 @@ export default defineNuxtConfig({
   srcDir: 'src/',
   serverDir: 'src/server/',
 
+  // Global CSS
+  css: ['~/assets/css/global.css'],
+
   // Nuxt modules
   modules: ['@nuxtjs/tailwindcss'],
 
