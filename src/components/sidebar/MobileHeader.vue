@@ -18,7 +18,7 @@ withDefaults(defineProps<{
   title?: string;
   model?: string | null;
 }>(), {
-  title: 'MyGPT',
+  title: 'チャット',
 });
 
 const emit = defineEmits<{

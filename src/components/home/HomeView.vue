@@ -5,7 +5,7 @@
       <div class="w-full max-w-md">
         <!-- ヘッダー：タイトル + プリセット選択 -->
         <div class="flex items-center justify-between mb-4">
-          <h1 class="text-2xl md:text-3xl font-bold">MyGPT</h1>
+          <h1 class="text-2xl md:text-3xl font-bold">新規チャット</h1>
           <select
             v-model="selectedPresetId"
             @change="handlePresetChange"

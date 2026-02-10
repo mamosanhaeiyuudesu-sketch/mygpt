@@ -36,12 +36,38 @@
         @open-sidebar="isSidebarOpen = true"
       />
 
-      <!-- エントリ未選択時 -->
+      <!-- エントリ未選択時：録音ボタン -->
       <div v-if="!currentEntryId" class="flex-1 flex flex-col items-center justify-center">
-        <svg class="w-16 h-16 text-gray-700 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-        </svg>
-        <p class="text-gray-600 text-sm">{{ t('diary.empty') }}</p>
+        <button
+          v-if="!isRecording && !isTranscribing"
+          @click="handleStartRecording"
+          class="w-20 h-20 rounded-full bg-red-600 hover:bg-red-500 active:scale-95 transition-all flex items-center justify-center shadow-lg"
+        >
+          <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
+            <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
+          </svg>
+        </button>
+        <button
+          v-else-if="isRecording"
+          @click="handleStopRecording"
+          class="w-20 h-20 rounded-full bg-gray-800 hover:bg-gray-700 active:scale-95 transition-all flex flex-col items-center justify-center shadow-lg animate-pulse"
+        >
+          <svg class="w-8 h-8 text-red-500" fill="currentColor" viewBox="0 0 24 24">
+            <rect x="6" y="6" width="12" height="12" rx="2" />
+          </svg>
+          <span class="text-red-400 text-xs font-mono mt-1">{{ formatDuration(recordingDuration) }}</span>
+        </button>
+        <div
+          v-else-if="isTranscribing"
+          class="w-20 h-20 rounded-full bg-gray-800 flex flex-col items-center justify-center shadow-lg"
+        >
+          <svg class="w-8 h-8 text-blue-400 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke-width="4" />
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          <span class="text-blue-400 text-[10px] mt-1">{{ t('diary.transcribing') }}</span>
+        </div>
       </div>
 
       <!-- エントリ選択時：詳細表示 -->
@@ -127,6 +153,12 @@ const handleLogout = async () => {
 // 言語変更
 const handleLanguageChange = async (language: import('~/types').Language) => {
   await updateLanguage(language);
+};
+
+const formatDuration = (seconds: number): string => {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 };
 
 const formatDate = (timestamp: number): string => {
