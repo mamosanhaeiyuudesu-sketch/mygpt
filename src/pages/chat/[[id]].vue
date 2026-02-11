@@ -13,7 +13,7 @@
     ></div>
 
     <!-- サイドバー -->
-    <Sidebar
+    <ChatSidebar
       :open="isSidebarOpen"
       :chats="chats"
       :current-chat-id="currentChatId"
