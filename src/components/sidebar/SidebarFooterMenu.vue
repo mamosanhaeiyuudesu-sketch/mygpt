@@ -83,8 +83,9 @@
 <script setup lang="ts">
 import type { Language } from '~/types';
 
-defineProps<{
+const props = defineProps<{
   userName?: string;
+  sidebarOpen?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -95,6 +96,11 @@ const emit = defineEmits<{
 const { t, currentLanguage, languageOptions, setLanguage, currentFontSize, setFontSize, fontSizeOptions } = useI18n();
 
 const isMenuOpen = ref(false);
+
+// サイドバーが閉じたらメニューも閉じる
+watch(() => props.sidebarOpen, (open) => {
+  if (!open) isMenuOpen.value = false;
+});
 
 const handleLanguageChange = (language: Language) => {
   setLanguage(language);

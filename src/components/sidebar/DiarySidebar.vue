@@ -57,6 +57,7 @@
     <!-- フッター：歯車アイコン + アカウント名 -->
     <SidebarFooterMenu
       :user-name="userName"
+      :sidebar-open="open"
       @logout="emit('logout')"
       @language-change="(lang) => emit('languageChange', lang)"
     />
