@@ -14,7 +14,7 @@
   </nav>
 
   <!-- モバイル: ボトムナビ -->
-  <nav class="fixed bottom-0 left-0 right-0 h-14 bg-gray-950 border-t border-gray-800 flex md:hidden z-50">
+  <nav class="fixed bottom-0 left-0 right-0 h-9 bg-gray-950 border-t border-gray-800 flex md:hidden z-50">
     <NuxtLink
       v-for="item in navItems"
       :key="item.to"
@@ -22,8 +22,8 @@
       class="flex-1 flex flex-col items-center justify-center transition-colors"
       :class="isActive(item.to) ? 'text-white' : 'text-gray-500'"
     >
-      <div class="w-5 h-5" v-html="item.icon" />
-      <span class="text-[10px] mt-0.5">{{ item.label }}</span>
+      <div class="w-4 h-4" v-html="item.icon" />
+      <span class="text-[9px] mt-0">{{ item.label }}</span>
     </NuxtLink>
   </nav>
 

@@ -1,6 +1,6 @@
 <template>
   <div
-    class="fixed md:relative z-50 h-full w-64 bg-gray-950 flex flex-col border-r border-gray-800 transition-transform duration-300 md:translate-x-0"
+    class="fixed md:relative z-50 h-full w-56 md:w-64 bg-gray-950 flex flex-col border-r border-gray-800 transition-transform duration-300 md:translate-x-0"
     :class="open ? 'translate-x-0' : '-translate-x-full'"
   >
     <!-- New Chat ボタン -->

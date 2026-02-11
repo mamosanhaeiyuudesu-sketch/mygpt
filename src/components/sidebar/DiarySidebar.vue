@@ -1,6 +1,6 @@
 <template>
   <div
-    class="fixed md:relative z-50 h-full w-64 bg-gray-950 flex flex-col border-r border-gray-800 transition-transform duration-300 md:translate-x-0"
+    class="fixed md:relative z-50 h-full w-56 md:w-64 bg-gray-950 flex flex-col border-r border-gray-800 transition-transform duration-300 md:translate-x-0"
     :class="open ? 'translate-x-0' : '-translate-x-full'"
   >
     <!-- 録音ボタン -->
@@ -11,11 +11,13 @@
         @click="emit('startRecording')"
         class="w-full px-4 py-3 bg-red-600 hover:bg-red-500 rounded-lg transition-colors flex items-center justify-center gap-2"
       >
-        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
-          <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
-        </svg>
-        {{ t('diary.startRecording') }}
+        <span class="flex items-center gap-2 -translate-x-[5px]">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
+            <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
+          </svg>
+          {{ t('diary.startRecording') }}
+        </span>
       </button>
       <!-- 録音中：停止ボタン + 時間 -->
       <button
