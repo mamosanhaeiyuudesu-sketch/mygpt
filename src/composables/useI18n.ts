@@ -128,6 +128,7 @@ const translations: Record<Language, Record<string, string>> = {
     'fontSize.small': '小',
     'fontSize.medium': '中',
     'fontSize.large': '大',
+    'fontSize.xlarge': '極大',
   },
   ko: {
     // AccountBadge
@@ -252,6 +253,7 @@ const translations: Record<Language, Record<string, string>> = {
     'fontSize.small': '소',
     'fontSize.medium': '중',
     'fontSize.large': '대',
+    'fontSize.xlarge': '특대',
   },
   en: {
     // AccountBadge
@@ -376,10 +378,11 @@ const translations: Record<Language, Record<string, string>> = {
     'fontSize.small': 'S',
     'fontSize.medium': 'M',
     'fontSize.large': 'L',
+    'fontSize.xlarge': 'XL',
   },
 };
 
-export type FontSize = 'small' | 'medium' | 'large';
+export type FontSize = 'small' | 'medium' | 'large' | 'xlarge';
 
 // グローバル状態
 const currentLanguage = ref<Language>('ja');
@@ -428,7 +431,7 @@ export const useI18n = () => {
   const initFontSize = () => {
     if (typeof localStorage !== 'undefined') {
       const saved = localStorage.getItem('mygpt_fontSize') as FontSize | null;
-      if (saved && ['small', 'medium', 'large'].includes(saved)) {
+      if (saved && ['small', 'medium', 'large', 'xlarge'].includes(saved)) {
         setFontSize(saved);
       }
     }
@@ -441,6 +444,7 @@ export const useI18n = () => {
     { value: 'small', labelKey: 'fontSize.small' },
     { value: 'medium', labelKey: 'fontSize.medium' },
     { value: 'large', labelKey: 'fontSize.large' },
+    { value: 'xlarge', labelKey: 'fontSize.xlarge' },
   ];
 
   return {

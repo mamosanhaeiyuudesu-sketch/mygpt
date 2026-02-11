@@ -1,5 +1,5 @@
 <template>
-  <div class="md:hidden flex items-center py-[3px] px-2 border-b border-gray-800">
+  <div class="md:hidden flex items-center py-1 px-2 border-b border-gray-800">
     <button
       @click="emit('openSidebar')"
       class="p-0.5 hover:bg-gray-800 rounded-lg"

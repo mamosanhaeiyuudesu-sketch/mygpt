@@ -14,7 +14,7 @@
   </nav>
 
   <!-- モバイル: ボトムナビ -->
-  <nav class="fixed bottom-0 left-0 right-0 h-9 bg-gray-950 border-t border-gray-800 flex md:hidden z-50">
+  <nav class="fixed bottom-0 left-0 right-0 h-12 bg-gray-950 border-t border-gray-800 flex md:hidden z-50">
     <NuxtLink
       v-for="item in navItems"
       :key="item.to"
