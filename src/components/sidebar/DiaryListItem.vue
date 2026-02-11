@@ -1,7 +1,8 @@
 <template>
   <div
     @click="emit('select')"
-    class="group relative mb-1 px-3 py-3 rounded-lg cursor-pointer transition-colors"
+    @touchend.prevent="emit('select')"
+    class="group relative mb-1 px-3 py-3 rounded-lg cursor-pointer transition-colors touch-manipulation"
     :class="isActive ? 'bg-gray-800' : 'hover:bg-gray-800'"
     @dblclick="startEditing"
   >

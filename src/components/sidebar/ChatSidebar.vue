@@ -25,7 +25,7 @@
         :is-active="chat.id === currentChatId"
         :is-drag-over="dragOverIndex === index"
         :on-generate-title="props.onGenerateTitle"
-        @select="emit('selectChat', chat.id)"
+        @select="emit('selectChat', chat.id); emit('update:open', false)"
         @delete="emit('deleteChat', chat.id)"
         @rename="(name) => emit('renameChat', chat.id, name)"
         @dragstart="(e) => handleDragStart(e, index)"

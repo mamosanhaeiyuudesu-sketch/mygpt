@@ -12,7 +12,7 @@
 
     <!-- サイドバー（録音ボタン + エントリ一覧） -->
     <DiarySidebar
-      :open="isSidebarOpen"
+      v-model:open="isSidebarOpen"
       :entries="entries"
       :current-entry-id="currentEntryId"
       :is-recording="isRecording"

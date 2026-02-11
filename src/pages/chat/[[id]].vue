@@ -14,7 +14,7 @@
 
     <!-- サイドバー -->
     <ChatSidebar
-      :open="isSidebarOpen"
+      v-model:open="isSidebarOpen"
       :chats="chats"
       :current-chat-id="currentChatId"
       :on-generate-title="handleGenerateTitle"

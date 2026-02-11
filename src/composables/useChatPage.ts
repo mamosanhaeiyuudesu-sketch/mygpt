@@ -119,9 +119,9 @@ export function useChatPage(options: UseChatPageOptions) {
   // --- イベントハンドラ ---
 
   const handleSelectChat = async (chatId: string) => {
+    isSidebarOpen.value = false;
     await selectChat(chatId);
     router.push(`/chat/${chatId}`);
-    isSidebarOpen.value = false;
 
     // 最新の質問（最後のユーザーメッセージ）までスクロール
     nextTick(() => {

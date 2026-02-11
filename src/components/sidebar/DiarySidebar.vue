@@ -48,7 +48,7 @@
         :key="entry.id"
         :entry="entry"
         :is-active="entry.id === currentEntryId"
-        @select="emit('selectEntry', entry.id)"
+        @select="emit('selectEntry', entry.id); emit('update:open', false)"
         @delete="emit('deleteEntry', entry.id)"
         @rename="(title) => emit('renameEntry', entry.id, title)"
       />
