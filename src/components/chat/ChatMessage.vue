@@ -64,12 +64,7 @@ const createRenderer = (hasH2: boolean) => {
 
 marked.use({ breaks: true });
 
-interface Message {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  createdAt?: number;
-}
+import type { Message } from '~/types';
 
 const props = defineProps<{
   message: Message;

@@ -101,6 +101,13 @@ export function useChatPage(options: UseChatPageOptions) {
     if (chatId) {
       if (chats.value.some(c => c.id === chatId)) {
         await selectChat(chatId);
+        // 最新の質問までスクロール
+        nextTick(() => {
+          const lastUserMessage = [...messages.value].reverse().find(m => m.role === 'user');
+          if (lastUserMessage) {
+            scrollToMessage(lastUserMessage.id);
+          }
+        });
       } else {
         router.replace('/chat');
       }
@@ -115,6 +122,14 @@ export function useChatPage(options: UseChatPageOptions) {
     await selectChat(chatId);
     router.push(`/chat/${chatId}`);
     isSidebarOpen.value = false;
+
+    // 最新の質問（最後のユーザーメッセージ）までスクロール
+    nextTick(() => {
+      const lastUserMessage = [...messages.value].reverse().find(m => m.role === 'user');
+      if (lastUserMessage) {
+        scrollToMessage(lastUserMessage.id);
+      }
+    });
   };
 
   const handleNewChat = () => {

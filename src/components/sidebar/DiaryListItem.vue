@@ -34,7 +34,7 @@
         <template v-else>
           <div class="font-medium text-sm truncate">{{ entry.title }}</div>
           <div class="text-xs text-gray-500 mt-1">
-            {{ formatDate(entry.createdAt) }}
+            {{ formatDateShort(entry.createdAt) }}
             <span v-if="entry.duration" class="text-gray-600 ml-1">({{ formatDurationShort(entry.duration) }})</span>
           </div>
         </template>
@@ -66,15 +66,11 @@
 </template>
 
 <script setup lang="ts">
-interface Entry {
-  id: string;
-  title: string;
-  duration?: number;
-  createdAt: number;
-}
+import { formatDateShort, formatDurationShort } from '~/utils/dateFormat';
+import type { DiaryEntryPreview } from '~/types';
 
 const props = defineProps<{
-  entry: Entry;
+  entry: DiaryEntryPreview;
   isActive: boolean;
 }>();
 
@@ -118,18 +114,4 @@ const handleBlur = (event: FocusEvent) => {
   finishEditing();
 };
 
-const formatDate = (timestamp: number): string => {
-  const d = new Date(timestamp);
-  const month = (d.getMonth() + 1).toString().padStart(2, '0');
-  const day = d.getDate().toString().padStart(2, '0');
-  const hours = d.getHours().toString().padStart(2, '0');
-  const minutes = d.getMinutes().toString().padStart(2, '0');
-  return `${month}/${day} ${hours}:${minutes}`;
-};
-
-const formatDurationShort = (seconds: number): string => {
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  return m > 0 ? `${m}m${s}s` : `${s}s`;
-};
 </script>

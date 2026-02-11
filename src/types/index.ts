@@ -33,7 +33,7 @@ export interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
-  createdAt: number;
+  createdAt?: number;
 }
 
 // 日記エントリ
@@ -44,6 +44,21 @@ export interface DiaryEntry {
   content: string;
   duration?: number; // 録音秒数
   createdAt: number;
+}
+
+// 日記エントリ（リスト表示用）
+export interface DiaryEntryPreview {
+  id: string;
+  title: string;
+  duration?: number;
+  createdAt: number;
+}
+
+// チャット（リスト表示用）
+export interface ChatPreview {
+  id: string;
+  name: string;
+  lastMessage?: string;
 }
 
 // プリセット

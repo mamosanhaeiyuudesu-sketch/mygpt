@@ -136,7 +136,8 @@ import { useQuestionNavigation } from '~/composables/useQuestionNavigation';
 import { useChatPage } from '~/composables/useChatPage';
 
 // アカウント管理
-const { currentUser, initialize: initializeAccount, logout, updateLanguage } = useAccount();
+const { currentUser, handleLogout, handleLanguageChange } = usePageAuth();
+const { initialize: initializeAccount } = useAccount();
 const { t, setLanguage } = useI18n();
 
 const {
@@ -178,18 +179,6 @@ const {
   isSidebarOpen, showModelSelector, showSettingsEditor, showAccountSetup, isPageReady,
   scrollToMessage
 });
-
-// ログアウト
-const handleLogout = async () => {
-  if (!confirm(t('logout.confirm'))) return;
-  await logout();
-  window.location.reload();
-};
-
-// 言語変更
-const handleLanguageChange = async (language: import('~/types').Language) => {
-  await updateLanguage(language);
-};
 
 // 初期化
 onMounted(() => initialize(fetchChats));

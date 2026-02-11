@@ -84,14 +84,10 @@
 </template>
 
 <script setup lang="ts">
-interface Chat {
-  id: string;
-  name: string;
-  lastMessage?: string;
-}
+import type { ChatPreview } from '~/types';
 
 const props = defineProps<{
-  chat: Chat;
+  chat: ChatPreview;
   isActive: boolean;
   isDragOver?: boolean;
   onGenerateTitle?: (chatId: string, excludeTitles?: string[]) => Promise<string | null>;

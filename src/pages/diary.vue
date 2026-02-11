@@ -93,8 +93,10 @@
 </template>
 
 <script setup lang="ts">
+import { formatDuration, formatDate, formatDurationShort } from '~/utils/dateFormat';
+
 const { t } = useI18n();
-const { currentUser, logout, updateLanguage } = useAccount();
+const { currentUser, handleLogout, handleLanguageChange } = usePageAuth();
 const {
   entries,
   currentEntryId,
@@ -143,37 +145,4 @@ const handleRenameEntry = async (id: string, title: string) => {
   await renameEntry(id, title);
 };
 
-// ログアウト
-const handleLogout = async () => {
-  if (!confirm(t('logout.confirm'))) return;
-  await logout();
-  window.location.reload();
-};
-
-// 言語変更
-const handleLanguageChange = async (language: import('~/types').Language) => {
-  await updateLanguage(language);
-};
-
-const formatDuration = (seconds: number): string => {
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-};
-
-const formatDate = (timestamp: number): string => {
-  const d = new Date(timestamp);
-  const year = d.getFullYear();
-  const month = (d.getMonth() + 1).toString().padStart(2, '0');
-  const day = d.getDate().toString().padStart(2, '0');
-  const hours = d.getHours().toString().padStart(2, '0');
-  const minutes = d.getMinutes().toString().padStart(2, '0');
-  return `${year}/${month}/${day} ${hours}:${minutes}`;
-};
-
-const formatDurationShort = (seconds: number): string => {
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  return m > 0 ? `${m}m${s}s` : `${s}s`;
-};
 </script>
