@@ -37,8 +37,8 @@ const translations: Record<Language, Record<string, string>> = {
 
     // ModelSelectorDialog
     'model.select': 'モデル選択',
-    'model.systemPrompt': 'システムプロンプト',
-    'model.systemPrompt.placeholder': 'システムプロンプトを入力（任意）',
+    'model.systemPrompt': 'AIの性格・ふるまい',
+    'model.systemPrompt.placeholder': 'AIにどんな話し方や役割をさせたいか入力（任意）',
     'model.vectorStoreId': 'Vector Store ID',
     'model.vectorStoreId.placeholder': 'Vector Store IDを入力（任意）',
     'model.useContext': 'コンテキストを使用',
@@ -52,7 +52,7 @@ const translations: Record<Language, Record<string, string>> = {
     'settings.preset.delete': '削除',
     'settings.preset.deleteConfirm': 'このプリセットを削除しますか？',
     'settings.model': 'モデル',
-    'settings.systemPrompt.placeholder': 'カスタム指示を入力（空欄でデフォルト）',
+    'settings.systemPrompt.placeholder': 'AIにどんな話し方や役割をさせたいか入力（空欄でデフォルト）',
     'settings.vectorStoreId.label': 'Vector Store ID（RAG用）',
     'settings.vectorStoreId.placeholder': 'vs_xxxxxxxxxxxxxxxx（空欄で無効）',
     'settings.vectorStoreId.description': '設定すると、毎回ファイル検索（RAG）を実行して回答します',
@@ -64,7 +64,7 @@ const translations: Record<Language, Record<string, string>> = {
 
     // ChatHeader
     'header.model': 'Model:',
-    'header.customPrompt': 'カスタムシステムプロンプト設定済み',
+    'header.customPrompt': 'AIの性格設定あり',
     'header.rag': 'RAG有効（Vector Store）',
     'header.fast': '文脈なし（高速モード）',
     'header.editSettings': '設定を編集',
@@ -98,8 +98,8 @@ const translations: Record<Language, Record<string, string>> = {
     'presetManager.name': 'プリセット名',
     'presetManager.name.placeholder': 'プリセット名を入力',
     'presetManager.model': 'モデル',
-    'presetManager.systemPrompt': 'システムプロンプト',
-    'presetManager.systemPrompt.placeholder': 'カスタム指示を入力（空欄でデフォルト）',
+    'presetManager.systemPrompt': 'AIの性格・ふるまい',
+    'presetManager.systemPrompt.placeholder': 'AIにどんな話し方や役割をさせたいか入力（空欄でデフォルト）',
     'presetManager.vectorStoreId': 'Vector Store ID（RAG用）',
     'presetManager.vectorStoreId.placeholder': 'vs_xxxxxxxxxxxxxxxx（空欄で無効）',
     'presetManager.useContext': '文脈を保持する',
@@ -161,8 +161,8 @@ const translations: Record<Language, Record<string, string>> = {
 
     // ModelSelectorDialog
     'model.select': '모델 선택',
-    'model.systemPrompt': '시스템 프롬프트',
-    'model.systemPrompt.placeholder': '시스템 프롬프트 입력 (선택)',
+    'model.systemPrompt': 'AI 성격·행동',
+    'model.systemPrompt.placeholder': 'AI에게 어떤 말투나 역할을 원하는지 입력 (선택)',
     'model.vectorStoreId': 'Vector Store ID',
     'model.vectorStoreId.placeholder': 'Vector Store ID 입력 (선택)',
     'model.useContext': '컨텍스트 사용',
@@ -176,7 +176,7 @@ const translations: Record<Language, Record<string, string>> = {
     'settings.preset.delete': '삭제',
     'settings.preset.deleteConfirm': '이 프리셋을 삭제하시겠습니까?',
     'settings.model': '모델',
-    'settings.systemPrompt.placeholder': '커스텀 지시 입력 (빈칸이면 기본값)',
+    'settings.systemPrompt.placeholder': 'AI에게 어떤 말투나 역할을 원하는지 입력 (빈칸이면 기본값)',
     'settings.vectorStoreId.label': 'Vector Store ID (RAG용)',
     'settings.vectorStoreId.placeholder': 'vs_xxxxxxxxxxxxxxxx (빈칸이면 비활성)',
     'settings.vectorStoreId.description': '설정하면 매번 파일 검색(RAG)을 실행하여 답변합니다',
@@ -188,7 +188,7 @@ const translations: Record<Language, Record<string, string>> = {
 
     // ChatHeader
     'header.model': 'Model:',
-    'header.customPrompt': '커스텀 시스템 프롬프트 설정됨',
+    'header.customPrompt': 'AI 성격 설정됨',
     'header.rag': 'RAG 활성화 (Vector Store)',
     'header.fast': '컨텍스트 없음 (고속 모드)',
     'header.editSettings': '설정 편집',
@@ -222,8 +222,8 @@ const translations: Record<Language, Record<string, string>> = {
     'presetManager.name': '프리셋 이름',
     'presetManager.name.placeholder': '프리셋 이름 입력',
     'presetManager.model': '모델',
-    'presetManager.systemPrompt': '시스템 프롬프트',
-    'presetManager.systemPrompt.placeholder': '커스텀 지시 입력 (빈칸이면 기본값)',
+    'presetManager.systemPrompt': 'AI 성격·행동',
+    'presetManager.systemPrompt.placeholder': 'AI에게 어떤 말투나 역할을 원하는지 입력 (빈칸이면 기본값)',
     'presetManager.vectorStoreId': 'Vector Store ID (RAG용)',
     'presetManager.vectorStoreId.placeholder': 'vs_xxxxxxxxxxxxxxxx (빈칸이면 비활성)',
     'presetManager.useContext': '컨텍스트 유지',
@@ -285,8 +285,8 @@ const translations: Record<Language, Record<string, string>> = {
 
     // ModelSelectorDialog
     'model.select': 'Select Model',
-    'model.systemPrompt': 'System Prompt',
-    'model.systemPrompt.placeholder': 'Enter system prompt (optional)',
+    'model.systemPrompt': 'AI Personality',
+    'model.systemPrompt.placeholder': 'Describe how the AI should talk or behave (optional)',
     'model.vectorStoreId': 'Vector Store ID',
     'model.vectorStoreId.placeholder': 'Enter Vector Store ID (optional)',
     'model.useContext': 'Use Context',
@@ -300,7 +300,7 @@ const translations: Record<Language, Record<string, string>> = {
     'settings.preset.delete': 'Delete',
     'settings.preset.deleteConfirm': 'Delete this preset?',
     'settings.model': 'Model',
-    'settings.systemPrompt.placeholder': 'Enter custom instructions (blank for default)',
+    'settings.systemPrompt.placeholder': 'Describe how the AI should talk or behave (blank for default)',
     'settings.vectorStoreId.label': 'Vector Store ID (for RAG)',
     'settings.vectorStoreId.placeholder': 'vs_xxxxxxxxxxxxxxxx (blank to disable)',
     'settings.vectorStoreId.description': 'When set, file search (RAG) is always used for every response',
@@ -312,7 +312,7 @@ const translations: Record<Language, Record<string, string>> = {
 
     // ChatHeader
     'header.model': 'Model:',
-    'header.customPrompt': 'Custom system prompt set',
+    'header.customPrompt': 'AI personality set',
     'header.rag': 'RAG enabled (Vector Store)',
     'header.fast': 'No context (fast mode)',
     'header.editSettings': 'Edit Settings',
@@ -346,8 +346,8 @@ const translations: Record<Language, Record<string, string>> = {
     'presetManager.name': 'Preset Name',
     'presetManager.name.placeholder': 'Enter preset name',
     'presetManager.model': 'Model',
-    'presetManager.systemPrompt': 'System Prompt',
-    'presetManager.systemPrompt.placeholder': 'Enter custom instructions (blank for default)',
+    'presetManager.systemPrompt': 'AI Personality',
+    'presetManager.systemPrompt.placeholder': 'Describe how the AI should talk or behave (blank for default)',
     'presetManager.vectorStoreId': 'Vector Store ID (for RAG)',
     'presetManager.vectorStoreId.placeholder': 'vs_xxxxxxxxxxxxxxxx (blank to disable)',
     'presetManager.useContext': 'Keep Context',

@@ -18,18 +18,6 @@
       </select>
     </div>
 
-    <!-- システムプロンプト入力 -->
-    <div>
-      <label class="text-sm text-gray-400 block mb-2">{{ t('model.systemPrompt') }}</label>
-      <textarea
-        :value="systemPrompt"
-        @input="emit('update:systemPrompt', ($event.target as HTMLTextAreaElement).value)"
-        :placeholder="t('settings.systemPrompt.placeholder')"
-        rows="6"
-        class="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
-      ></textarea>
-    </div>
-
     <!-- 詳細トグル -->
     <button
       type="button"
@@ -44,6 +32,18 @@
 
     <!-- 詳細セクション -->
     <template v-if="showDetails">
+      <!-- AIの性格（システムプロンプト） -->
+      <div>
+        <label class="text-sm text-gray-400 block mb-2">{{ t('model.systemPrompt') }}</label>
+        <textarea
+          :value="systemPrompt"
+          @input="emit('update:systemPrompt', ($event.target as HTMLTextAreaElement).value)"
+          :placeholder="t('settings.systemPrompt.placeholder')"
+          rows="6"
+          class="w-full bg-gray-800 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
+        ></textarea>
+      </div>
+
       <!-- Vector Store ID入力 -->
       <div>
         <label class="text-sm text-gray-400 block mb-2">{{ t('settings.vectorStoreId.label') }}</label>
