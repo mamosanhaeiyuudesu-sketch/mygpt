@@ -1,7 +1,6 @@
 <template>
   <div class="border-b border-gray-800 px-4 py-2 hidden md:flex items-center gap-2">
     <div class="flex items-center gap-2">
-      <span class="text-sm text-gray-400">{{ t('header.model') }}</span>
       <span class="text-sm font-medium bg-gray-800 px-2 py-1 rounded">{{ model }}</span>
     </div>
     <!-- 設定編集ボタン -->

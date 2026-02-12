@@ -36,6 +36,7 @@
         :model="currentChatModel"
         :has-active-item="!!currentChatId"
         @open-sidebar="isSidebarOpen = true"
+        @edit="showSettingsEditor = true"
         @rename="handleMobileRename"
         @delete="handleMobileDelete"
       />
@@ -106,15 +107,6 @@
       </template>
     </div>
 
-    <!-- モデル選択ダイアログ -->
-    <ModelSelectorDialog
-      v-model="showModelSelector"
-      :models="availableModels"
-      :is-loading-models="isLoadingModels"
-      :default-model="selectedModel"
-      @create="handleCreateChatFromDialog"
-    />
-
     <!-- 設定編集ダイアログ -->
     <SettingsEditorDialog
       v-model="showSettingsEditor"
@@ -152,7 +144,6 @@ const {
 
 // UI state
 const showAccountSetup = ref(false);
-const showModelSelector = ref(false);
 const showSettingsEditor = ref(false);
 const showPresetManager = ref(false);
 const isPageReady = ref(false);
@@ -170,7 +161,7 @@ const {
 // ページロジック
 const {
   availableModels, selectedModel, isLoadingModels,
-  initialize, handleSelectChat, handleNewChat, handleCreateChatFromDialog,
+  initialize, handleSelectChat, handleNewChat,
   handleDeleteChat, handleRenameChat, handleReorderChats, handleAccountCreated,
   handleGenerateTitle,
   handleNewChatWithMessage, handleSendMessage, handleSaveSettings
@@ -179,7 +170,7 @@ const {
   createChat, selectChat, sendMessage, deleteChat, renameChat, updateChatSettings, reorderChats,
   initializeAccount,
   t, setLanguage,
-  isSidebarOpen, showModelSelector, showSettingsEditor, showAccountSetup, isPageReady,
+  isSidebarOpen, showSettingsEditor, showAccountSetup, isPageReady,
   scrollToMessage
 });
 

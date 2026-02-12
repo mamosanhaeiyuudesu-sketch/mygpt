@@ -6,7 +6,7 @@
     <!-- New Chat ボタン -->
     <div class="p-3">
       <button
-        @click="emit('newChat')"
+        @click="emit('newChat'); emit('update:open', false)"
         class="w-full px-4 py-3 bg-gray-800 hover:bg-gray-700 rounded-lg transition-colors flex items-center justify-center gap-2"
       >
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">

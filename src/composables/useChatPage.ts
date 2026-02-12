@@ -28,7 +28,6 @@ interface UseChatPageOptions {
 
   // UI state
   isSidebarOpen: Ref<boolean>;
-  showModelSelector: Ref<boolean>;
   showSettingsEditor: Ref<boolean>;
   showAccountSetup: Ref<boolean>;
   isPageReady: Ref<boolean>;
@@ -43,7 +42,7 @@ export function useChatPage(options: UseChatPageOptions) {
     createChat, selectChat, sendMessage, deleteChat, renameChat, updateChatSettings, reorderChats,
     initializeAccount,
     t, setLanguage,
-    isSidebarOpen, showModelSelector, showSettingsEditor, showAccountSetup, isPageReady,
+    isSidebarOpen, showSettingsEditor, showAccountSetup, isPageReady,
     scrollToMessage
   } = options;
 
@@ -133,20 +132,8 @@ export function useChatPage(options: UseChatPageOptions) {
   };
 
   const handleNewChat = () => {
-    showModelSelector.value = true;
-  };
-
-  const handleCreateChatFromDialog = async (model: string, systemPrompt?: string, vectorStoreId?: string, useContext?: boolean) => {
-    try {
-      const chatId = await createChat(model, undefined, systemPrompt, vectorStoreId, useContext ?? true);
-      if (chatId) {
-        router.push(`/chat/${chatId}`);
-      }
-      isSidebarOpen.value = false;
-    } catch (error) {
-      console.error('Failed to create chat:', error);
-      alert(t('error.chatCreate'));
-    }
+    selectChat(null);
+    navigateTo('/chat');
   };
 
   const handleDeleteChat = async (chatId: string) => {
@@ -289,7 +276,6 @@ export function useChatPage(options: UseChatPageOptions) {
     fetchModels,
     handleSelectChat,
     handleNewChat,
-    handleCreateChatFromDialog,
     handleDeleteChat,
     handleRenameChat,
     handleReorderChats,
