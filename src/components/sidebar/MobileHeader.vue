@@ -9,8 +9,8 @@
       </svg>
     </button>
     <span v-if="title" class="ml-2 text-xs text-gray-300 truncate">{{ title }}</span>
-    <span v-if="subtitle" class="ml-1 text-[10px] text-gray-500 shrink-0">{{ subtitle }}</span>
-    <span v-if="model" class="ml-2 text-[10px] text-gray-400 bg-gray-800 px-1.5 py-0.5 rounded shrink-0">{{ model }}</span>
+    <span v-if="subtitle" class="ml-1 text-[13px] text-gray-500 shrink-0">{{ subtitle }}</span>
+    <span v-if="model" class="ml-2 text-[15px] text-gray-400 bg-gray-800 px-1.5 py-0.5 rounded shrink-0">{{ model }}</span>
     <!-- 設定編集ボタン -->
     <button
       v-if="model"
