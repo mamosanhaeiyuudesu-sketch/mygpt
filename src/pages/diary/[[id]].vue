@@ -134,6 +134,12 @@ const handleSelectEntry = (id: string) => {
 };
 
 const handleStartRecording = async () => {
+  // エントリ選択中なら録音ページに遷移
+  if (currentEntryId.value) {
+    selectEntry(null);
+    router.push('/diary');
+    isSidebarOpen.value = false;
+  }
   try {
     await startRecording();
   } catch (e) {
