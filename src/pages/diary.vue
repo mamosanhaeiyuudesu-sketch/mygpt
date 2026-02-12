@@ -29,11 +29,14 @@
     />
 
     <!-- メインエリア -->
-    <div class="flex-1 flex flex-col md:ml-0 pb-12 md:pb-0 bg-[#212121]">
+    <div class="flex-1 flex flex-col md:ml-0 pb-9 md:pb-0 bg-[#212121]">
       <!-- モバイル用ヘッダー -->
       <MobileHeader
         :title="t('nav.diary')"
+        :has-active-item="!!currentEntryId"
         @open-sidebar="isSidebarOpen = true"
+        @rename="handleMobileRename"
+        @delete="handleMobileDelete"
       />
 
       <!-- エントリ未選択時：録音ボタン -->
@@ -143,6 +146,21 @@ const handleDeleteEntry = async (id: string) => {
 
 const handleRenameEntry = async (id: string, title: string) => {
   await renameEntry(id, title);
+};
+
+// モバイルヘッダーメニュー
+const handleMobileRename = () => {
+  if (!currentEntryId.value) return;
+  const entry = entries.value.find(e => e.id === currentEntryId.value);
+  const newTitle = prompt(t('menu.renamePrompt'), entry?.title || '');
+  if (newTitle?.trim()) {
+    handleRenameEntry(currentEntryId.value, newTitle.trim());
+  }
+};
+
+const handleMobileDelete = () => {
+  if (!currentEntryId.value) return;
+  handleDeleteEntry(currentEntryId.value);
 };
 
 </script>

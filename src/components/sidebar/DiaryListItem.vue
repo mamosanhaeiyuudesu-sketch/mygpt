@@ -42,7 +42,7 @@
       </div>
 
       <!-- アクションボタン（ホバー時に表示） -->
-      <div v-if="!isEditing" class="opacity-0 group-hover:opacity-100 flex gap-1 ml-2 transition-opacity">
+      <div v-if="!isEditing" class="opacity-0 group-hover:opacity-100 hidden md:flex gap-1 ml-2 transition-opacity">
         <!-- 編集ボタン -->
         <button
           @click.stop="startEditing"

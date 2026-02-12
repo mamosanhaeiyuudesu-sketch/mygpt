@@ -34,7 +34,10 @@
       <!-- モバイル用ヘッダー -->
       <MobileHeader
         :model="currentChatModel"
+        :has-active-item="!!currentChatId"
         @open-sidebar="isSidebarOpen = true"
+        @rename="handleMobileRename"
+        @delete="handleMobileDelete"
       />
 
       <!-- チャット未選択時 -->
@@ -179,6 +182,21 @@ const {
   isSidebarOpen, showModelSelector, showSettingsEditor, showAccountSetup, isPageReady,
   scrollToMessage
 });
+
+// モバイルヘッダーメニュー
+const handleMobileRename = () => {
+  if (!currentChatId.value) return;
+  const currentChat = chats.value.find(c => c.id === currentChatId.value);
+  const newName = prompt(t('menu.renamePrompt'), currentChat?.name || '');
+  if (newName?.trim()) {
+    handleRenameChat(currentChatId.value, newName.trim());
+  }
+};
+
+const handleMobileDelete = () => {
+  if (!currentChatId.value) return;
+  handleDeleteChat(currentChatId.value);
+};
 
 // 初期化
 onMounted(() => initialize(fetchChats));

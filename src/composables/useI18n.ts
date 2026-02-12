@@ -120,6 +120,11 @@ const translations: Record<Language, Record<string, string>> = {
     'diary.micPermissionError': 'マイクの使用許可が必要です',
     'diary.seconds': '秒',
 
+    // Mobile Header Menu
+    'menu.rename': '名前を変更',
+    'menu.delete': '削除',
+    'menu.renamePrompt': '新しい名前を入力',
+
     // Language
     'language': '言語',
 
@@ -245,6 +250,11 @@ const translations: Record<Language, Record<string, string>> = {
     'diary.micPermissionError': '마이크 사용 권한이 필요합니다',
     'diary.seconds': '초',
 
+    // Mobile Header Menu
+    'menu.rename': '이름 변경',
+    'menu.delete': '삭제',
+    'menu.renamePrompt': '새 이름 입력',
+
     // Language
     'language': '언어',
 
@@ -369,6 +379,11 @@ const translations: Record<Language, Record<string, string>> = {
     'diary.deleteConfirm': 'Delete this diary entry?',
     'diary.micPermissionError': 'Microphone permission is required',
     'diary.seconds': 'sec',
+
+    // Mobile Header Menu
+    'menu.rename': 'Rename',
+    'menu.delete': 'Delete',
+    'menu.renamePrompt': 'Enter new name',
 
     // Language
     'language': 'Language',
