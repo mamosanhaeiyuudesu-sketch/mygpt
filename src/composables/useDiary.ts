@@ -114,6 +114,8 @@ export function useDiary() {
       const newEntry = await saveEntry(text, duration);
       if (newEntry) {
         currentEntryId.value = newEntry.id;
+        // AIでタイトル生成（バックグラウンド）
+        generateTitle(newEntry.id, text).catch(() => {});
       }
     } finally {
       isTranscribing.value = false;
@@ -151,6 +153,26 @@ export function useDiary() {
       }
     }
     return null;
+  };
+
+  const generateTitle = async (entryId: string, content: string) => {
+    try {
+      const res = await fetch('/api/generate-title', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [{ role: 'user', content }],
+        }),
+      });
+      if (res.ok) {
+        const { title } = (await res.json()) as { title: string };
+        if (title) {
+          await renameEntry(entryId, title);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to generate diary title:', e);
+    }
   };
 
   const renameEntry = async (entryId: string, title: string) => {

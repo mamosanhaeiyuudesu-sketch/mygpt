@@ -41,7 +41,7 @@
       />
 
       <!-- エントリ未選択時：録音ボタン -->
-      <div v-if="!currentEntryId" class="flex-1 flex flex-col items-center justify-center -mt-12 md:mt-0">
+      <div v-if="!currentEntryId" class="flex-1 flex flex-col items-center justify-center pb-12 md:pb-0">
         <button
           v-if="!isRecording && !isTranscribing"
           @click="handleStartRecording"
