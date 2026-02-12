@@ -11,6 +11,8 @@
           :disabled="disabled"
           @keydown="handleKeyDown"
           @input="autoResize"
+          @focus="isInputFocused = true"
+          @blur="isInputFocused = false"
         ></textarea>
         <button
           type="submit"
@@ -35,6 +37,7 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 
+const isInputFocused = useState('inputFocused', () => false);
 const localMessage = ref('');
 const textareaRef = ref<HTMLTextAreaElement | null>(null);
 
