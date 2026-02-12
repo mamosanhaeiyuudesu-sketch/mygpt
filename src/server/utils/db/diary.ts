@@ -32,7 +32,7 @@ export async function createDiaryEntry(
   title?: string
 ): Promise<DiaryEntry> {
   const db = getD1(event);
-  const id = generateId('diary');
+  const id = crypto.randomUUID();
   const now = Date.now();
   const entryTitle = title || content.substring(0, 30).replace(/\n/g, ' ');
   const entry: DiaryEntry = {

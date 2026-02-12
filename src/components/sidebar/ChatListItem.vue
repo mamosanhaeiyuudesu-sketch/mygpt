@@ -39,14 +39,6 @@
               </svg>
             </button>
           </div>
-          <button
-            @click.stop="generateTitle"
-            :disabled="isGenerating"
-            class="px-2 py-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white text-xs rounded whitespace-nowrap"
-            title="AIでタイトル生成"
-          >
-            {{ isGenerating ? '...' : 'AI' }}
-          </button>
         </div>
         <!-- 表示モード -->
         <template v-else>

@@ -128,7 +128,7 @@ export function useDiary() {
       if (!user) return null;
 
       const entry: DiaryEntry = {
-        id: `diary_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`,
+        id: crypto.randomUUID(),
         userId: user.id,
         title,
         content,

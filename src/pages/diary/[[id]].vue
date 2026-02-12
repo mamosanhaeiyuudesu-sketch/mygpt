@@ -41,7 +41,7 @@
       />
 
       <!-- エントリ未選択時：録音ボタン -->
-      <div v-if="!currentEntryId" class="flex-1 flex flex-col items-center justify-center">
+      <div v-if="!currentEntryId" class="flex-1 flex flex-col items-center justify-center -mt-12 md:mt-0">
         <button
           v-if="!isRecording && !isTranscribing"
           @click="handleStartRecording"
@@ -76,13 +76,6 @@
 
       <!-- エントリ選択時：詳細表示 -->
       <div v-else-if="currentEntry" class="flex-1 flex flex-col overflow-hidden">
-        <!-- ヘッダー -->
-        <div class="px-4 py-3 border-b border-gray-800 hidden md:block">
-          <div class="text-xs text-gray-500">
-            {{ formatDate(currentEntry.createdAt) }}
-            <span v-if="currentEntry.duration" class="ml-2 text-gray-600">({{ formatDurationShort(currentEntry.duration) }})</span>
-          </div>
-        </div>
 
         <!-- コンテンツ -->
         <div class="flex-1 overflow-y-auto px-4 py-4">
@@ -99,6 +92,8 @@
 import { formatDuration, formatDate, formatDateShort, formatDurationShort } from '~/utils/dateFormat';
 
 const { t } = useI18n();
+const route = useRoute();
+const router = useRouter();
 const { currentUser, handleLogout, handleLanguageChange } = usePageAuth();
 const {
   entries,
@@ -117,12 +112,24 @@ const {
 
 const isSidebarOpen = ref(false);
 
-onMounted(() => {
-  loadEntries();
+onMounted(async () => {
+  await loadEntries();
+  // ルートパラメータからエントリを選択
+  const entryId = route.params.id as string | undefined;
+  if (entryId) {
+    if (entries.value.some(e => e.id === entryId)) {
+      selectEntry(entryId);
+    } else {
+      router.replace('/diary');
+    }
+  } else {
+    selectEntry(null);
+  }
 });
 
 const handleSelectEntry = (id: string) => {
   selectEntry(id);
+  router.push(`/diary/${id}`);
   isSidebarOpen.value = false;
 };
 
@@ -136,11 +143,19 @@ const handleStartRecording = async () => {
 
 const handleStopRecording = async () => {
   await stopRecording();
+  // 録音完了後、新しいエントリに遷移
+  if (currentEntryId.value) {
+    router.push(`/diary/${currentEntryId.value}`);
+  }
 };
 
 const handleDeleteEntry = async (id: string) => {
   if (confirm(t('diary.deleteConfirm'))) {
+    const wasCurrent = currentEntryId.value === id;
     await deleteEntry(id);
+    if (wasCurrent) {
+      router.push('/diary');
+    }
   }
 };
 
