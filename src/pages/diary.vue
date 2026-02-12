@@ -32,7 +32,8 @@
     <div class="flex-1 flex flex-col md:ml-0 pb-9 md:pb-0 bg-[#212121]">
       <!-- モバイル用ヘッダー -->
       <MobileHeader
-        :title="t('nav.diary')"
+        :title="currentEntry?.title"
+        :subtitle="currentEntry ? formatDateShort(currentEntry.createdAt) : undefined"
         :has-active-item="!!currentEntryId"
         @open-sidebar="isSidebarOpen = true"
         @rename="handleMobileRename"
@@ -76,12 +77,11 @@
       <!-- エントリ選択時：詳細表示 -->
       <div v-else-if="currentEntry" class="flex-1 flex flex-col overflow-hidden">
         <!-- ヘッダー -->
-        <div class="px-4 py-3 border-b border-gray-800">
+        <div class="px-4 py-3 border-b border-gray-800 hidden md:block">
           <div class="text-xs text-gray-500">
             {{ formatDate(currentEntry.createdAt) }}
             <span v-if="currentEntry.duration" class="ml-2 text-gray-600">({{ formatDurationShort(currentEntry.duration) }})</span>
           </div>
-          <h2 class="font-medium text-sm mt-1">{{ currentEntry.title }}</h2>
         </div>
 
         <!-- コンテンツ -->
@@ -96,7 +96,7 @@
 </template>
 
 <script setup lang="ts">
-import { formatDuration, formatDate, formatDurationShort } from '~/utils/dateFormat';
+import { formatDuration, formatDate, formatDateShort, formatDurationShort } from '~/utils/dateFormat';
 
 const { t } = useI18n();
 const { currentUser, handleLogout, handleLanguageChange } = usePageAuth();
