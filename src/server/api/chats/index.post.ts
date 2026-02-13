@@ -6,6 +6,7 @@ import { createChat } from '~/server/utils/db/chats';
 import { createConversation } from '~/server/utils/openai';
 import { getOpenAIKey } from '~/server/utils/env';
 import { USER_COOKIE_NAME } from '~/server/utils/constants';
+import { getEncryptionKey, encryptIfKey, encryptNullable } from '~/server/utils/crypto';
 
 export default defineEventHandler(async (event) => {
   const userId = getCookie(event, USER_COOKIE_NAME);
@@ -29,8 +30,11 @@ export default defineEventHandler(async (event) => {
   // OpenAI Conversationを作成
   const conversationId = await createConversation(apiKey, chatName);
 
-  // DBに保存（userId, model, systemPrompt, vectorStoreId を含む）
-  await createChat(event, chatId, userId, conversationId, chatName, model, systemPrompt, vectorStoreId);
+  // 暗号化してDBに保存
+  const encKey = await getEncryptionKey(event);
+  const encName = await encryptIfKey(chatName, encKey);
+  const encSystemPrompt = await encryptNullable(systemPrompt, encKey) as string | undefined;
+  await createChat(event, chatId, userId, conversationId, encName, model, encSystemPrompt, vectorStoreId);
 
   return { chatId, conversationId, userId };
 });

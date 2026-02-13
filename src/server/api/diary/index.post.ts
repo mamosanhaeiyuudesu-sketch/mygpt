@@ -3,6 +3,7 @@
  */
 import { createDiaryEntry } from '~/server/utils/db/diary';
 import { USER_COOKIE_NAME } from '~/server/utils/constants';
+import { getEncryptionKey, encryptIfKey } from '~/server/utils/crypto';
 
 export default defineEventHandler(async (event) => {
   const userId = getCookie(event, USER_COOKIE_NAME);
@@ -25,13 +26,19 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const entry = await createDiaryEntry(event, userId, content, duration);
+  // タイトルを平文から生成してから暗号化
+  const encKey = await getEncryptionKey(event);
+  const title = content.substring(0, 30).replace(/\n/g, ' ');
+  const encContent = await encryptIfKey(content, encKey);
+  const encTitle = await encryptIfKey(title, encKey);
+
+  const entry = await createDiaryEntry(event, userId, encContent, duration, encTitle);
 
   return {
     id: entry.id,
     userId: entry.user_id,
-    title: entry.title,
-    content: entry.content,
+    title,
+    content,
     duration: entry.duration,
     createdAt: entry.created_at,
   };

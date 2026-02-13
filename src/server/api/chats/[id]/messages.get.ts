@@ -2,6 +2,7 @@
  * GET /api/chats/:id/messages - メッセージ履歴取得
  */
 import { getMessages } from '~/server/utils/db/messages';
+import { getEncryptionKey, decryptIfKey } from '~/server/utils/crypto';
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id');
@@ -14,13 +15,14 @@ export default defineEventHandler(async (event) => {
   }
 
   const allMessages = await getMessages(event, id);
+  const encKey = await getEncryptionKey(event);
 
-  const messages = allMessages.map(msg => ({
+  const messages = await Promise.all(allMessages.map(async msg => ({
     id: msg.id,
     role: msg.role,
-    content: msg.content,
+    content: await decryptIfKey(msg.content, encKey),
     createdAt: msg.created_at
-  }));
+  })));
 
   return { messages };
 });

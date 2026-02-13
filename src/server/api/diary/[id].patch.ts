@@ -3,6 +3,7 @@
  */
 import { renameDiaryEntry } from '~/server/utils/db/diary';
 import { USER_COOKIE_NAME } from '~/server/utils/constants';
+import { getEncryptionKey, encryptIfKey } from '~/server/utils/crypto';
 
 export default defineEventHandler(async (event) => {
   const userId = getCookie(event, USER_COOKIE_NAME);
@@ -32,7 +33,9 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  await renameDiaryEntry(event, entryId, title);
+  const encKey = await getEncryptionKey(event);
+  const encTitle = await encryptIfKey(title, encKey);
+  await renameDiaryEntry(event, entryId, encTitle);
 
   return { success: true };
 });

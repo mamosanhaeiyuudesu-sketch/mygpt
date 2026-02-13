@@ -4,6 +4,7 @@
 import { generateId } from '~/server/utils/db/common';
 import { getChat, updateChatTimestamp } from '~/server/utils/db/chats';
 import { createMessage } from '~/server/utils/db/messages';
+import { getEncryptionKey, encryptIfKey } from '~/server/utils/crypto';
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id');
@@ -33,14 +34,17 @@ export default defineEventHandler(async (event) => {
   }
 
   const now = Date.now();
+  const encKey = await getEncryptionKey(event);
 
-  // ユーザーメッセージを保存
+  // ユーザーメッセージを暗号化して保存
   const userMessageId = generateId('msg');
-  await createMessage(event, userMessageId, id, 'user', body.userMessage, now);
+  const encUserMsg = await encryptIfKey(body.userMessage, encKey);
+  await createMessage(event, userMessageId, id, 'user', encUserMsg, now);
 
-  // アシスタントメッセージを保存
+  // アシスタントメッセージを暗号化して保存
   const assistantMessageId = generateId('msg');
-  await createMessage(event, assistantMessageId, id, 'assistant', body.assistantMessage, now + 1);
+  const encAssistantMsg = await encryptIfKey(body.assistantMessage, encKey);
+  await createMessage(event, assistantMessageId, id, 'assistant', encAssistantMsg, now + 1);
 
   // チャットのupdated_atを更新
   await updateChatTimestamp(event, id, now + 1);
