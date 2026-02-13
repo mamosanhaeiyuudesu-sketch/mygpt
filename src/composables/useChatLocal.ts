@@ -16,21 +16,22 @@ export interface ChatState {
   currentChatModel: ComputedRef<string | null>;
   currentChatSystemPrompt: ComputedRef<string | null>;
   currentChatVectorStoreId: ComputedRef<string | null>;
+  currentChatUseContext: ComputedRef<boolean>;
 }
 
 export interface ChatOperations {
   fetchChats: () => Promise<void>;
-  createChat: (model: string, name?: string, systemPrompt?: string, vectorStoreId?: string) => Promise<string | undefined>;
+  createChat: (model: string, name?: string, systemPrompt?: string, vectorStoreId?: string, useContext?: boolean) => Promise<string | undefined>;
   selectChat: (chatId: string) => Promise<void>;
   sendMessage: (content: string) => Promise<void>;
   deleteChat: (chatId: string) => Promise<void>;
   renameChat: (chatId: string, name: string) => Promise<void>;
-  updateChatSettings: (chatId: string, model?: string, systemPrompt?: string | null, vectorStoreId?: string | null) => Promise<void>;
+  updateChatSettings: (chatId: string, model?: string, systemPrompt?: string | null, vectorStoreId?: string | null, useContext?: boolean) => Promise<void>;
   reorderChats: (fromIndex: number, toIndex: number) => Promise<void>;
 }
 
 export function useChatLocal(state: ChatState): ChatOperations {
-  const { chats, currentChatId, messages, isLoading, currentConversationId, currentChatModel, currentChatSystemPrompt, currentChatVectorStoreId } = state;
+  const { chats, currentChatId, messages, isLoading, currentConversationId, currentChatModel, currentChatSystemPrompt, currentChatVectorStoreId, currentChatUseContext } = state;
 
   const fetchChats = async () => {
     const user = getUserFromStorage();
@@ -44,7 +45,7 @@ export function useChatLocal(state: ChatState): ChatOperations {
       .sort((a, b) => b.updatedAt - a.updatedAt);
   };
 
-  const createChat = async (model: string, name?: string, systemPrompt?: string, vectorStoreId?: string): Promise<string | undefined> => {
+  const createChat = async (model: string, name?: string, systemPrompt?: string, vectorStoreId?: string, useContext?: boolean): Promise<string | undefined> => {
     try {
       isLoading.value = true;
       const chatName = name || 'New Chat';
@@ -76,6 +77,7 @@ export function useChatLocal(state: ChatState): ChatOperations {
         model,
         systemPrompt,
         vectorStoreId,
+        useContext: useContext !== false,
         createdAt: now,
         updatedAt: now
       };
@@ -146,11 +148,12 @@ export function useChatLocal(state: ChatState): ChatOperations {
         throw new Error('No conversation ID');
       }
 
+      const useContext = currentChatUseContext.value;
       const response = await fetch('/api/messages-stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          conversationId,
+          conversationId: useContext ? conversationId : undefined,
           message: content,
           model,
           systemPrompt,
@@ -226,13 +229,14 @@ export function useChatLocal(state: ChatState): ChatOperations {
     chats.value = data.chats.sort((a, b) => b.updatedAt - a.updatedAt);
   };
 
-  const updateChatSettings = async (chatId: string, model?: string, systemPrompt?: string | null, vectorStoreId?: string | null) => {
+  const updateChatSettings = async (chatId: string, model?: string, systemPrompt?: string | null, vectorStoreId?: string | null, useContext?: boolean) => {
     const data = loadFromStorage();
     const chatIndex = data.chats.findIndex(c => c.id === chatId);
     if (chatIndex !== -1) {
       if (model !== undefined) data.chats[chatIndex].model = model;
       if (systemPrompt !== undefined) data.chats[chatIndex].systemPrompt = systemPrompt || undefined;
       if (vectorStoreId !== undefined) data.chats[chatIndex].vectorStoreId = vectorStoreId || undefined;
+      if (useContext !== undefined) data.chats[chatIndex].useContext = useContext;
       saveToStorage(data);
     }
 

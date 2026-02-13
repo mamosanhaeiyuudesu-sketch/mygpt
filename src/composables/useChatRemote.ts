@@ -8,7 +8,7 @@ import { generateMessageId } from '~/utils/storage';
 import { parseSSEStream, updateMessageContent } from '~/composables/useChatStream';
 
 export function useChatRemote(state: ChatState): ChatOperations {
-  const { chats, currentChatId, messages, isLoading, currentChatModel } = state;
+  const { chats, currentChatId, messages, isLoading, currentChatModel, currentChatUseContext } = state;
 
   const fetchChats = async () => {
     try {
@@ -22,7 +22,7 @@ export function useChatRemote(state: ChatState): ChatOperations {
     }
   };
 
-  const createChat = async (model: string, name?: string, systemPrompt?: string, vectorStoreId?: string): Promise<string | undefined> => {
+  const createChat = async (model: string, name?: string, systemPrompt?: string, vectorStoreId?: string, useContext?: boolean): Promise<string | undefined> => {
     try {
       isLoading.value = true;
       const chatName = name || 'New Chat';
@@ -30,7 +30,7 @@ export function useChatRemote(state: ChatState): ChatOperations {
       const response = await fetch('/api/chats', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: chatName, model, systemPrompt, vectorStoreId })
+        body: JSON.stringify({ name: chatName, model, systemPrompt, vectorStoreId, useContext: useContext !== false })
       });
 
       if (!response.ok) {
@@ -48,6 +48,7 @@ export function useChatRemote(state: ChatState): ChatOperations {
         model,
         systemPrompt,
         vectorStoreId,
+        useContext: useContext !== false,
         createdAt: now,
         updatedAt: now
       };
@@ -106,12 +107,14 @@ export function useChatRemote(state: ChatState): ChatOperations {
     try {
       isLoading.value = true;
 
+      const useContext = currentChatUseContext.value;
       const response = await fetch(`/api/chats/${chatId}/messages-stream`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: content,
-          model
+          model,
+          useContext
         })
       });
 
@@ -187,12 +190,12 @@ export function useChatRemote(state: ChatState): ChatOperations {
     }
   };
 
-  const updateChatSettings = async (chatId: string, model?: string, systemPrompt?: string | null, vectorStoreId?: string | null) => {
+  const updateChatSettings = async (chatId: string, model?: string, systemPrompt?: string | null, vectorStoreId?: string | null, useContext?: boolean) => {
     try {
       await fetch(`/api/chats/${chatId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model, systemPrompt, vectorStoreId })
+        body: JSON.stringify({ model, systemPrompt, vectorStoreId, useContext })
       });
 
       const chatIndex = chats.value.findIndex(c => c.id === chatId);
@@ -200,6 +203,7 @@ export function useChatRemote(state: ChatState): ChatOperations {
         if (model !== undefined) chats.value[chatIndex].model = model;
         if (systemPrompt !== undefined) chats.value[chatIndex].systemPrompt = systemPrompt || undefined;
         if (vectorStoreId !== undefined) chats.value[chatIndex].vectorStoreId = vectorStoreId || undefined;
+        if (useContext !== undefined) chats.value[chatIndex].useContext = useContext;
         chats.value = [...chats.value];
       }
     } catch (error) {

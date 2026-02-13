@@ -25,6 +25,7 @@ export const useChat = () => {
   const currentChatModel = computed(() => currentChat.value?.model || null);
   const currentChatSystemPrompt = computed(() => currentChat.value?.systemPrompt || null);
   const currentChatVectorStoreId = computed(() => currentChat.value?.vectorStoreId || null);
+  const currentChatUseContext = computed(() => currentChat.value?.useContext !== false);
 
   // 環境に応じた実装を選択
   const state = {
@@ -35,7 +36,8 @@ export const useChat = () => {
     currentConversationId,
     currentChatModel,
     currentChatSystemPrompt,
-    currentChatVectorStoreId
+    currentChatVectorStoreId,
+    currentChatUseContext
   };
 
   const ops = isLocalEnvironment() ? useChatLocal(state) : useChatRemote(state);
@@ -47,6 +49,7 @@ export const useChat = () => {
     currentChatModel,
     currentChatSystemPrompt,
     currentChatVectorStoreId,
+    currentChatUseContext,
     messages,
     isLoading,
 

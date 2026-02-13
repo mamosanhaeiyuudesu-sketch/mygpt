@@ -19,6 +19,7 @@ export interface Chat {
   model?: string | null;
   system_prompt?: string | null;
   vector_store_id?: string | null;
+  use_context?: boolean | number | null;
   created_at: number;
   updated_at: number;
 }

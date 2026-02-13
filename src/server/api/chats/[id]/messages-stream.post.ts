@@ -36,11 +36,12 @@ export default defineEventHandler(async (event) => {
   const model = body.model || chat.model || 'gpt-4o';
   const systemPrompt = chat.system_prompt || undefined;
   const vectorStoreId = chat.vector_store_id || undefined;
+  const useContext = body.useContext !== undefined ? body.useContext : (chat.use_context != 0 && chat.use_context !== false);
 
   // OpenAI にストリーミングメッセージを送信
   const response = await sendMessageToOpenAIStream(
     apiKey,
-    chat.conversation_id,
+    useContext ? chat.conversation_id : undefined,
     body.message,
     model,
     systemPrompt,

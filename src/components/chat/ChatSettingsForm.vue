@@ -58,6 +58,29 @@
       </div>
 
     </template>
+
+    <!-- 文脈保持設定 -->
+    <div class="flex items-center justify-between">
+      <div>
+        <label class="text-sm text-gray-400">{{ t('settings.useContext') }}</label>
+        <p class="text-xs text-gray-500 mt-0.5">{{ t('settings.useContext.description') }}</p>
+      </div>
+      <button
+        type="button"
+        @click="emit('update:useContext', !useContext)"
+        :class="[
+          'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
+          useContext ? 'bg-blue-600' : 'bg-gray-600'
+        ]"
+      >
+        <span
+          :class="[
+            'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
+            useContext ? 'translate-x-6' : 'translate-x-1'
+          ]"
+        />
+      </button>
+    </div>
   </div>
 </template>
 
@@ -69,6 +92,7 @@ defineProps<{
   model: string;
   systemPrompt: string;
   vectorStoreId: string;
+  useContext: boolean;
   isLoadingModels?: boolean;
 }>();
 
@@ -76,6 +100,7 @@ const emit = defineEmits<{
   'update:model': [value: string];
   'update:systemPrompt': [value: string];
   'update:vectorStoreId': [value: string];
+  'update:useContext': [value: boolean];
 }>();
 
 const { t } = useI18n();

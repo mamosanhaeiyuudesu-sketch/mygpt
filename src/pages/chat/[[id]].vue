@@ -113,6 +113,7 @@
       :current-model="currentChatModel"
       :current-system-prompt="currentChatSystemPrompt"
       :current-vector-store-id="currentChatVectorStoreId"
+      :current-use-context="currentChatUseContext"
       @save="handleSaveSettings"
     />
 
@@ -134,7 +135,7 @@ const { t, setLanguage } = useI18n();
 
 const {
   chats, currentChatId, currentChatModel, currentChatSystemPrompt,
-  currentChatVectorStoreId, messages, isLoading,
+  currentChatVectorStoreId, currentChatUseContext, messages, isLoading,
   fetchChats, createChat, selectChat, sendMessage, deleteChat, renameChat,
   updateChatSettings, reorderChats
 } = useChat();

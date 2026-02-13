@@ -8,13 +8,6 @@ export default defineEventHandler(async (event) => {
   const body = await readBody(event);
   const apiKey = getOpenAIKey(event);
 
-  if (!body?.conversationId) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: '会話IDが必要です'
-    });
-  }
-
   if (!body?.message) {
     throw createError({
       statusCode: 400,
@@ -32,7 +25,7 @@ export default defineEventHandler(async (event) => {
   // OpenAI にストリーミングメッセージを送信
   const response = await sendMessageToOpenAIStream(
     apiKey,
-    body.conversationId,
+    body.conversationId || undefined,
     body.message,
     body.model,
     body.systemPrompt,
