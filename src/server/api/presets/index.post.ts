@@ -3,19 +3,18 @@ import { createPreset } from '../../utils/db/presets';
 
 interface CreatePresetBody {
   name: string;
-  model: string;
   systemPrompt?: string | null;
   vectorStoreId?: string | null;
-  useContext?: boolean;
+  imageUrl?: string | null;
 }
 
 export default defineEventHandler(async (event) => {
   const body = await readBody<CreatePresetBody>(event);
 
-  if (!body.name || !body.model) {
+  if (!body.name) {
     throw createError({
       statusCode: 400,
-      statusMessage: '名前とモデルは必須です'
+      statusMessage: '名前は必須です'
     });
   }
 
@@ -24,20 +23,18 @@ export default defineEventHandler(async (event) => {
     event,
     id,
     body.name,
-    body.model,
     body.systemPrompt ?? null,
     body.vectorStoreId ?? null,
-    body.useContext ?? true
+    body.imageUrl ?? null
   );
 
   return {
     preset: {
       id: preset.id,
       name: preset.name,
-      model: preset.model,
       systemPrompt: preset.system_prompt,
       vectorStoreId: preset.vector_store_id,
-      useContext: preset.use_context,
+      imageUrl: preset.image_url,
       createdAt: preset.created_at
     }
   };

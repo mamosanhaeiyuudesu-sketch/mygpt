@@ -25,7 +25,6 @@
         v-model:model="editModel"
         v-model:system-prompt="editSystemPrompt"
         v-model:vector-store-id="editVectorStoreId"
-        v-model:use-context="editUseContext"
       />
 
       <div class="flex gap-2 mt-4">
@@ -56,12 +55,11 @@ const props = defineProps<{
   currentModel?: string | null;
   currentSystemPrompt?: string | null;
   currentVectorStoreId?: string | null;
-  currentUseContext?: boolean;
 }>();
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean];
-  save: [model: string, systemPrompt: string | null, vectorStoreId: string | null, useContext: boolean];
+  save: [model: string, systemPrompt: string | null, vectorStoreId: string | null];
 }>();
 
 const { t } = useI18n();
@@ -71,7 +69,6 @@ const { presets, loadPresets, getPresetById } = usePresets();
 const editModel = ref('');
 const editSystemPrompt = ref('');
 const editVectorStoreId = ref('');
-const editUseContext = ref(true);
 const selectedPresetId = ref('');
 
 // ダイアログが開かれたときに現在の値をセット
@@ -81,7 +78,6 @@ watch(() => props.modelValue, (isOpen) => {
     editModel.value = props.currentModel || 'gpt-4o';
     editSystemPrompt.value = props.currentSystemPrompt || '';
     editVectorStoreId.value = props.currentVectorStoreId || '';
-    editUseContext.value = props.currentUseContext ?? true;
     selectedPresetId.value = '';
   }
 });
@@ -90,15 +86,13 @@ const handlePresetChange = () => {
   if (!selectedPresetId.value) return;
   const preset = getPresetById(selectedPresetId.value);
   if (preset) {
-    editModel.value = preset.model;
     editSystemPrompt.value = preset.systemPrompt || '';
     editVectorStoreId.value = preset.vectorStoreId || '';
-    editUseContext.value = preset.useContext;
   }
 };
 
 const handleSave = () => {
-  emit('save', editModel.value, editSystemPrompt.value.trim() || null, editVectorStoreId.value.trim() || null, editUseContext.value);
+  emit('save', editModel.value, editSystemPrompt.value.trim() || null, editVectorStoreId.value.trim() || null);
   emit('update:modelValue', false);
 };
 </script>

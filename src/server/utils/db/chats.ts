@@ -21,7 +21,6 @@ export async function getAllChats(event: H3Event, userId: string): Promise<(Chat
         c.model,
         c.system_prompt,
         c.vector_store_id,
-        c.use_context,
         c.created_at,
         c.updated_at,
         (SELECT content FROM messages WHERE chat_id = c.id ORDER BY created_at DESC LIMIT 1) as last_message
@@ -55,8 +54,7 @@ export async function createChat(
   name: string,
   model?: string,
   systemPrompt?: string,
-  vectorStoreId?: string,
-  useContext: boolean = true
+  vectorStoreId?: string
 ): Promise<Chat> {
   const now = Date.now();
   const chat: Chat = {
@@ -67,7 +65,6 @@ export async function createChat(
     model: model || null,
     system_prompt: systemPrompt || null,
     vector_store_id: vectorStoreId || null,
-    use_context: useContext,
     created_at: now,
     updated_at: now
   };
@@ -76,9 +73,9 @@ export async function createChat(
 
   if (db) {
     await db.prepare(`
-      INSERT INTO chats (id, user_id, conversation_id, name, model, system_prompt, vector_store_id, use_context, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).bind(id, userId, conversationId, name, model || null, systemPrompt || null, vectorStoreId || null, useContext ? 1 : 0, now, now).run();
+      INSERT INTO chats (id, user_id, conversation_id, name, model, system_prompt, vector_store_id, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(id, userId, conversationId, name, model || null, systemPrompt || null, vectorStoreId || null, now, now).run();
   } else {
     memoryStore.chats.push(chat);
   }
@@ -145,29 +142,27 @@ export async function updateChatTimestamp(event: H3Event, id: string, timestamp:
 }
 
 /**
- * チャット設定更新（モデル・システムプロンプト・Vector Store ID・文脈保持）
+ * チャット設定更新（モデル・システムプロンプト・Vector Store ID）
  */
 export async function updateChatSettings(
   event: H3Event,
   id: string,
   model?: string,
   systemPrompt?: string | null,
-  vectorStoreId?: string | null,
-  useContext?: boolean
+  vectorStoreId?: string | null
 ): Promise<void> {
   const db = getD1(event);
 
   if (db) {
     await db.prepare(
-      'UPDATE chats SET model = ?, system_prompt = ?, vector_store_id = ?, use_context = ? WHERE id = ?'
-    ).bind(model || null, systemPrompt ?? null, vectorStoreId ?? null, useContext === undefined ? 1 : (useContext ? 1 : 0), id).run();
+      'UPDATE chats SET model = ?, system_prompt = ?, vector_store_id = ? WHERE id = ?'
+    ).bind(model || null, systemPrompt ?? null, vectorStoreId ?? null, id).run();
   } else {
     const chat = memoryStore.chats.find(c => c.id === id);
     if (chat) {
       if (model !== undefined) chat.model = model || null;
       if (systemPrompt !== undefined) chat.system_prompt = systemPrompt ?? null;
       if (vectorStoreId !== undefined) chat.vector_store_id = vectorStoreId ?? null;
-      if (useContext !== undefined) chat.use_context = useContext;
     }
   }
 }

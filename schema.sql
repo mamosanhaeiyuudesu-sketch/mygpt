@@ -22,7 +22,6 @@ CREATE TABLE chats (
   model TEXT,                            -- 使用するOpenAIモデル
   system_prompt TEXT,                    -- システムプロンプト（カスタム指示）
   vector_store_id TEXT,                  -- Vector Store ID（RAG用）
-  use_context INTEGER NOT NULL DEFAULT 1, -- 文脈を保持するか (0: false, 1: true)
   created_at INTEGER NOT NULL,           -- UNIXタイムスタンプ (ミリ秒)
   updated_at INTEGER NOT NULL,           -- UNIXタイムスタンプ (ミリ秒)
   FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -49,11 +48,10 @@ CREATE INDEX idx_messages_chat_created ON messages(chat_id, created_at);
 -- チャット設定のプリセットを保存
 CREATE TABLE presets (
   id TEXT PRIMARY KEY,
-  name TEXT NOT NULL,                    -- プリセット名
-  model TEXT NOT NULL,                   -- 使用するOpenAIモデル
+  name TEXT NOT NULL,                    -- ペルソナ名
   system_prompt TEXT,                    -- システムプロンプト（カスタム指示）
   vector_store_id TEXT,                  -- Vector Store ID（RAG用）
-  use_context INTEGER NOT NULL DEFAULT 1, -- 文脈を保持するか (0: false, 1: true)
+  image_url TEXT,                        -- ペルソナ画像（Base64 Data URL）
   created_at INTEGER NOT NULL            -- UNIXタイムスタンプ (ミリ秒)
 );
 

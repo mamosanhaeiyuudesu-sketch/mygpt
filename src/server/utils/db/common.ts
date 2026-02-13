@@ -19,7 +19,6 @@ export interface Chat {
   model?: string | null;
   system_prompt?: string | null;
   vector_store_id?: string | null;
-  use_context?: boolean | null;
   created_at: number;
   updated_at: number;
 }
@@ -35,10 +34,9 @@ export interface Message {
 export interface Preset {
   id: string;
   name: string;
-  model: string;
   system_prompt: string | null;
   vector_store_id: string | null;
-  use_context: boolean;
+  image_url: string | null;
   created_at: number;
 }
 

@@ -58,7 +58,6 @@
           :model="currentChatModel || ''"
           :system-prompt="currentChatSystemPrompt"
           :vector-store-id="currentChatVectorStoreId"
-          :use-context="currentChatUseContext"
           @edit="showSettingsEditor = true"
         />
 
@@ -114,14 +113,12 @@
       :current-model="currentChatModel"
       :current-system-prompt="currentChatSystemPrompt"
       :current-vector-store-id="currentChatVectorStoreId"
-      :current-use-context="currentChatUseContext"
       @save="handleSaveSettings"
     />
 
     <!-- プリセット管理ダイアログ -->
     <PresetManagerDialog
       v-model="showPresetManager"
-      :models="availableModels"
     />
   </div>
 </template>
@@ -137,7 +134,7 @@ const { t, setLanguage } = useI18n();
 
 const {
   chats, currentChatId, currentChatModel, currentChatSystemPrompt,
-  currentChatVectorStoreId, currentChatUseContext, messages, isLoading,
+  currentChatVectorStoreId, messages, isLoading,
   fetchChats, createChat, selectChat, sendMessage, deleteChat, renameChat,
   updateChatSettings, reorderChats
 } = useChat();

@@ -13,15 +13,12 @@ export async function getAllPresets(event: H3Event): Promise<Preset[]> {
 
   if (db) {
     const result = await db.prepare(`
-      SELECT id, name, model, system_prompt, vector_store_id, use_context, created_at
+      SELECT id, name, system_prompt, vector_store_id, image_url, created_at
       FROM presets
       ORDER BY created_at ASC
     `).all();
 
-    return ((result.results || []) as Array<Omit<Preset, 'use_context'> & { use_context: number }>).map(p => ({
-      ...p,
-      use_context: p.use_context === 1
-    }));
+    return (result.results || []) as unknown as Preset[];
   }
 
   return [...memoryStore.presets].sort((a, b) => a.created_at - b.created_at);
@@ -34,19 +31,17 @@ export async function createPreset(
   event: H3Event,
   id: string,
   name: string,
-  model: string,
   systemPrompt: string | null,
   vectorStoreId: string | null,
-  useContext: boolean
+  imageUrl: string | null = null
 ): Promise<Preset> {
   const now = Date.now();
   const preset: Preset = {
     id,
     name,
-    model,
     system_prompt: systemPrompt,
     vector_store_id: vectorStoreId,
-    use_context: useContext,
+    image_url: imageUrl,
     created_at: now
   };
 
@@ -54,9 +49,9 @@ export async function createPreset(
 
   if (db) {
     await db.prepare(`
-      INSERT INTO presets (id, name, model, system_prompt, vector_store_id, use_context, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).bind(id, name, model, systemPrompt, vectorStoreId, useContext ? 1 : 0, now).run();
+      INSERT INTO presets (id, name, system_prompt, vector_store_id, image_url, created_at)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).bind(id, name, systemPrompt, vectorStoreId, imageUrl, now).run();
   } else {
     memoryStore.presets.push(preset);
   }

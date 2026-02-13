@@ -42,19 +42,17 @@ export const usePresets = () => {
    */
   const createPreset = async (
     name: string,
-    model: string,
     systemPrompt: string | null,
     vectorStoreId: string | null,
-    useContext: boolean
+    imageUrl: string | null = null
   ): Promise<Preset | null> => {
     try {
       const newPreset: Preset = {
         id: crypto.randomUUID(),
         name,
-        model,
         systemPrompt,
         vectorStoreId,
-        useContext,
+        imageUrl,
         createdAt: Date.now()
       };
 
@@ -66,7 +64,7 @@ export const usePresets = () => {
         const response = await fetch('/api/presets', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, model, systemPrompt, vectorStoreId, useContext })
+          body: JSON.stringify({ name, systemPrompt, vectorStoreId, imageUrl })
         });
         if (response.ok) {
           const data = await response.json() as { preset: Preset };
@@ -110,10 +108,9 @@ export const usePresets = () => {
   const updatePreset = async (
     id: string,
     name: string,
-    model: string,
     systemPrompt: string | null,
     vectorStoreId: string | null,
-    useContext: boolean
+    imageUrl: string | null = null
   ): Promise<boolean> => {
     try {
       const index = presets.value.findIndex(p => p.id === id);
@@ -122,10 +119,9 @@ export const usePresets = () => {
       const updated: Preset = {
         ...presets.value[index],
         name,
-        model,
         systemPrompt,
         vectorStoreId,
-        useContext
+        imageUrl
       };
 
       if (isLocalEnvironment()) {
@@ -136,7 +132,7 @@ export const usePresets = () => {
         const response = await fetch(`/api/presets/${id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, model, systemPrompt, vectorStoreId, useContext })
+          body: JSON.stringify({ name, systemPrompt, vectorStoreId, imageUrl })
         });
         if (response.ok) {
           presets.value[index] = updated;

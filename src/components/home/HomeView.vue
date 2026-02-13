@@ -23,7 +23,6 @@
           v-model:model="localSelectedModel"
           v-model:system-prompt="localSystemPrompt"
           v-model:vector-store-id="localVectorStoreId"
-          v-model:use-context="localUseContext"
           :is-loading-models="isLoadingModels"
         />
       </div>
@@ -47,7 +46,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:selectedModel': [value: string];
-  submit: [message: string, model: string, systemPrompt?: string, vectorStoreId?: string, useContext?: boolean];
+  submit: [message: string, model: string, systemPrompt?: string, vectorStoreId?: string];
 }>();
 
 const { t } = useI18n();
@@ -55,7 +54,6 @@ const { presets, loadPresets, getPresetById } = usePresets();
 
 const localSystemPrompt = ref('');
 const localVectorStoreId = ref('');
-const localUseContext = ref(true);
 const selectedPresetId = ref('');
 
 const localSelectedModel = computed({
@@ -73,19 +71,16 @@ const handlePresetChange = () => {
     emit('update:selectedModel', props.models.length > 0 ? props.models[0].id : 'gpt-4o');
     localSystemPrompt.value = '';
     localVectorStoreId.value = '';
-    localUseContext.value = true;
     return;
   }
   const preset = getPresetById(selectedPresetId.value);
   if (preset) {
-    emit('update:selectedModel', preset.model);
     localSystemPrompt.value = preset.systemPrompt || '';
     localVectorStoreId.value = preset.vectorStoreId || '';
-    localUseContext.value = preset.useContext;
   }
 };
 
 const handleSubmit = (message: string) => {
-  emit('submit', message, props.selectedModel, localSystemPrompt.value.trim() || undefined, localVectorStoreId.value.trim() || undefined, localUseContext.value);
+  emit('submit', message, props.selectedModel, localSystemPrompt.value.trim() || undefined, localVectorStoreId.value.trim() || undefined);
 };
 </script>

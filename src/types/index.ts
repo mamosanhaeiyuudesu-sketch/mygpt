@@ -22,7 +22,6 @@ export interface Chat {
   model: string;
   systemPrompt?: string | null;
   vectorStoreId?: string | null;
-  useContext: boolean;
   lastMessage?: string;
   createdAt: number;
   updatedAt: number;
@@ -61,14 +60,13 @@ export interface ChatPreview {
   lastMessage?: string;
 }
 
-// プリセット
+// プリセット（ペルソナ）
 export interface Preset {
   id: string;
   name: string;
-  model: string;
   systemPrompt: string | null;
   vectorStoreId: string | null;
-  useContext: boolean;
+  imageUrl: string | null;
   createdAt?: number;
 }
 
@@ -95,7 +93,6 @@ export interface CreateChatRequest {
   model: string;
   systemPrompt?: string;
   vectorStoreId?: string;
-  useContext?: boolean;
 }
 
 export interface SendMessageRequest {
@@ -104,14 +101,12 @@ export interface SendMessageRequest {
   model: string;
   systemPrompt?: string;
   vectorStoreId?: string;
-  useContext?: boolean;
 }
 
 export interface UpdateChatSettingsRequest {
   model?: string;
   systemPrompt?: string | null;
   vectorStoreId?: string | null;
-  useContext?: boolean;
 }
 
 export interface SaveMessagesRequest {
@@ -121,10 +116,8 @@ export interface SaveMessagesRequest {
 
 export interface CreatePresetRequest {
   name: string;
-  model: string;
   systemPrompt?: string | null;
   vectorStoreId?: string | null;
-  useContext?: boolean;
 }
 
 export interface CreateDiaryEntryRequest {

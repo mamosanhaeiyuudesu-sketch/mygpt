@@ -57,19 +57,6 @@
         <p class="text-xs text-gray-500 mt-1">{{ t('settings.vectorStoreId.description') }}</p>
       </div>
 
-      <!-- 文脈保持設定 -->
-      <div>
-        <label class="flex items-center gap-3 cursor-pointer">
-          <input
-            :checked="useContext"
-            @change="emit('update:useContext', ($event.target as HTMLInputElement).checked)"
-            type="checkbox"
-            class="w-5 h-5 rounded bg-gray-800 border-gray-600 text-blue-600 focus:ring-blue-500"
-          />
-          <span class="text-sm text-gray-400">{{ t('settings.useContext') }}</span>
-        </label>
-        <p class="text-xs text-gray-500 mt-1 ml-8">{{ t('settings.useContext.description') }}</p>
-      </div>
     </template>
   </div>
 </template>
@@ -82,7 +69,6 @@ defineProps<{
   model: string;
   systemPrompt: string;
   vectorStoreId: string;
-  useContext: boolean;
   isLoadingModels?: boolean;
 }>();
 
@@ -90,7 +76,6 @@ const emit = defineEmits<{
   'update:model': [value: string];
   'update:systemPrompt': [value: string];
   'update:vectorStoreId': [value: string];
-  'update:useContext': [value: boolean];
 }>();
 
 const { t } = useI18n();

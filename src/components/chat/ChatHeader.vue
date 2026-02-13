@@ -21,7 +21,6 @@ defineProps<{
   model: string;
   systemPrompt?: string | null;
   vectorStoreId?: string | null;
-  useContext?: boolean;
 }>();
 
 const emit = defineEmits<{
