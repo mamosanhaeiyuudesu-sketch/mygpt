@@ -23,6 +23,7 @@ export interface Chat {
   systemPrompt?: string | null;
   vectorStoreId?: string | null;
   useContext: boolean;
+  presetName?: string | null;
   lastMessage?: string;
   createdAt: number;
   updatedAt: number;
@@ -95,6 +96,7 @@ export interface CreateChatRequest {
   systemPrompt?: string;
   vectorStoreId?: string;
   useContext?: boolean;
+  presetName?: string;
 }
 
 export interface SendMessageRequest {
@@ -111,6 +113,7 @@ export interface UpdateChatSettingsRequest {
   systemPrompt?: string | null;
   vectorStoreId?: string | null;
   useContext?: boolean;
+  presetName?: string | null;
 }
 
 export interface SaveMessagesRequest {

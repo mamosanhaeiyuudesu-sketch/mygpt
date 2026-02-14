@@ -58,6 +58,7 @@
           :model="currentChatModel || ''"
           :system-prompt="currentChatSystemPrompt"
           :vector-store-id="currentChatVectorStoreId"
+          :preset-name="currentChatPresetName"
           @edit="showSettingsEditor = true"
         />
 
@@ -114,6 +115,7 @@
       :current-system-prompt="currentChatSystemPrompt"
       :current-vector-store-id="currentChatVectorStoreId"
       :current-use-context="currentChatUseContext"
+      :current-preset-name="currentChatPresetName"
       @save="handleSaveSettings"
     />
 
@@ -135,7 +137,7 @@ const { t, setLanguage } = useI18n();
 
 const {
   chats, currentChatId, currentChatModel, currentChatSystemPrompt,
-  currentChatVectorStoreId, currentChatUseContext, messages, isLoading,
+  currentChatVectorStoreId, currentChatUseContext, currentChatPresetName, messages, isLoading,
   fetchChats, createChat, selectChat, sendMessage, deleteChat, renameChat,
   updateChatSettings, reorderChats
 } = useChat();

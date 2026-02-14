@@ -11,12 +11,12 @@ interface UseChatPageOptions {
   currentChatId: Ref<string | null>;
   messages: Ref<Message[]>;
   isLoading: Ref<boolean>;
-  createChat: (model: string, name?: string, systemPrompt?: string, vectorStoreId?: string, useContext?: boolean) => Promise<string | undefined>;
+  createChat: (model: string, name?: string, systemPrompt?: string, vectorStoreId?: string, useContext?: boolean, presetName?: string) => Promise<string | undefined>;
   selectChat: (chatId: string) => Promise<void>;
   sendMessage: (content: string) => Promise<void>;
   deleteChat: (chatId: string) => Promise<void>;
   renameChat: (chatId: string, name: string) => Promise<void>;
-  updateChatSettings: (chatId: string, model?: string, systemPrompt?: string | null, vectorStoreId?: string | null, useContext?: boolean) => Promise<void>;
+  updateChatSettings: (chatId: string, model?: string, systemPrompt?: string | null, vectorStoreId?: string | null, useContext?: boolean, presetName?: string | null) => Promise<void>;
   reorderChats: (fromIndex: number, toIndex: number) => Promise<void>;
 
   // useAccount()
@@ -195,9 +195,9 @@ export function useChatPage(options: UseChatPageOptions) {
     }
   };
 
-  const handleNewChatWithMessage = async (message: string, model: string, systemPrompt?: string, vectorStoreId?: string, useContext?: boolean) => {
+  const handleNewChatWithMessage = async (message: string, model: string, systemPrompt?: string, vectorStoreId?: string, useContext?: boolean, presetName?: string) => {
     try {
-      const chatId = await createChat(model, undefined, systemPrompt, vectorStoreId, useContext);
+      const chatId = await createChat(model, undefined, systemPrompt, vectorStoreId, useContext, presetName);
       if (chatId) {
         history.replaceState(null, '', `/chat/${chatId}`);
       }
@@ -255,10 +255,10 @@ export function useChatPage(options: UseChatPageOptions) {
     }
   };
 
-  const handleSaveSettings = async (model: string, systemPrompt: string | null, vectorStoreId: string | null, useContext: boolean) => {
+  const handleSaveSettings = async (model: string, systemPrompt: string | null, vectorStoreId: string | null, useContext: boolean, presetName?: string | null) => {
     if (!currentChatId.value) return;
     try {
-      await updateChatSettings(currentChatId.value, model, systemPrompt, vectorStoreId, useContext);
+      await updateChatSettings(currentChatId.value, model, systemPrompt, vectorStoreId, useContext, presetName);
     } catch (error) {
       console.error('Failed to save settings:', error);
       alert(t('error.settingsSave'));

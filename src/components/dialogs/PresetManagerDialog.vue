@@ -32,7 +32,6 @@
             <div class="flex items-center px-2 py-2 gap-1.5">
               <div class="flex-1 min-w-0">
                 <div class="font-medium text-sm truncate">{{ preset.name }}</div>
-                <div v-if="preset.systemPrompt" class="text-xs text-gray-400 truncate">{{ preset.systemPrompt }}</div>
               </div>
               <div class="shrink-0">
                 <img

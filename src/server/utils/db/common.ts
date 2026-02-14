@@ -20,6 +20,7 @@ export interface Chat {
   system_prompt?: string | null;
   vector_store_id?: string | null;
   use_context?: boolean | number | null;
+  preset_name?: string | null;
   created_at: number;
   updated_at: number;
 }

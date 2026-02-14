@@ -26,6 +26,7 @@ export default defineEventHandler(async (event) => {
   const systemPrompt = body?.systemPrompt;
   const vectorStoreId = body?.vectorStoreId;
   const useContext = body?.useContext;
+  const presetName = body?.presetName;
   const chatId = generateId('chat');
 
   // OpenAI Conversationを作成
@@ -35,7 +36,7 @@ export default defineEventHandler(async (event) => {
   const encKey = await getEncryptionKey(event);
   const encName = await encryptIfKey(chatName, encKey);
   const encSystemPrompt = await encryptNullable(systemPrompt, encKey) as string | undefined;
-  await createChat(event, chatId, userId, conversationId, encName, model, encSystemPrompt, vectorStoreId, useContext);
+  await createChat(event, chatId, userId, conversationId, encName, model, encSystemPrompt, vectorStoreId, useContext, presetName);
 
   return { chatId, conversationId, userId };
 });

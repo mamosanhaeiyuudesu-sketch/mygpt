@@ -21,12 +21,12 @@ export interface ChatState {
 
 export interface ChatOperations {
   fetchChats: () => Promise<void>;
-  createChat: (model: string, name?: string, systemPrompt?: string, vectorStoreId?: string, useContext?: boolean) => Promise<string | undefined>;
+  createChat: (model: string, name?: string, systemPrompt?: string, vectorStoreId?: string, useContext?: boolean, presetName?: string) => Promise<string | undefined>;
   selectChat: (chatId: string) => Promise<void>;
   sendMessage: (content: string) => Promise<void>;
   deleteChat: (chatId: string) => Promise<void>;
   renameChat: (chatId: string, name: string) => Promise<void>;
-  updateChatSettings: (chatId: string, model?: string, systemPrompt?: string | null, vectorStoreId?: string | null, useContext?: boolean) => Promise<void>;
+  updateChatSettings: (chatId: string, model?: string, systemPrompt?: string | null, vectorStoreId?: string | null, useContext?: boolean, presetName?: string | null) => Promise<void>;
   reorderChats: (fromIndex: number, toIndex: number) => Promise<void>;
 }
 
@@ -45,7 +45,7 @@ export function useChatLocal(state: ChatState): ChatOperations {
       .sort((a, b) => b.updatedAt - a.updatedAt);
   };
 
-  const createChat = async (model: string, name?: string, systemPrompt?: string, vectorStoreId?: string, useContext?: boolean): Promise<string | undefined> => {
+  const createChat = async (model: string, name?: string, systemPrompt?: string, vectorStoreId?: string, useContext?: boolean, presetName?: string): Promise<string | undefined> => {
     try {
       isLoading.value = true;
       const chatName = name || 'New Chat';
@@ -78,6 +78,7 @@ export function useChatLocal(state: ChatState): ChatOperations {
         systemPrompt,
         vectorStoreId,
         useContext: useContext !== false,
+        presetName: presetName || null,
         createdAt: now,
         updatedAt: now
       };
@@ -229,7 +230,7 @@ export function useChatLocal(state: ChatState): ChatOperations {
     chats.value = data.chats.sort((a, b) => b.updatedAt - a.updatedAt);
   };
 
-  const updateChatSettings = async (chatId: string, model?: string, systemPrompt?: string | null, vectorStoreId?: string | null, useContext?: boolean) => {
+  const updateChatSettings = async (chatId: string, model?: string, systemPrompt?: string | null, vectorStoreId?: string | null, useContext?: boolean, presetName?: string | null) => {
     const data = loadFromStorage();
     const chatIndex = data.chats.findIndex(c => c.id === chatId);
     if (chatIndex !== -1) {
@@ -237,6 +238,7 @@ export function useChatLocal(state: ChatState): ChatOperations {
       if (systemPrompt !== undefined) data.chats[chatIndex].systemPrompt = systemPrompt || undefined;
       if (vectorStoreId !== undefined) data.chats[chatIndex].vectorStoreId = vectorStoreId || undefined;
       if (useContext !== undefined) data.chats[chatIndex].useContext = useContext;
+      if (presetName !== undefined) data.chats[chatIndex].presetName = presetName;
       saveToStorage(data);
     }
 

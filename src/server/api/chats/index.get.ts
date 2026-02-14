@@ -27,6 +27,7 @@ export default defineEventHandler(async (event) => {
     systemPrompt: await decryptNullable(chat.system_prompt, encKey) as string | null || null,
     vectorStoreId: chat.vector_store_id || null,
     useContext: chat.use_context != 0 && chat.use_context !== false,
+    presetName: chat.preset_name || null,
     lastMessage: chat.last_message ? await decryptIfKey(chat.last_message, encKey) : '',
     createdAt: chat.created_at,
     updatedAt: chat.updated_at

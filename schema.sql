@@ -23,6 +23,7 @@ CREATE TABLE chats (
   system_prompt TEXT,                    -- システムプロンプト（カスタム指示）
   vector_store_id TEXT,                  -- Vector Store ID（RAG用）
   use_context INTEGER NOT NULL DEFAULT 1, -- 文脈保持（1=ON, 0=OFF）
+  preset_name TEXT,                      -- 選択されたペルソナ名
   created_at INTEGER NOT NULL,           -- UNIXタイムスタンプ (ミリ秒)
   updated_at INTEGER NOT NULL,           -- UNIXタイムスタンプ (ミリ秒)
   FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE

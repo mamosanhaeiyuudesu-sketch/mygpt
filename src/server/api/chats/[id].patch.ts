@@ -24,11 +24,11 @@ export default defineEventHandler(async (event) => {
   }
 
   // モデル・システムプロンプト・Vector Store IDの更新
-  if (body?.model !== undefined || body?.systemPrompt !== undefined || body?.vectorStoreId !== undefined || body?.useContext !== undefined) {
+  if (body?.model !== undefined || body?.systemPrompt !== undefined || body?.vectorStoreId !== undefined || body?.useContext !== undefined || body?.presetName !== undefined) {
     const encSystemPrompt = body?.systemPrompt !== undefined
       ? await encryptNullable(body.systemPrompt, encKey) as string | undefined
       : undefined;
-    await updateChatSettings(event, id, body.model, encSystemPrompt, body.vectorStoreId, body.useContext);
+    await updateChatSettings(event, id, body.model, encSystemPrompt, body.vectorStoreId, body.useContext, body.presetName);
   }
 
   return { success: true };

@@ -22,7 +22,7 @@ export function useChatRemote(state: ChatState): ChatOperations {
     }
   };
 
-  const createChat = async (model: string, name?: string, systemPrompt?: string, vectorStoreId?: string, useContext?: boolean): Promise<string | undefined> => {
+  const createChat = async (model: string, name?: string, systemPrompt?: string, vectorStoreId?: string, useContext?: boolean, presetName?: string): Promise<string | undefined> => {
     try {
       isLoading.value = true;
       const chatName = name || 'New Chat';
@@ -30,7 +30,7 @@ export function useChatRemote(state: ChatState): ChatOperations {
       const response = await fetch('/api/chats', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: chatName, model, systemPrompt, vectorStoreId, useContext: useContext !== false })
+        body: JSON.stringify({ name: chatName, model, systemPrompt, vectorStoreId, useContext: useContext !== false, presetName })
       });
 
       if (!response.ok) {
@@ -49,6 +49,7 @@ export function useChatRemote(state: ChatState): ChatOperations {
         systemPrompt,
         vectorStoreId,
         useContext: useContext !== false,
+        presetName: presetName || null,
         createdAt: now,
         updatedAt: now
       };
@@ -190,12 +191,12 @@ export function useChatRemote(state: ChatState): ChatOperations {
     }
   };
 
-  const updateChatSettings = async (chatId: string, model?: string, systemPrompt?: string | null, vectorStoreId?: string | null, useContext?: boolean) => {
+  const updateChatSettings = async (chatId: string, model?: string, systemPrompt?: string | null, vectorStoreId?: string | null, useContext?: boolean, presetName?: string | null) => {
     try {
       await fetch(`/api/chats/${chatId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model, systemPrompt, vectorStoreId, useContext })
+        body: JSON.stringify({ model, systemPrompt, vectorStoreId, useContext, presetName })
       });
 
       const chatIndex = chats.value.findIndex(c => c.id === chatId);
@@ -204,6 +205,7 @@ export function useChatRemote(state: ChatState): ChatOperations {
         if (systemPrompt !== undefined) chats.value[chatIndex].systemPrompt = systemPrompt || undefined;
         if (vectorStoreId !== undefined) chats.value[chatIndex].vectorStoreId = vectorStoreId || undefined;
         if (useContext !== undefined) chats.value[chatIndex].useContext = useContext;
+        if (presetName !== undefined) chats.value[chatIndex].presetName = presetName;
         chats.value = [...chats.value];
       }
     } catch (error) {
