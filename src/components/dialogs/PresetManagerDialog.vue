@@ -5,7 +5,7 @@
     class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
     @click.self="emit('update:modelValue', false)"
   >
-    <div class="bg-gray-900 rounded-lg p-6 max-w-2xl w-full border border-gray-700 max-h-[80vh] flex flex-col">
+    <div class="bg-gray-900 rounded-lg p-6 max-w-2xl w-full md:w-[70%] border border-gray-700 max-h-[80vh] flex flex-col">
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-lg font-bold">{{ t('presetManager.title') }}</h2>
         <button
@@ -23,7 +23,7 @@
           {{ t('presetManager.empty') }}
         </div>
 
-        <div v-else class="grid grid-cols-3 gap-2">
+        <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-2">
           <div
             v-for="preset in presets"
             :key="preset.id"

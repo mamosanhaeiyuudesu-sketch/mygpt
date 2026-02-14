@@ -1,7 +1,7 @@
 <template>
   <div class="flex-1 flex flex-col">
     <!-- 中央コンテンツ -->
-    <div class="flex-1 flex items-center justify-center px-4">
+    <div class="flex-1 flex items-start pt-[5vh] md:items-center md:pt-0 justify-center px-4">
       <div class="w-full max-w-md space-y-4">
         <h1 class="text-2xl md:text-3xl font-bold">{{ t('sidebar.newChat') }}</h1>
 
@@ -26,7 +26,7 @@
         <!-- ペルソナ選択（カード形式） -->
         <div v-if="presets.length > 0">
           <label class="text-sm text-gray-400 block mb-2">{{ t('settings.preset') }}</label>
-          <div class="grid grid-cols-3 gap-2">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
             <button
               v-for="preset in presets"
               :key="preset.id"

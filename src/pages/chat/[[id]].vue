@@ -34,6 +34,7 @@
       <!-- モバイル用ヘッダー -->
       <MobileHeader
         :model="currentChatModel"
+        :preset-name="currentChatPresetName"
         :has-active-item="!!currentChatId"
         @open-sidebar="isSidebarOpen = true"
         @edit="showSettingsEditor = true"

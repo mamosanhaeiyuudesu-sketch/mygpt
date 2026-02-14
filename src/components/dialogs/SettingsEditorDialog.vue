@@ -4,7 +4,7 @@
     class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
     @click.self="emit('update:modelValue', false)"
   >
-    <div class="bg-gray-900 rounded-lg p-6 max-w-md w-full border border-gray-700">
+    <div class="bg-gray-900 rounded-lg p-6 max-w-lg w-full border border-gray-700">
       <h2 class="text-lg font-bold mb-4">{{ t('settings.title') }}</h2>
 
       <div class="space-y-4">
@@ -24,7 +24,7 @@
         <!-- ペルソナ選択（カード形式） -->
         <div v-if="presets.length > 0">
           <label class="text-sm text-gray-400 block mb-2">{{ t('settings.preset') }}</label>
-          <div class="grid grid-cols-3 gap-2">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
             <button
               v-for="preset in presets"
               :key="preset.id"
