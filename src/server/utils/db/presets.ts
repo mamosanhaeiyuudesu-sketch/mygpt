@@ -60,6 +60,35 @@ export async function createPreset(
 }
 
 /**
+ * プリセット更新
+ */
+export async function updatePreset(
+  event: H3Event,
+  id: string,
+  name: string,
+  systemPrompt: string | null,
+  vectorStoreId: string | null,
+  imageUrl: string | null
+): Promise<void> {
+  const db = getD1(event);
+
+  if (db) {
+    await db.prepare(`
+      UPDATE presets SET name = ?, system_prompt = ?, vector_store_id = ?, image_url = ?
+      WHERE id = ?
+    `).bind(name, systemPrompt, vectorStoreId, imageUrl, id).run();
+  } else {
+    const preset = memoryStore.presets.find(p => p.id === id);
+    if (preset) {
+      preset.name = name;
+      preset.system_prompt = systemPrompt;
+      preset.vector_store_id = vectorStoreId;
+      preset.image_url = imageUrl;
+    }
+  }
+}
+
+/**
  * プリセット削除
  */
 export async function deletePreset(event: H3Event, id: string): Promise<void> {
