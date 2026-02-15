@@ -74,6 +74,7 @@ src/
 │   ├── sidebar/                  # ChatSidebar, ChatListItem, DiarySidebar, DiaryListItem, MobileHeader, SidebarFooterMenu
 │   ├── home/                     # HomeView（チャット未選択時のランディング）
 │   ├── navigation/               # AppNavigation
+│   ├── ui/                       # ToggleSwitch, PresetCardGrid（共通UIコンポーネント）
 │   └── dialogs/                  # AccountSetupDialog, PresetManagerDialog, SettingsEditorDialog
 ├── composables/
 │   ├── useAccount.ts             # アカウント管理（ログイン/サインアップ/ログアウト）
@@ -81,14 +82,18 @@ src/
 │   ├── useChatLocal.ts           # ローカル永続化（localStorage）
 │   ├── useChatRemote.ts          # リモートAPI操作
 │   ├── useChatPage.ts            # チャットページのUIロジック
-│   ├── useChatStream.ts          # SSEストリーム解析
+│   ├── useChatStream.ts          # SSEストリーム解析・メッセージ送信共通ロジック
 │   ├── useDiary.ts               # 日記エントリ管理
-│   ├── useI18n.ts                # 多言語対応（ja/ko/en）
+│   ├── useI18n.ts                # 多言語対応（翻訳データはsrc/locales/*.json）
 │   ├── usePageAuth.ts            # ページレベル認証チェック
 │   ├── usePresets.ts             # プリセット管理
 │   └── useQuestionNavigation.ts  # 質問ナビゲーション
 ├── types/
 │   └── index.ts                  # 共通型定義
+├── locales/
+│   ├── ja.json                   # 日本語翻訳
+│   ├── ko.json                   # 韓国語翻訳
+│   └── en.json                   # 英語翻訳
 ├── utils/
 │   ├── dateFormat.ts             # 日付フォーマット
 │   ├── diaryStorage.ts           # 日記ローカルストレージ
@@ -99,8 +104,9 @@ src/
 └── server/
     ├── api/                      # Nuxtサーバールート（下記参照）
     └── utils/
+        ├── auth.ts               # 認証・認可ユーティリティ（requireAuth, assertChatOwner, assertDiaryOwner）
         ├── db/
-        │   ├── common.ts         # 型定義、インメモリストレージ、D1アクセス
+        │   ├── common.ts         # 型定義、インメモリストレージ、D1アクセス、useContextToBoolean
         │   ├── chats.ts          # チャットCRUD操作
         │   ├── messages.ts       # メッセージCRUD操作
         │   ├── presets.ts        # プリセットCRUD操作
@@ -125,11 +131,17 @@ src/
 
 4. **RAGサポート**: チャットに`vectorStoreId`が設定されている場合、Responses APIリクエストに`file_search`ツールと、それを使用するための追加指示が含まれます。
 
-5. **ユーザー認証**: Cookieベースのセッション管理。`auth.global.ts`ミドルウェアが全ルートに適用され、未認証ユーザーを`/password`にリダイレクト。ユーザーごとにデータが分離されます。
+5. **ユーザー認証**: Cookieベースのセッション管理。`auth.global.ts`ミドルウェアが全ルートに適用され、未認証ユーザーを`/password`にリダイレクト。サーバー側では`auth.ts`の`requireAuth()`で認証チェック、`assertChatOwner()`/`assertDiaryOwner()`でリソース所有者検証を行います。
 
 6. **暗号化**: `crypto.ts`を使用してチャット名やコンテンツをサーバー側で暗号化して保存。
 
-7. **チャットcomposableの分離**: チャットロジックを`useChatLocal.ts`（ローカル永続化）、`useChatRemote.ts`（API操作）、`useChatStream.ts`（SSE解析）、`useChatPage.ts`（UIロジック）に分離し、`useChat.ts`が全体を調整します。
+7. **チャットcomposableの分離**: チャットロジックを`useChatLocal.ts`（ローカル永続化）、`useChatRemote.ts`（API操作）、`useChatStream.ts`（SSE解析・メッセージ送信共通ロジック`executeSendMessage()`）、`useChatPage.ts`（UIロジック）に分離し、`useChat.ts`が全体を調整します。
+
+8. **i18n翻訳データの外部化**: 翻訳データは`src/locales/{ja,ko,en}.json`に格納し、`useI18n.ts`はロジックのみを保持します。
+
+9. **共通UIコンポーネント**: `ToggleSwitch.vue`（v-modelでboolean制御）と`PresetCardGrid.vue`（プリセット選択グリッド）を共通化し、HomeView・SettingsEditorDialog・ChatSettingsForm等で再利用しています。
+
+10. **DB型の統一**: `use_context`フィールドはDB側では`number | null`（0/1）で管理し、フロントエンドへの変換時に`useContextToBoolean()`を使用してbooleanに変換します。
 
 ### サーバーAPIルート
 
