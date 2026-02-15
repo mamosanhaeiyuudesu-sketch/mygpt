@@ -2,17 +2,10 @@
  * PATCH /api/users/language - ユーザーの言語設定を更新
  */
 import { getUserById, updateUserLanguage } from '~/server/utils/db/users';
-import { USER_COOKIE_NAME } from '~/server/utils/constants';
+import { requireAuth } from '~/server/utils/auth';
 
 export default defineEventHandler(async (event) => {
-  const userId = getCookie(event, USER_COOKIE_NAME);
-
-  if (!userId) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: 'ログインが必要です'
-    });
-  }
+  const userId = requireAuth(event);
 
   const body = await readBody(event);
   const language = body?.language;

@@ -65,21 +65,7 @@
         <label class="text-sm text-gray-400">{{ t('settings.useContext') }}</label>
         <p class="text-xs text-gray-500 mt-0.5">{{ t('settings.useContext.description') }}</p>
       </div>
-      <button
-        type="button"
-        @click="emit('update:useContext', !useContext)"
-        :class="[
-          'relative inline-flex h-6 w-11 items-center rounded-full transition-colors',
-          useContext ? 'bg-blue-600' : 'bg-gray-600'
-        ]"
-      >
-        <span
-          :class="[
-            'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
-            useContext ? 'translate-x-6' : 'translate-x-1'
-          ]"
-        />
-      </button>
+      <ToggleSwitch :model-value="useContext" @update:model-value="emit('update:useContext', $event)" />
     </div>
   </div>
 </template>

@@ -2,18 +2,12 @@
  * GET /api/chats - チャット一覧取得
  */
 import { getAllChats } from '~/server/utils/db/chats';
-import { USER_COOKIE_NAME } from '~/server/utils/constants';
+import { useContextToBoolean } from '~/server/utils/db/common';
 import { getEncryptionKey, decryptIfKey, decryptNullable } from '~/server/utils/crypto';
+import { requireAuth } from '~/server/utils/auth';
 
 export default defineEventHandler(async (event) => {
-  const userId = getCookie(event, USER_COOKIE_NAME);
-
-  if (!userId) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: 'ログインが必要です'
-    });
-  }
+  const userId = requireAuth(event);
 
   const allChats = await getAllChats(event, userId);
   const encKey = await getEncryptionKey(event);
@@ -26,7 +20,7 @@ export default defineEventHandler(async (event) => {
     model: chat.model || 'gpt-4o',
     systemPrompt: await decryptNullable(chat.system_prompt, encKey) as string | null || null,
     vectorStoreId: chat.vector_store_id || null,
-    useContext: chat.use_context != 0 && chat.use_context !== false,
+    useContext: useContextToBoolean(chat.use_context),
     presetName: chat.preset_name || null,
     lastMessage: chat.last_message ? await decryptIfKey(chat.last_message, encKey) : '',
     createdAt: chat.created_at,

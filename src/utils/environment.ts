@@ -6,14 +6,14 @@
  * 開発環境かどうかを判定
  */
 export function isDevelopment(): boolean {
-  return import.meta.dev;
+  return import.meta.dev ?? false;
 }
 
 /**
  * 本番環境かどうかを判定
  */
 export function isProduction(): boolean {
-  return !import.meta.dev;
+  return !(import.meta.dev ?? false);
 }
 
 /**

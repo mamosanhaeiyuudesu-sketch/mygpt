@@ -132,7 +132,8 @@ export function useChatPage(options: UseChatPageOptions) {
   };
 
   const handleNewChat = () => {
-    selectChat(null);
+    currentChatId.value = null;
+    messages.value = [];
     navigateTo('/chat');
   };
 
@@ -195,6 +196,34 @@ export function useChatPage(options: UseChatPageOptions) {
     }
   };
 
+  /**
+   * チャットタイトルの自動生成（New Chat の場合のみ）
+   */
+  const autoGenerateTitle = async (chatId: string) => {
+    const chat = chats.value.find(c => c.id === chatId);
+    if (!chat || chat.name !== 'New Chat') return;
+
+    const excludeTitles = chats.value
+      .filter(c => c.id !== chatId)
+      .map(c => c.name);
+    const generatedTitle = await handleGenerateTitle(chatId, excludeTitles);
+    if (generatedTitle) {
+      await renameChat(chatId, generatedTitle);
+    }
+  };
+
+  /**
+   * メッセージ送信後に最新のユーザーメッセージまでスクロール
+   */
+  const scrollToLatestUserMessage = () => {
+    nextTick(() => {
+      const lastUserMessage = [...messages.value].reverse().find(m => m.role === 'user');
+      if (lastUserMessage) {
+        scrollToMessage(lastUserMessage.id);
+      }
+    });
+  };
+
   const handleNewChatWithMessage = async (message: string, model: string, systemPrompt?: string, vectorStoreId?: string, useContext?: boolean, presetName?: string) => {
     try {
       const chatId = await createChat(model, undefined, systemPrompt, vectorStoreId, useContext, presetName);
@@ -203,23 +232,12 @@ export function useChatPage(options: UseChatPageOptions) {
       }
 
       const sendPromise = sendMessage(message);
-
       await nextTick();
-      const userMessage = messages.value[messages.value.length - 2];
-      if (userMessage && userMessage.role === 'user') {
-        scrollToMessage(userMessage.id);
-      }
-
+      scrollToLatestUserMessage();
       await sendPromise;
 
       if (chatId) {
-        const excludeTitles = chats.value
-          .filter(c => c.id !== chatId)
-          .map(c => c.name);
-        const generatedTitle = await handleGenerateTitle(chatId, excludeTitles);
-        if (generatedTitle) {
-          await renameChat(chatId, generatedTitle);
-        }
+        await autoGenerateTitle(chatId);
       }
     } catch (error) {
       console.error('Failed to create chat with message:', error);
@@ -230,24 +248,12 @@ export function useChatPage(options: UseChatPageOptions) {
   const handleSendMessage = async (message: string) => {
     try {
       const sendPromise = sendMessage(message);
-
       await nextTick();
-      const userMessage = messages.value[messages.value.length - 2];
-      if (userMessage && userMessage.role === 'user') {
-        scrollToMessage(userMessage.id);
-      }
-
+      scrollToLatestUserMessage();
       await sendPromise;
 
-      const currentChat = chats.value.find(c => c.id === currentChatId.value);
-      if (currentChat && currentChat.name === 'New Chat') {
-        const excludeTitles = chats.value
-          .filter(c => c.id !== currentChatId.value)
-          .map(c => c.name);
-        const generatedTitle = await handleGenerateTitle(currentChatId.value!, excludeTitles);
-        if (generatedTitle) {
-          await renameChat(currentChatId.value!, generatedTitle);
-        }
+      if (currentChatId.value) {
+        await autoGenerateTitle(currentChatId.value);
       }
     } catch (error) {
       console.error('Failed to send message:', error);

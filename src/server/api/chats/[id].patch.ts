@@ -3,17 +3,14 @@
  */
 import { updateChatName, updateChatSettings } from '~/server/utils/db/chats';
 import { getEncryptionKey, encryptIfKey, encryptNullable } from '~/server/utils/crypto';
+import { requireAuth, requireParam, assertChatOwner } from '~/server/utils/auth';
 
 export default defineEventHandler(async (event) => {
-  const id = getRouterParam(event, 'id');
+  const userId = requireAuth(event);
+  const id = requireParam(event, 'id', 'チャットIDが必要です');
   const body = await readBody(event);
 
-  if (!id) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: 'チャットIDが必要です'
-    });
-  }
+  await assertChatOwner(event, id, userId);
 
   const encKey = await getEncryptionKey(event);
 

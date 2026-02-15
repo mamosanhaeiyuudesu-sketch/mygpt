@@ -19,7 +19,7 @@ export interface Chat {
   model?: string | null;
   system_prompt?: string | null;
   vector_store_id?: string | null;
-  use_context?: boolean | number | null;
+  use_context?: number | null;
   preset_name?: string | null;
   created_at: number;
   updated_at: number;
@@ -66,6 +66,13 @@ export const memoryStore = {
 export function getD1(event: H3Event): D1Database | null {
   const cfEnv = event.context.cloudflare?.env as { DB?: D1Database } | undefined;
   return cfEnv?.DB || null;
+}
+
+/**
+ * DB の use_context (number|null) を boolean に変換
+ */
+export function useContextToBoolean(value: number | null | undefined): boolean {
+  return value !== 0 && value !== null;
 }
 
 /**

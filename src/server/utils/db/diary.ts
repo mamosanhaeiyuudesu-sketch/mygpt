@@ -56,6 +56,17 @@ export async function createDiaryEntry(
 }
 
 /**
+ * 日記エントリを1件取得
+ */
+export async function getDiaryEntry(event: H3Event, entryId: string): Promise<DiaryEntry | null> {
+  const db = getD1(event);
+  if (db) {
+    return await db.prepare('SELECT * FROM diary_entries WHERE id = ?').bind(entryId).first() as DiaryEntry | null;
+  }
+  return memoryStore.diaryEntries.find(e => e.id === entryId) || null;
+}
+
+/**
  * 日記エントリのタイトルを更新
  */
 export async function renameDiaryEntry(event: H3Event, entryId: string, title: string): Promise<void> {

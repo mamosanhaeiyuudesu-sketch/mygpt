@@ -70,7 +70,7 @@ export async function createChat(
     model: model || null,
     system_prompt: systemPrompt || null,
     vector_store_id: vectorStoreId || null,
-    use_context: useContext !== false,
+    use_context: useContext !== false ? 1 : 0,
     preset_name: presetName || null,
     created_at: now,
     updated_at: now
@@ -172,7 +172,7 @@ export async function updateChatSettings(
       if (model !== undefined) chat.model = model || null;
       if (systemPrompt !== undefined) chat.system_prompt = systemPrompt ?? null;
       if (vectorStoreId !== undefined) chat.vector_store_id = vectorStoreId ?? null;
-      if (useContext !== undefined) chat.use_context = useContext;
+      if (useContext !== undefined) chat.use_context = useContext ? 1 : 0;
       if (presetName !== undefined) chat.preset_name = presetName ?? null;
     }
   }

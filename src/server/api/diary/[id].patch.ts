@@ -2,26 +2,12 @@
  * PATCH /api/diary/:id - 日記エントリのタイトル更新
  */
 import { renameDiaryEntry } from '~/server/utils/db/diary';
-import { USER_COOKIE_NAME } from '~/server/utils/constants';
 import { getEncryptionKey, encryptIfKey } from '~/server/utils/crypto';
+import { requireAuth, requireParam, assertDiaryOwner } from '~/server/utils/auth';
 
 export default defineEventHandler(async (event) => {
-  const userId = getCookie(event, USER_COOKIE_NAME);
-
-  if (!userId) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: 'ログインが必要です'
-    });
-  }
-
-  const entryId = getRouterParam(event, 'id');
-  if (!entryId) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: 'Entry ID is required'
-    });
-  }
+  const userId = requireAuth(event);
+  const entryId = requireParam(event, 'id', 'エントリIDが必要です');
 
   const body = await readBody(event);
   const title = body?.title;
@@ -29,9 +15,11 @@ export default defineEventHandler(async (event) => {
   if (typeof title !== 'string') {
     throw createError({
       statusCode: 400,
-      statusMessage: 'title is required'
+      statusMessage: 'タイトルが必要です'
     });
   }
+
+  await assertDiaryOwner(event, entryId, userId);
 
   const encKey = await getEncryptionKey(event);
   const encTitle = await encryptIfKey(title, encKey);

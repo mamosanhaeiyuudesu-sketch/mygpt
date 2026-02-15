@@ -2,20 +2,15 @@
  * POST /api/chats/:id/messages-save - メッセージをD1に保存
  */
 import { generateId } from '~/server/utils/db/common';
-import { getChat, updateChatTimestamp } from '~/server/utils/db/chats';
+import { updateChatTimestamp } from '~/server/utils/db/chats';
 import { createMessage } from '~/server/utils/db/messages';
 import { getEncryptionKey, encryptIfKey } from '~/server/utils/crypto';
+import { requireAuth, requireParam, assertChatOwner } from '~/server/utils/auth';
 
 export default defineEventHandler(async (event) => {
-  const id = getRouterParam(event, 'id');
+  const userId = requireAuth(event);
+  const id = requireParam(event, 'id', 'チャットIDが必要です');
   const body = await readBody(event);
-
-  if (!id) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: 'チャットIDが必要です'
-    });
-  }
 
   if (!body?.userMessage || !body?.assistantMessage) {
     throw createError({
@@ -24,14 +19,7 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  // チャット存在確認
-  const chat = await getChat(event, id);
-  if (!chat) {
-    throw createError({
-      statusCode: 404,
-      statusMessage: 'チャットが見つかりません'
-    });
-  }
+  await assertChatOwner(event, id, userId);
 
   const now = Date.now();
   const encKey = await getEncryptionKey(event);

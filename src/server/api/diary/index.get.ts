@@ -2,18 +2,11 @@
  * GET /api/diary - 日記エントリ一覧取得
  */
 import { getAllDiaryEntries } from '~/server/utils/db/diary';
-import { USER_COOKIE_NAME } from '~/server/utils/constants';
 import { getEncryptionKey, decryptIfKey } from '~/server/utils/crypto';
+import { requireAuth } from '~/server/utils/auth';
 
 export default defineEventHandler(async (event) => {
-  const userId = getCookie(event, USER_COOKIE_NAME);
-
-  if (!userId) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: 'ログインが必要です'
-    });
-  }
+  const userId = requireAuth(event);
 
   const entries = await getAllDiaryEntries(event, userId);
   const encKey = await getEncryptionKey(event);

@@ -2,18 +2,11 @@
  * POST /api/diary - 日記エントリ保存
  */
 import { createDiaryEntry } from '~/server/utils/db/diary';
-import { USER_COOKIE_NAME } from '~/server/utils/constants';
 import { getEncryptionKey, encryptIfKey } from '~/server/utils/crypto';
+import { requireAuth } from '~/server/utils/auth';
 
 export default defineEventHandler(async (event) => {
-  const userId = getCookie(event, USER_COOKIE_NAME);
-
-  if (!userId) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: 'ログインが必要です'
-    });
-  }
+  const userId = requireAuth(event);
 
   const body = await readBody(event);
   const content = body?.content;
@@ -22,7 +15,7 @@ export default defineEventHandler(async (event) => {
   if (!content) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'content is required'
+      statusMessage: 'コンテンツが必要です'
     });
   }
 

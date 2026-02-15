@@ -2,26 +2,13 @@
  * DELETE /api/diary/:id - 日記エントリ削除
  */
 import { deleteDiaryEntry } from '~/server/utils/db/diary';
-import { USER_COOKIE_NAME } from '~/server/utils/constants';
+import { requireAuth, requireParam, assertDiaryOwner } from '~/server/utils/auth';
 
 export default defineEventHandler(async (event) => {
-  const userId = getCookie(event, USER_COOKIE_NAME);
+  const userId = requireAuth(event);
+  const entryId = requireParam(event, 'id', 'エントリIDが必要です');
 
-  if (!userId) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: 'ログインが必要です'
-    });
-  }
-
-  const entryId = getRouterParam(event, 'id');
-  if (!entryId) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: 'Entry ID is required'
-    });
-  }
-
+  await assertDiaryOwner(event, entryId, userId);
   await deleteDiaryEntry(event, entryId);
 
   return { success: true };

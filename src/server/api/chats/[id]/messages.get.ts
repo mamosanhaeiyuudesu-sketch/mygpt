@@ -3,16 +3,13 @@
  */
 import { getMessages } from '~/server/utils/db/messages';
 import { getEncryptionKey, decryptIfKey } from '~/server/utils/crypto';
+import { requireAuth, requireParam, assertChatOwner } from '~/server/utils/auth';
 
 export default defineEventHandler(async (event) => {
-  const id = getRouterParam(event, 'id');
+  const userId = requireAuth(event);
+  const id = requireParam(event, 'id', 'チャットIDが必要です');
 
-  if (!id) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: 'チャットIDが必要です'
-    });
-  }
+  await assertChatOwner(event, id, userId);
 
   const allMessages = await getMessages(event, id);
   const encKey = await getEncryptionKey(event);

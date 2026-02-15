@@ -4,8 +4,7 @@
  */
 import type { Chat, Message } from '~/types';
 import type { ChatState, ChatOperations } from '~/composables/useChatLocal';
-import { generateMessageId } from '~/utils/storage';
-import { parseSSEStream, updateMessageContent } from '~/composables/useChatStream';
+import { executeSendMessage } from '~/composables/useChatStream';
 
 export function useChatRemote(state: ChatState): ChatOperations {
   const { chats, currentChatId, messages, isLoading, currentChatModel, currentChatUseContext } = state;
@@ -87,76 +86,40 @@ export function useChatRemote(state: ChatState): ChatOperations {
 
     const chatId = currentChatId.value;
     const model = currentChatModel.value;
-    const now = Date.now();
+    const useContext = currentChatUseContext.value;
 
-    const userMessage: Message = {
-      id: generateMessageId(),
-      role: 'user',
-      content,
-      createdAt: now
-    };
-    messages.value.push(userMessage);
-
-    const assistantMessage: Message = {
-      id: generateMessageId(),
-      role: 'assistant',
-      content: '',
-      createdAt: Date.now()
-    };
-    messages.value.push(assistantMessage);
-
-    try {
-      isLoading.value = true;
-
-      const useContext = currentChatUseContext.value;
-      const response = await fetch(`/api/chats/${chatId}/messages-stream`, {
+    await executeSendMessage(content, {
+      messages,
+      isLoading,
+      fetchStream: (msg) => fetch(`/api/chats/${chatId}/messages-stream`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          message: content,
+          message: msg,
           model,
           useContext
         })
-      });
+      }),
+      onSuccess: async (_userMessage, finalContent) => {
+        // D1にメッセージを保存
+        await fetch(`/api/chats/${chatId}/messages-save`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userMessage: content,
+            assistantMessage: finalContent
+          })
+        });
 
-      if (!response.ok) {
-        throw new Error('Failed to send message');
+        // チャット一覧を更新
+        const chatIndex = chats.value.findIndex(c => c.id === chatId);
+        if (chatIndex !== -1) {
+          chats.value[chatIndex].lastMessage = finalContent.substring(0, 50);
+          chats.value[chatIndex].updatedAt = Date.now();
+          chats.value = [...chats.value].sort((a, b) => b.updatedAt - a.updatedAt);
+        }
       }
-
-      const reader = response.body?.getReader();
-      if (!reader) {
-        throw new Error('No response body');
-      }
-
-      const finalContent = await parseSSEStream(reader, (text) => {
-        updateMessageContent(messages, assistantMessage.id, text);
-      });
-      updateMessageContent(messages, assistantMessage.id, finalContent);
-
-      // D1にメッセージを保存
-      await fetch(`/api/chats/${chatId}/messages-save`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userMessage: content,
-          assistantMessage: finalContent
-        })
-      });
-
-      // チャット一覧を更新
-      const chatIndex = chats.value.findIndex(c => c.id === chatId);
-      if (chatIndex !== -1) {
-        chats.value[chatIndex].lastMessage = finalContent.substring(0, 50);
-        chats.value[chatIndex].updatedAt = Date.now();
-        chats.value = [...chats.value].sort((a, b) => b.updatedAt - a.updatedAt);
-      }
-    } catch (error) {
-      messages.value = messages.value.filter(m => m.id !== userMessage.id && m.id !== assistantMessage.id);
-      console.error('Error sending message:', error);
-      throw error;
-    } finally {
-      isLoading.value = false;
-    }
+    });
   };
 
   const deleteChat = async (chatId: string) => {

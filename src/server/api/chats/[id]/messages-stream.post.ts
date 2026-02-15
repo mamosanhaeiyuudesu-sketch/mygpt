@@ -1,21 +1,16 @@
 /**
  * POST /api/chats/:id/messages-stream - ストリーミングメッセージ送信
  */
-import { getChat } from '~/server/utils/db/chats';
 import { sendMessageToOpenAIStream } from '~/server/utils/openai';
 import { getOpenAIKey } from '~/server/utils/env';
+import { useContextToBoolean } from '~/server/utils/db/common';
+import { requireAuth, requireParam, assertChatOwner } from '~/server/utils/auth';
 
 export default defineEventHandler(async (event) => {
-  const id = getRouterParam(event, 'id');
+  const userId = requireAuth(event);
+  const id = requireParam(event, 'id', 'チャットIDが必要です');
   const body = await readBody(event);
   const apiKey = getOpenAIKey(event);
-
-  if (!id) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: 'チャットIDが必要です'
-    });
-  }
 
   if (!body?.message) {
     throw createError({
@@ -24,19 +19,12 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  // チャットからconversation_idを取得
-  const chat = await getChat(event, id);
-  if (!chat) {
-    throw createError({
-      statusCode: 404,
-      statusMessage: 'チャットが見つかりません'
-    });
-  }
+  const chat = await assertChatOwner(event, id, userId);
 
   const model = body.model || chat.model || 'gpt-4o';
   const systemPrompt = chat.system_prompt || undefined;
   const vectorStoreId = chat.vector_store_id || undefined;
-  const useContext = body.useContext !== undefined ? body.useContext : (chat.use_context != 0 && chat.use_context !== false);
+  const useContext = body.useContext !== undefined ? body.useContext : useContextToBoolean(chat.use_context);
 
   // OpenAI にストリーミングメッセージを送信
   const response = await sendMessageToOpenAIStream(

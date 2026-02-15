@@ -5,18 +5,11 @@ import { generateId } from '~/server/utils/db/common';
 import { createChat } from '~/server/utils/db/chats';
 import { createConversation } from '~/server/utils/openai';
 import { getOpenAIKey } from '~/server/utils/env';
-import { USER_COOKIE_NAME } from '~/server/utils/constants';
 import { getEncryptionKey, encryptIfKey, encryptNullable } from '~/server/utils/crypto';
+import { requireAuth } from '~/server/utils/auth';
 
 export default defineEventHandler(async (event) => {
-  const userId = getCookie(event, USER_COOKIE_NAME);
-
-  if (!userId) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: 'ログインが必要です'
-    });
-  }
+  const userId = requireAuth(event);
 
   const body = await readBody(event);
   const apiKey = getOpenAIKey(event);

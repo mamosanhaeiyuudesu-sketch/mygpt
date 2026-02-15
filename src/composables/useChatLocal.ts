@@ -4,8 +4,8 @@
  */
 import type { Ref, ComputedRef } from 'vue';
 import type { Chat, Message } from '~/types';
-import { getUserFromStorage, loadFromStorage, saveToStorage, generateUUID, generateMessageId } from '~/utils/storage';
-import { parseSSEStream, updateMessageContent } from '~/composables/useChatStream';
+import { getUserFromStorage, loadFromStorage, saveToStorage, generateUUID } from '~/utils/storage';
+import { executeSendMessage } from '~/composables/useChatStream';
 
 export interface ChatState {
   chats: Ref<Chat[]>;
@@ -115,94 +115,63 @@ export function useChatLocal(state: ChatState): ChatOperations {
     const model = currentChatModel.value;
     const systemPrompt = currentChatSystemPrompt.value;
     const vectorStoreId = currentChatVectorStoreId.value;
-    const now = Date.now();
+    const conversationId = currentConversationId.value;
+    const useContext = currentChatUseContext.value;
 
-    const userMessage: Message = {
-      id: generateMessageId(),
-      role: 'user',
-      content,
-      createdAt: now
-    };
-    messages.value.push(userMessage);
+    if (!conversationId) {
+      throw new Error('No conversation ID');
+    }
 
-    const assistantMessage: Message = {
-      id: generateMessageId(),
-      role: 'assistant',
-      content: '',
-      createdAt: Date.now()
-    };
-    messages.value.push(assistantMessage);
-
-    // localStorage に保存
+    // localStorage にユーザーメッセージを先行保存
     const data = loadFromStorage();
     if (!data.messages[chatId]) {
       data.messages[chatId] = [];
     }
-    data.messages[chatId].push(userMessage);
-    saveToStorage(data);
 
-    try {
-      isLoading.value = true;
-
-      const conversationId = currentConversationId.value;
-      if (!conversationId) {
-        throw new Error('No conversation ID');
-      }
-
-      const useContext = currentChatUseContext.value;
-      const response = await fetch('/api/messages-stream', {
+    await executeSendMessage(content, {
+      messages,
+      isLoading,
+      fetchStream: (msg) => fetch('/api/messages-stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           conversationId: useContext ? conversationId : undefined,
-          message: content,
+          message: msg,
           model,
           systemPrompt,
           vectorStoreId
         })
-      });
+      }),
+      onSuccess: async (userMessage, finalContent) => {
+        const updatedData = loadFromStorage();
+        if (!updatedData.messages[chatId]) {
+          updatedData.messages[chatId] = [];
+        }
+        updatedData.messages[chatId].push(userMessage);
+        updatedData.messages[chatId].push({
+          id: '',
+          role: 'assistant',
+          content: finalContent,
+          createdAt: Date.now()
+        });
 
-      if (!response.ok) {
-        throw new Error('Failed to send message');
+        const chatIndex = updatedData.chats.findIndex(c => c.id === chatId);
+        if (chatIndex !== -1) {
+          updatedData.chats[chatIndex].lastMessage = finalContent.substring(0, 50);
+          updatedData.chats[chatIndex].updatedAt = Date.now();
+        }
+        saveToStorage(updatedData);
+
+        chats.value = updatedData.chats.sort((a, b) => b.updatedAt - a.updatedAt);
+      },
+      onError: (userMessage) => {
+        const errorData = loadFromStorage();
+        if (errorData.messages[chatId]) {
+          errorData.messages[chatId] = errorData.messages[chatId].filter(m => m.id !== userMessage.id);
+          saveToStorage(errorData);
+        }
       }
-
-      const reader = response.body?.getReader();
-      if (!reader) {
-        throw new Error('No response body');
-      }
-
-      const finalContent = await parseSSEStream(reader, (text) => {
-        updateMessageContent(messages, assistantMessage.id, text);
-      });
-      updateMessageContent(messages, assistantMessage.id, finalContent);
-
-      // localStorage に保存
-      const updatedData = loadFromStorage();
-      updatedData.messages[chatId].push({
-        ...assistantMessage,
-        content: finalContent
-      });
-
-      const chatIndex = updatedData.chats.findIndex(c => c.id === chatId);
-      if (chatIndex !== -1) {
-        updatedData.chats[chatIndex].lastMessage = finalContent.substring(0, 50);
-        updatedData.chats[chatIndex].updatedAt = Date.now();
-      }
-      saveToStorage(updatedData);
-
-      chats.value = updatedData.chats.sort((a, b) => b.updatedAt - a.updatedAt);
-    } catch (error) {
-      messages.value = messages.value.filter(m => m.id !== userMessage.id && m.id !== assistantMessage.id);
-
-      const errorData = loadFromStorage();
-      errorData.messages[chatId] = errorData.messages[chatId].filter(m => m.id !== userMessage.id);
-      saveToStorage(errorData);
-
-      console.error('Error sending message:', error);
-      throw error;
-    } finally {
-      isLoading.value = false;
-    }
+    });
   };
 
   const deleteChat = async (chatId: string) => {
