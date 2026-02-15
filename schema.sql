@@ -62,7 +62,7 @@ CREATE INDEX idx_personas_created_at ON personas(created_at);
 
 -- 日記エントリテーブル
 -- 音声入力で文字起こしした日記を保存
-CREATE TABLE diary_entries (
+CREATE TABLE diaries (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
   title TEXT NOT NULL DEFAULT '',        -- 日記タイトル
@@ -73,4 +73,4 @@ CREATE TABLE diary_entries (
 );
 
 -- ユーザーごとの日記一覧取得用インデックス
-CREATE INDEX idx_diary_entries_user_created ON diary_entries(user_id, created_at DESC);
+CREATE INDEX idx_diaries_user_created ON diaries(user_id, created_at DESC);

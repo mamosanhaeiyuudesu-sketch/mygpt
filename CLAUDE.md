@@ -50,7 +50,7 @@ npx wrangler secret put OPENAI_API_KEY
 
 - **フロントエンド**: Nuxt 3 + Vue 3（TypeScript）、ソースは`src/`配下
 - **バックエンド**: Nuxtサーバールート（`src/server/api/`）— 本番ではCloudflare D1、ローカルではインメモリフォールバック
-- **データベース**: Cloudflare D1（SQLite）。スキーマは`schema.sql`。テーブル: `users`, `chats`, `messages`, `presets`, `diary_entries`
+- **データベース**: Cloudflare D1（SQLite）。スキーマは`schema.sql`。テーブル: `users`, `chats`, `messages`, `presets`, `diaries`
 - **AI**: OpenAI Conversations API（コンテキスト管理）+ Responses API（ストリーミング応答）
 - **スタイリング**: Tailwind CSS、Markdownレンダリング用に`@tailwindcss/typography`。ダークテーマの色は`tailwind.config.js`で定義
 - **認証**: Cookieベースのセッション管理、パスワード保護（オプション）

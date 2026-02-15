@@ -12,7 +12,7 @@ export async function getAllDiaryEntries(event: H3Event, userId: string): Promis
   const db = getD1(event);
   if (db) {
     const result = await db.prepare(
-      'SELECT * FROM diary_entries WHERE user_id = ? ORDER BY created_at DESC'
+      'SELECT * FROM diaries WHERE user_id = ? ORDER BY created_at DESC'
     ).bind(userId).all<DiaryEntry>();
     return result.results || [];
   }
@@ -46,7 +46,7 @@ export async function createDiaryEntry(
 
   if (db) {
     await db.prepare(
-      'INSERT INTO diary_entries (id, user_id, title, content, duration, created_at) VALUES (?, ?, ?, ?, ?, ?)'
+      'INSERT INTO diaries (id, user_id, title, content, duration, created_at) VALUES (?, ?, ?, ?, ?, ?)'
     ).bind(id, userId, entryTitle, content, duration ?? null, now).run();
   } else {
     memoryStore.diaryEntries.push(entry);
@@ -61,7 +61,7 @@ export async function createDiaryEntry(
 export async function getDiaryEntry(event: H3Event, entryId: string): Promise<DiaryEntry | null> {
   const db = getD1(event);
   if (db) {
-    return await db.prepare('SELECT * FROM diary_entries WHERE id = ?').bind(entryId).first() as DiaryEntry | null;
+    return await db.prepare('SELECT * FROM diaries WHERE id = ?').bind(entryId).first() as DiaryEntry | null;
   }
   return memoryStore.diaryEntries.find(e => e.id === entryId) || null;
 }
@@ -72,7 +72,7 @@ export async function getDiaryEntry(event: H3Event, entryId: string): Promise<Di
 export async function renameDiaryEntry(event: H3Event, entryId: string, title: string): Promise<void> {
   const db = getD1(event);
   if (db) {
-    await db.prepare('UPDATE diary_entries SET title = ? WHERE id = ?').bind(title, entryId).run();
+    await db.prepare('UPDATE diaries SET title = ? WHERE id = ?').bind(title, entryId).run();
   } else {
     const entry = memoryStore.diaryEntries.find(e => e.id === entryId);
     if (entry) entry.title = title;
@@ -85,7 +85,7 @@ export async function renameDiaryEntry(event: H3Event, entryId: string, title: s
 export async function deleteDiaryEntry(event: H3Event, entryId: string): Promise<void> {
   const db = getD1(event);
   if (db) {
-    await db.prepare('DELETE FROM diary_entries WHERE id = ?').bind(entryId).run();
+    await db.prepare('DELETE FROM diaries WHERE id = ?').bind(entryId).run();
   } else {
     const idx = memoryStore.diaryEntries.findIndex(e => e.id === entryId);
     if (idx !== -1) memoryStore.diaryEntries.splice(idx, 1);
