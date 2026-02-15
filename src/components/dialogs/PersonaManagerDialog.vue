@@ -7,7 +7,7 @@
   >
     <div class="bg-gray-900 rounded-lg p-6 max-w-2xl w-full md:w-[70%] border border-gray-700 max-h-[80vh] flex flex-col">
       <div class="flex items-center justify-between mb-4">
-        <h2 class="text-lg font-bold">{{ t('presetManager.title') }}</h2>
+        <h2 class="text-lg font-bold">{{ t('personaManager.title') }}</h2>
         <button
           @click="emit('update:modelValue', false)"
           class="text-gray-400 hover:text-white transition-colors"
@@ -19,25 +19,25 @@
       </div>
 
       <div class="flex-1 overflow-y-auto mb-4">
-        <div v-if="presets.length === 0" class="text-center text-gray-500 py-8">
-          {{ t('presetManager.empty') }}
+        <div v-if="personas.length === 0" class="text-center text-gray-500 py-8">
+          {{ t('personaManager.empty') }}
         </div>
 
         <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-2">
           <div
-            v-for="preset in presets"
-            :key="preset.id"
+            v-for="persona in personas"
+            :key="persona.id"
             class="bg-gray-800 rounded border border-gray-700"
           >
             <div class="flex items-center px-2 py-2 gap-1.5">
               <div class="flex-1 min-w-0">
-                <div class="font-medium text-sm truncate">{{ preset.name }}</div>
+                <div class="font-medium text-sm truncate">{{ persona.name }}</div>
               </div>
               <div class="shrink-0">
                 <img
-                  v-if="preset.imageUrl"
-                  :src="preset.imageUrl"
-                  :alt="preset.name"
+                  v-if="persona.imageUrl"
+                  :src="persona.imageUrl"
+                  :alt="persona.name"
                   class="w-8 h-8 rounded object-cover"
                 />
                 <div
@@ -51,16 +51,16 @@
               </div>
               <div class="flex flex-col gap-0.5 shrink-0">
                 <button
-                  @click="startEdit(preset)"
+                  @click="startEdit(persona)"
                   class="px-1.5 py-0.5 text-[10px] bg-gray-700 hover:bg-gray-600 rounded transition-colors"
                 >
-                  {{ t('presetManager.edit') }}
+                  {{ t('personaManager.edit') }}
                 </button>
                 <button
-                  @click="handleDelete(preset.id)"
+                  @click="handleDelete(persona.id)"
                   class="px-1.5 py-0.5 text-[10px] bg-red-600/20 hover:bg-red-600/40 text-red-400 rounded transition-colors"
                 >
-                  {{ t('presetManager.delete') }}
+                  {{ t('personaManager.delete') }}
                 </button>
               </div>
             </div>
@@ -75,7 +75,7 @@
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
         </svg>
-        {{ t('presetManager.add') }}
+        {{ t('personaManager.add') }}
       </button>
     </div>
   </div>
@@ -88,7 +88,7 @@
   >
     <div class="bg-gray-900 rounded-lg p-6 max-w-lg w-full border border-gray-700 max-h-[80vh] overflow-y-auto">
       <div class="flex items-center justify-between mb-4">
-        <h2 class="text-lg font-bold">{{ t('presetManager.editTitle') }}</h2>
+        <h2 class="text-lg font-bold">{{ t('personaManager.editTitle') }}</h2>
         <button
           @click="cancelEdit"
           class="text-gray-400 hover:text-white transition-colors"
@@ -101,34 +101,34 @@
 
       <div class="space-y-3">
         <div>
-          <label class="text-xs text-gray-400 block mb-1">{{ t('presetManager.name') }}</label>
+          <label class="text-xs text-gray-400 block mb-1">{{ t('personaManager.name') }}</label>
           <input
             v-model="editForm.name"
             type="text"
-            :placeholder="t('presetManager.name.placeholder')"
+            :placeholder="t('personaManager.name.placeholder')"
             class="w-full bg-gray-700 text-white rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
         <div>
-          <label class="text-xs text-gray-400 block mb-1">{{ t('presetManager.systemPrompt') }}</label>
+          <label class="text-xs text-gray-400 block mb-1">{{ t('personaManager.systemPrompt') }}</label>
           <textarea
             v-model="editForm.systemPrompt"
-            :placeholder="t('presetManager.systemPrompt.placeholder')"
+            :placeholder="t('personaManager.systemPrompt.placeholder')"
             rows="2"
             class="w-full bg-gray-700 text-white rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
           ></textarea>
         </div>
         <div>
-          <label class="text-xs text-gray-400 block mb-1">{{ t('presetManager.vectorStoreId') }}</label>
+          <label class="text-xs text-gray-400 block mb-1">{{ t('personaManager.vectorStoreId') }}</label>
           <input
             v-model="editForm.vectorStoreId"
             type="text"
-            :placeholder="t('presetManager.vectorStoreId.placeholder')"
+            :placeholder="t('personaManager.vectorStoreId.placeholder')"
             class="w-full bg-gray-700 text-white rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
         <div>
-          <label class="text-xs text-gray-400 block mb-1">{{ t('presetManager.image') }}</label>
+          <label class="text-xs text-gray-400 block mb-1">{{ t('personaManager.image') }}</label>
           <div class="flex items-center gap-3">
             <img
               v-if="editForm.imageUrl"
@@ -146,7 +146,7 @@
             </div>
             <div class="flex gap-2">
               <label class="px-3 py-1.5 text-sm bg-gray-700 hover:bg-gray-600 rounded cursor-pointer transition-colors">
-                {{ editForm.imageUrl ? t('presetManager.edit') : t('presetManager.imageUpload') }}
+                {{ editForm.imageUrl ? t('personaManager.edit') : t('personaManager.imageUpload') }}
                 <input
                   type="file"
                   accept="image/*"
@@ -159,7 +159,7 @@
                 @click="editForm.imageUrl = ''"
                 class="px-3 py-1.5 text-sm bg-red-600/20 hover:bg-red-600/40 text-red-400 rounded transition-colors"
               >
-                {{ t('presetManager.delete') }}
+                {{ t('personaManager.delete') }}
               </button>
             </div>
           </div>
@@ -169,14 +169,14 @@
             @click="cancelEdit"
             class="flex-1 px-3 py-1.5 text-sm bg-gray-700 hover:bg-gray-600 rounded transition-colors"
           >
-            {{ t('presetManager.cancel') }}
+            {{ t('personaManager.cancel') }}
           </button>
           <button
             @click="saveEdit"
             :disabled="!editForm.name.trim()"
             class="flex-1 px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed rounded transition-colors"
           >
-            {{ t('presetManager.save') }}
+            {{ t('personaManager.save') }}
           </button>
         </div>
       </div>
@@ -191,7 +191,7 @@
   >
     <div class="bg-gray-900 rounded-lg p-6 max-w-lg w-full border border-gray-700 max-h-[80vh] overflow-y-auto">
       <div class="flex items-center justify-between mb-4">
-        <h2 class="text-lg font-bold">{{ t('presetManager.addTitle') }}</h2>
+        <h2 class="text-lg font-bold">{{ t('personaManager.addTitle') }}</h2>
         <button
           @click="cancelAdd"
           class="text-gray-400 hover:text-white transition-colors"
@@ -204,34 +204,34 @@
 
       <div class="space-y-3">
         <div>
-          <label class="text-xs text-gray-400 block mb-1">{{ t('presetManager.name') }}</label>
+          <label class="text-xs text-gray-400 block mb-1">{{ t('personaManager.name') }}</label>
           <input
             v-model="addForm.name"
             type="text"
-            :placeholder="t('presetManager.name.placeholder')"
+            :placeholder="t('personaManager.name.placeholder')"
             class="w-full bg-gray-700 text-white rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
         <div>
-          <label class="text-xs text-gray-400 block mb-1">{{ t('presetManager.systemPrompt') }}</label>
+          <label class="text-xs text-gray-400 block mb-1">{{ t('personaManager.systemPrompt') }}</label>
           <textarea
             v-model="addForm.systemPrompt"
-            :placeholder="t('presetManager.systemPrompt.placeholder')"
+            :placeholder="t('personaManager.systemPrompt.placeholder')"
             rows="2"
             class="w-full bg-gray-700 text-white rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
           ></textarea>
         </div>
         <div>
-          <label class="text-xs text-gray-400 block mb-1">{{ t('presetManager.vectorStoreId') }}</label>
+          <label class="text-xs text-gray-400 block mb-1">{{ t('personaManager.vectorStoreId') }}</label>
           <input
             v-model="addForm.vectorStoreId"
             type="text"
-            :placeholder="t('presetManager.vectorStoreId.placeholder')"
+            :placeholder="t('personaManager.vectorStoreId.placeholder')"
             class="w-full bg-gray-700 text-white rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
         <div>
-          <label class="text-xs text-gray-400 block mb-1">{{ t('presetManager.image') }}</label>
+          <label class="text-xs text-gray-400 block mb-1">{{ t('personaManager.image') }}</label>
           <div class="flex items-center gap-3">
             <img
               v-if="addForm.imageUrl"
@@ -249,7 +249,7 @@
             </div>
             <div class="flex gap-2">
               <label class="px-3 py-1.5 text-sm bg-gray-700 hover:bg-gray-600 rounded cursor-pointer transition-colors">
-                {{ addForm.imageUrl ? t('presetManager.edit') : t('presetManager.imageUpload') }}
+                {{ addForm.imageUrl ? t('personaManager.edit') : t('personaManager.imageUpload') }}
                 <input
                   type="file"
                   accept="image/*"
@@ -262,7 +262,7 @@
                 @click="addForm.imageUrl = ''"
                 class="px-3 py-1.5 text-sm bg-red-600/20 hover:bg-red-600/40 text-red-400 rounded transition-colors"
               >
-                {{ t('presetManager.delete') }}
+                {{ t('personaManager.delete') }}
               </button>
             </div>
           </div>
@@ -272,14 +272,14 @@
             @click="cancelAdd"
             class="flex-1 px-3 py-1.5 text-sm bg-gray-700 hover:bg-gray-600 rounded transition-colors"
           >
-            {{ t('presetManager.cancel') }}
+            {{ t('personaManager.cancel') }}
           </button>
           <button
             @click="saveAdd"
             :disabled="!addForm.name.trim()"
             class="flex-1 px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed rounded transition-colors"
           >
-            {{ t('presetManager.save') }}
+            {{ t('personaManager.save') }}
           </button>
         </div>
       </div>
@@ -288,7 +288,7 @@
 </template>
 
 <script setup lang="ts">
-import { usePresets } from '~/composables/usePresets';
+import { usePersonas } from '~/composables/usePersonas';
 
 const props = defineProps<{
   modelValue: boolean;
@@ -299,7 +299,7 @@ const emit = defineEmits<{
 }>();
 
 const { t } = useI18n();
-const { presets, loadPresets, createPreset, updatePreset, deletePreset } = usePresets();
+const { personas, loadPersonas, createPersona, updatePersona, deletePersona } = usePersonas();
 
 // 編集状態
 const editingId = ref<string | null>(null);
@@ -319,10 +319,10 @@ const addForm = reactive({
   imageUrl: '',
 });
 
-// ダイアログが開かれたときにプリセットを読み込む
+// ダイアログが開かれたときにペルソナを読み込む
 watch(() => props.modelValue, (isOpen) => {
   if (isOpen) {
-    loadPresets();
+    loadPersonas();
     editingId.value = null;
     isAdding.value = false;
   }
@@ -381,13 +381,13 @@ const handleAddImageUpload = async (event: Event) => {
   input.value = '';
 };
 
-const startEdit = (preset: { id: string; name: string; systemPrompt: string | null; vectorStoreId: string | null; imageUrl: string | null }) => {
+const startEdit = (persona: { id: string; name: string; systemPrompt: string | null; vectorStoreId: string | null; imageUrl: string | null }) => {
   isAdding.value = false;
-  editingId.value = preset.id;
-  editForm.name = preset.name;
-  editForm.systemPrompt = preset.systemPrompt || '';
-  editForm.vectorStoreId = preset.vectorStoreId || '';
-  editForm.imageUrl = preset.imageUrl || '';
+  editingId.value = persona.id;
+  editForm.name = persona.name;
+  editForm.systemPrompt = persona.systemPrompt || '';
+  editForm.vectorStoreId = persona.vectorStoreId || '';
+  editForm.imageUrl = persona.imageUrl || '';
 };
 
 const cancelEdit = () => {
@@ -396,7 +396,7 @@ const cancelEdit = () => {
 
 const saveEdit = async () => {
   if (!editingId.value || !editForm.name.trim()) return;
-  await updatePreset(
+  await updatePersona(
     editingId.value,
     editForm.name.trim(),
     editForm.systemPrompt.trim() || null,
@@ -407,8 +407,8 @@ const saveEdit = async () => {
 };
 
 const handleDelete = async (id: string) => {
-  if (!confirm(t('presetManager.deleteConfirm'))) return;
-  await deletePreset(id);
+  if (!confirm(t('personaManager.deleteConfirm'))) return;
+  await deletePersona(id);
 };
 
 const startAdd = () => {
@@ -426,7 +426,7 @@ const cancelAdd = () => {
 
 const saveAdd = async () => {
   if (!addForm.name.trim()) return;
-  await createPreset(
+  await createPersona(
     addForm.name.trim(),
     addForm.systemPrompt.trim() || null,
     addForm.vectorStoreId.trim() || null,

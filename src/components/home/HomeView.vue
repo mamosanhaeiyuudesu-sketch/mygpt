@@ -24,7 +24,7 @@
         </div>
 
         <!-- ペルソナ選択（カード形式） -->
-        <PresetCardGrid :presets="presets" :selected-id="selectedPresetId" @select="selectPreset" />
+        <PersonaCardGrid :personas="personas" :selected-id="selectedPersonaId" @select="selectPersona" />
 
         <!-- 文脈保持設定 -->
         <div class="flex items-center justify-between">
@@ -44,7 +44,7 @@
 
 <script setup lang="ts">
 import type { Model } from '~/types';
-import { usePresets } from '~/composables/usePresets';
+import { usePersonas } from '~/composables/usePersonas';
 
 const props = defineProps<{
   models: Model[];
@@ -55,41 +55,32 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:selectedModel': [value: string];
-  submit: [message: string, model: string, systemPrompt?: string, vectorStoreId?: string, useContext?: boolean, presetName?: string];
+  submit: [message: string, model: string, systemPrompt?: string, vectorStoreId?: string, useContext?: boolean, personaId?: string];
 }>();
 
 const { t } = useI18n();
-const { presets, loadPresets, getPresetById } = usePresets();
+const { personas, loadPersonas } = usePersonas();
 
-const localSystemPrompt = ref('');
-const localVectorStoreId = ref('');
 const localUseContext = ref(true);
-const selectedPresetId = ref('');
+const selectedPersonaId = ref('');
 
-// 初期表示時にプリセットを読み込む
+// 初期表示時にペルソナを読み込む
 onMounted(() => {
-  loadPresets();
+  loadPersonas();
 });
 
-const selectPreset = (presetId: string) => {
-  if (selectedPresetId.value === presetId) {
+const selectPersona = (personaId: string) => {
+  if (selectedPersonaId.value === personaId) {
     // 同じペルソナをもう一度タップで解除
-    selectedPresetId.value = '';
-    localSystemPrompt.value = '';
-    localVectorStoreId.value = '';
+    selectedPersonaId.value = '';
     return;
   }
-  selectedPresetId.value = presetId;
-  const preset = getPresetById(presetId);
-  if (preset) {
-    localSystemPrompt.value = preset.systemPrompt || '';
-    localVectorStoreId.value = preset.vectorStoreId || '';
-  }
+  selectedPersonaId.value = personaId;
 };
 
 const handleSubmit = (message: string) => {
-  const selectedPreset = selectedPresetId.value ? getPresetById(selectedPresetId.value) : null;
-  const presetName = selectedPreset ? selectedPreset.name : undefined;
-  emit('submit', message, props.selectedModel, localSystemPrompt.value.trim() || undefined, localVectorStoreId.value.trim() || undefined, localUseContext.value, presetName);
+  const personaId = selectedPersonaId.value || undefined;
+  // ペルソナ選択時はsystemPrompt/vectorStoreIdを渡さない（サーバー側で動的取得）
+  emit('submit', message, props.selectedModel, undefined, undefined, localUseContext.value, personaId);
 };
 </script>

@@ -1,14 +1,14 @@
 <template>
-  <div v-if="presets.length > 0">
-    <label class="text-sm text-gray-400 block mb-2">{{ t('settings.preset') }}</label>
+  <div v-if="personas.length > 0">
+    <label class="text-sm text-gray-400 block mb-2">{{ t('settings.persona') }}</label>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
       <button
-        v-for="preset in presets"
-        :key="preset.id"
-        @click="emit('select', preset.id)"
+        v-for="persona in personas"
+        :key="persona.id"
+        @click="emit('select', persona.id)"
         :class="[
           'rounded border p-2 text-left transition-colors',
-          selectedId === preset.id
+          selectedId === persona.id
             ? 'bg-blue-600/20 border-blue-500'
             : 'bg-gray-800 border-gray-700 hover:border-gray-500'
         ]"
@@ -16,9 +16,9 @@
         <div class="flex items-center gap-1.5">
           <div class="shrink-0">
             <img
-              v-if="preset.imageUrl"
-              :src="preset.imageUrl"
-              :alt="preset.name"
+              v-if="persona.imageUrl"
+              :src="persona.imageUrl"
+              :alt="persona.name"
               class="w-8 h-8 rounded object-cover"
             />
             <div
@@ -31,7 +31,7 @@
             </div>
           </div>
           <div class="flex-1 min-w-0">
-            <div class="font-medium text-sm truncate">{{ preset.name }}</div>
+            <div class="font-medium text-sm truncate">{{ persona.name }}</div>
           </div>
         </div>
       </button>
@@ -40,15 +40,15 @@
 </template>
 
 <script setup lang="ts">
-import type { Preset } from '~/types';
+import type { Persona } from '~/types';
 
 defineProps<{
-  presets: readonly Preset[];
+  personas: readonly Persona[];
   selectedId: string;
 }>();
 
 const emit = defineEmits<{
-  select: [presetId: string];
+  select: [personaId: string];
 }>();
 
 const { t } = useI18n();

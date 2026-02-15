@@ -23,7 +23,7 @@ export interface Chat {
   systemPrompt?: string | null;
   vectorStoreId?: string | null;
   useContext: boolean;
-  presetName?: string | null;
+  personaId?: string | null;
   lastMessage?: string;
   createdAt: number;
   updatedAt: number;
@@ -62,8 +62,8 @@ export interface ChatPreview {
   lastMessage?: string;
 }
 
-// プリセット（ペルソナ）
-export interface Preset {
+// ペルソナ
+export interface Persona {
   id: string;
   name: string;
   systemPrompt: string | null;
@@ -96,7 +96,7 @@ export interface CreateChatRequest {
   systemPrompt?: string;
   vectorStoreId?: string;
   useContext?: boolean;
-  presetName?: string;
+  personaId?: string;
 }
 
 export interface SendMessageRequest {
@@ -113,7 +113,7 @@ export interface UpdateChatSettingsRequest {
   systemPrompt?: string | null;
   vectorStoreId?: string | null;
   useContext?: boolean;
-  presetName?: string | null;
+  personaId?: string | null;
 }
 
 export interface SaveMessagesRequest {
@@ -121,7 +121,7 @@ export interface SaveMessagesRequest {
   assistantMessage: string;
 }
 
-export interface CreatePresetRequest {
+export interface CreatePersonaRequest {
   name: string;
   systemPrompt?: string | null;
   vectorStoreId?: string | null;
@@ -158,8 +158,8 @@ export interface GetMessagesResponse {
   messages: Message[];
 }
 
-export interface GetPresetsResponse {
-  presets: Preset[];
+export interface GetPersonasResponse {
+  personas: Persona[];
 }
 
 export interface GenerateTitleResponse {

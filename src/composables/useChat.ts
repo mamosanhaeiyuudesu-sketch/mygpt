@@ -26,7 +26,7 @@ export const useChat = () => {
   const currentChatSystemPrompt = computed(() => currentChat.value?.systemPrompt || null);
   const currentChatVectorStoreId = computed(() => currentChat.value?.vectorStoreId || null);
   const currentChatUseContext = computed(() => currentChat.value?.useContext !== false);
-  const currentChatPresetName = computed(() => currentChat.value?.presetName || null);
+  const currentChatPersonaId = computed(() => currentChat.value?.personaId || null);
 
   // 環境に応じた実装を選択
   const state = {
@@ -51,7 +51,7 @@ export const useChat = () => {
     currentChatSystemPrompt,
     currentChatVectorStoreId,
     currentChatUseContext,
-    currentChatPresetName,
+    currentChatPersonaId,
     messages,
     isLoading,
 

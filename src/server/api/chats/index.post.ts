@@ -16,11 +16,13 @@ export default defineEventHandler(async (event) => {
 
   const chatName = body?.name || 'New Chat';
   const model = body?.model;
-  const systemPrompt = body?.systemPrompt;
-  const vectorStoreId = body?.vectorStoreId;
   const useContext = body?.useContext;
-  const presetName = body?.presetName;
+  const personaId = body?.personaId;
   const chatId = generateId('chat');
+
+  // personaId指定時はsystemPrompt/vectorStoreIdをDBに保存しない（動的参照）
+  const systemPrompt = personaId ? undefined : body?.systemPrompt;
+  const vectorStoreId = personaId ? undefined : body?.vectorStoreId;
 
   // OpenAI Conversationを作成
   let conversationId: string;
@@ -36,7 +38,7 @@ export default defineEventHandler(async (event) => {
     const encKey = await getEncryptionKey(event);
     const encName = await encryptIfKey(chatName, encKey);
     const encSystemPrompt = await encryptNullable(systemPrompt, encKey) as string | undefined;
-    await createChat(event, chatId, userId, conversationId, encName, model, encSystemPrompt, vectorStoreId, useContext, presetName);
+    await createChat(event, chatId, userId, conversationId, encName, model, encSystemPrompt, vectorStoreId, useContext, personaId);
   } catch (e) {
     console.error('[POST /api/chats] DB save failed:', e);
     throw createError({ statusCode: 500, statusMessage: `DB save failed: ${(e as Error).message}` });

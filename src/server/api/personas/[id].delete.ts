@@ -1,4 +1,4 @@
-import { deletePreset } from '../../utils/db/presets';
+import { deletePersona } from '../../utils/db/personas';
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id');
@@ -6,11 +6,11 @@ export default defineEventHandler(async (event) => {
   if (!id) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'プリセットIDが必要です'
+      statusMessage: 'ペルソナIDが必要です'
     });
   }
 
-  await deletePreset(event, id);
+  await deletePersona(event, id);
 
   return { success: true };
 });

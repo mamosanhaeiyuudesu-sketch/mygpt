@@ -22,7 +22,7 @@
         </div>
 
         <!-- ペルソナ選択（カード形式） -->
-        <PresetCardGrid :presets="presets" :selected-id="selectedPresetId" @select="selectPreset" />
+        <PersonaCardGrid :personas="personas" :selected-id="selectedPersonaId" @select="selectPersona" />
 
         <!-- 文脈保持設定 -->
         <div class="flex items-center justify-between">
@@ -54,7 +54,7 @@
 
 <script setup lang="ts">
 import type { Model } from '~/types';
-import { usePresets } from '~/composables/usePresets';
+import { usePersonas } from '~/composables/usePersonas';
 
 const props = defineProps<{
   modelValue: boolean;
@@ -63,65 +63,44 @@ const props = defineProps<{
   currentSystemPrompt?: string | null;
   currentVectorStoreId?: string | null;
   currentUseContext?: boolean;
-  currentPresetName?: string | null;
+  currentPersonaId?: string | null;
 }>();
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean];
-  save: [model: string, systemPrompt: string | null, vectorStoreId: string | null, useContext: boolean, presetName: string | null];
+  save: [model: string, systemPrompt: string | null, vectorStoreId: string | null, useContext: boolean, personaId: string | null];
 }>();
 
 const { t } = useI18n();
-const { presets, loadPresets, getPresetById } = usePresets();
+const { personas, loadPersonas } = usePersonas();
 
 // フォーム状態
 const editModel = ref('');
-const editSystemPrompt = ref('');
-const editVectorStoreId = ref('');
 const editUseContext = ref(true);
-const selectedPresetId = ref('');
+const selectedPersonaId = ref('');
 
 // ダイアログが開かれたときに現在の値をセット
 watch(() => props.modelValue, (isOpen) => {
   if (isOpen) {
-    loadPresets();
+    loadPersonas();
     editModel.value = props.currentModel || 'gpt-4o';
-    editSystemPrompt.value = props.currentSystemPrompt || '';
-    editVectorStoreId.value = props.currentVectorStoreId || '';
     editUseContext.value = props.currentUseContext !== false;
-    // 現在のpresetNameからプリセットIDを復元
-    selectedPresetId.value = '';
-    if (props.currentPresetName) {
-      nextTick(() => {
-        const matchingPreset = presets.value.find(p => p.name === props.currentPresetName);
-        if (matchingPreset) {
-          selectedPresetId.value = matchingPreset.id;
-        }
-      });
-    }
+    selectedPersonaId.value = props.currentPersonaId || '';
   }
 });
 
-const selectPreset = (presetId: string) => {
-  if (selectedPresetId.value === presetId) {
-    // 同じペルソナをもう一度タップで解除
-    selectedPresetId.value = '';
-    editSystemPrompt.value = '';
-    editVectorStoreId.value = '';
+const selectPersona = (personaId: string) => {
+  if (selectedPersonaId.value === personaId) {
+    selectedPersonaId.value = '';
     return;
   }
-  selectedPresetId.value = presetId;
-  const preset = getPresetById(presetId);
-  if (preset) {
-    editSystemPrompt.value = preset.systemPrompt || '';
-    editVectorStoreId.value = preset.vectorStoreId || '';
-  }
+  selectedPersonaId.value = personaId;
 };
 
 const handleSave = () => {
-  const selectedPreset = selectedPresetId.value ? getPresetById(selectedPresetId.value) : null;
-  const presetName = selectedPreset ? selectedPreset.name : null;
-  emit('save', editModel.value, editSystemPrompt.value.trim() || null, editVectorStoreId.value.trim() || null, editUseContext.value, presetName);
+  const personaId = selectedPersonaId.value || null;
+  // ペルソナ選択時はsystemPrompt/vectorStoreIdをnullにする（サーバー側で動的取得）
+  emit('save', editModel.value, null, null, editUseContext.value, personaId);
   emit('update:modelValue', false);
 };
 </script>

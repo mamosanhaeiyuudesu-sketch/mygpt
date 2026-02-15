@@ -20,7 +20,7 @@ export interface Chat {
   system_prompt?: string | null;
   vector_store_id?: string | null;
   use_context?: number | null;
-  preset_name?: string | null;
+  persona_id?: string | null;
   created_at: number;
   updated_at: number;
 }
@@ -33,7 +33,7 @@ export interface Message {
   created_at: number;
 }
 
-export interface Preset {
+export interface Persona {
   id: string;
   name: string;
   system_prompt: string | null;
@@ -56,7 +56,7 @@ export const memoryStore = {
   users: [] as User[],
   chats: [] as Chat[],
   messages: [] as Message[],
-  presets: [] as Preset[],
+  personas: [] as Persona[],
   diaryEntries: [] as DiaryEntry[]
 };
 

@@ -5,6 +5,8 @@ import { sendMessageToOpenAIStream } from '~/server/utils/openai';
 import { getOpenAIKey } from '~/server/utils/env';
 import { useContextToBoolean } from '~/server/utils/db/common';
 import { requireAuth, requireParam, assertChatOwner } from '~/server/utils/auth';
+import { getEncryptionKey, decryptNullable } from '~/server/utils/crypto';
+import { getPersonaById } from '~/server/utils/db/personas';
 
 export default defineEventHandler(async (event) => {
   const userId = requireAuth(event);
@@ -22,9 +24,25 @@ export default defineEventHandler(async (event) => {
   const chat = await assertChatOwner(event, id, userId);
 
   const model = body.model || chat.model || 'gpt-4o';
-  const systemPrompt = chat.system_prompt || undefined;
-  const vectorStoreId = chat.vector_store_id || undefined;
   const useContext = body.useContext !== undefined ? body.useContext : useContextToBoolean(chat.use_context);
+
+  // ペルソナIDがある場合は動的にペルソナのデータを取得
+  let systemPrompt: string | undefined;
+  let vectorStoreId: string | undefined;
+
+  if (chat.persona_id) {
+    const persona = await getPersonaById(event, chat.persona_id);
+    if (persona) {
+      systemPrompt = persona.system_prompt || undefined;
+      vectorStoreId = persona.vector_store_id || undefined;
+    }
+  } else {
+    // ペルソナなし: チャット自身のsystem_promptを使用
+    const encKey = await getEncryptionKey(event);
+    const decryptedSystemPrompt = await decryptNullable(chat.system_prompt, encKey);
+    systemPrompt = decryptedSystemPrompt || undefined;
+    vectorStoreId = chat.vector_store_id || undefined;
+  }
 
   // OpenAI にストリーミングメッセージを送信
   const response = await sendMessageToOpenAIStream(

@@ -2,7 +2,7 @@
   <div class="border-b border-gray-800 px-4 py-2 hidden md:flex items-center gap-2">
     <div class="flex items-center gap-2">
       <span class="text-sm font-medium bg-gray-800 px-2 py-1 rounded">{{ model }}</span>
-      <span v-if="presetName" class="text-sm font-medium bg-gray-800 px-2 py-1 rounded text-blue-400">{{ presetName }}</span>
+      <span v-if="personaName" class="text-sm font-medium bg-gray-800 px-2 py-1 rounded text-blue-400">{{ personaName }}</span>
     </div>
     <!-- 設定編集ボタン -->
     <button
@@ -22,7 +22,7 @@ defineProps<{
   model: string;
   systemPrompt?: string | null;
   vectorStoreId?: string | null;
-  presetName?: string | null;
+  personaName?: string | null;
 }>();
 
 const emit = defineEmits<{

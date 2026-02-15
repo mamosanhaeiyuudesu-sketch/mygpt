@@ -1,9 +1,9 @@
-import { getAllPresets } from '../../utils/db/presets';
+import { getAllPersonas } from '../../utils/db/personas';
 
 export default defineEventHandler(async (event) => {
-  const presets = await getAllPresets(event);
+  const personas = await getAllPersonas(event);
   return {
-    presets: presets.map(p => ({
+    personas: personas.map(p => ({
       id: p.id,
       name: p.name,
       systemPrompt: p.system_prompt,

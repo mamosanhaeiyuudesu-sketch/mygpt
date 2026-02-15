@@ -1,7 +1,7 @@
 import { generateId } from '../../utils/db/common';
-import { createPreset } from '../../utils/db/presets';
+import { createPersona } from '../../utils/db/personas';
 
-interface CreatePresetBody {
+interface CreatePersonaBody {
   name: string;
   systemPrompt?: string | null;
   vectorStoreId?: string | null;
@@ -9,7 +9,7 @@ interface CreatePresetBody {
 }
 
 export default defineEventHandler(async (event) => {
-  const body = await readBody<CreatePresetBody>(event);
+  const body = await readBody<CreatePersonaBody>(event);
 
   if (!body.name) {
     throw createError({
@@ -18,8 +18,8 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const id = generateId('preset');
-  const preset = await createPreset(
+  const id = generateId('persona');
+  const persona = await createPersona(
     event,
     id,
     body.name,
@@ -29,13 +29,13 @@ export default defineEventHandler(async (event) => {
   );
 
   return {
-    preset: {
-      id: preset.id,
-      name: preset.name,
-      systemPrompt: preset.system_prompt,
-      vectorStoreId: preset.vector_store_id,
-      imageUrl: preset.image_url,
-      createdAt: preset.created_at
+    persona: {
+      id: persona.id,
+      name: persona.name,
+      systemPrompt: persona.system_prompt,
+      vectorStoreId: persona.vector_store_id,
+      imageUrl: persona.image_url,
+      createdAt: persona.created_at
     }
   };
 });

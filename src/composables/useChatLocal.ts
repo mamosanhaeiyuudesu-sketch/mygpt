@@ -3,7 +3,7 @@
  * localStorage + Nuxtサーバールート（インメモリ）を使用
  */
 import type { Ref, ComputedRef } from 'vue';
-import type { Chat, Message } from '~/types';
+import type { Chat, Message, Persona } from '~/types';
 import { getUserFromStorage, loadFromStorage, saveToStorage, generateUUID } from '~/utils/storage';
 import { executeSendMessage } from '~/composables/useChatStream';
 
@@ -21,12 +21,12 @@ export interface ChatState {
 
 export interface ChatOperations {
   fetchChats: () => Promise<void>;
-  createChat: (model: string, name?: string, systemPrompt?: string, vectorStoreId?: string, useContext?: boolean, presetName?: string) => Promise<string | undefined>;
+  createChat: (model: string, name?: string, systemPrompt?: string, vectorStoreId?: string, useContext?: boolean, personaId?: string) => Promise<string | undefined>;
   selectChat: (chatId: string) => Promise<void>;
   sendMessage: (content: string) => Promise<void>;
   deleteChat: (chatId: string) => Promise<void>;
   renameChat: (chatId: string, name: string) => Promise<void>;
-  updateChatSettings: (chatId: string, model?: string, systemPrompt?: string | null, vectorStoreId?: string | null, useContext?: boolean, presetName?: string | null) => Promise<void>;
+  updateChatSettings: (chatId: string, model?: string, systemPrompt?: string | null, vectorStoreId?: string | null, useContext?: boolean, personaId?: string | null) => Promise<void>;
   reorderChats: (fromIndex: number, toIndex: number) => Promise<void>;
 }
 
@@ -45,7 +45,7 @@ export function useChatLocal(state: ChatState): ChatOperations {
       .sort((a, b) => b.updatedAt - a.updatedAt);
   };
 
-  const createChat = async (model: string, name?: string, systemPrompt?: string, vectorStoreId?: string, useContext?: boolean, presetName?: string): Promise<string | undefined> => {
+  const createChat = async (model: string, name?: string, systemPrompt?: string, vectorStoreId?: string, useContext?: boolean, personaId?: string): Promise<string | undefined> => {
     try {
       isLoading.value = true;
       const chatName = name || 'New Chat';
@@ -78,7 +78,7 @@ export function useChatLocal(state: ChatState): ChatOperations {
         systemPrompt,
         vectorStoreId,
         useContext: useContext !== false,
-        presetName: presetName || null,
+        personaId: personaId || null,
         createdAt: now,
         updatedAt: now
       };
@@ -113,10 +113,24 @@ export function useChatLocal(state: ChatState): ChatOperations {
 
     const chatId = currentChatId.value;
     const model = currentChatModel.value;
-    const systemPrompt = currentChatSystemPrompt.value;
-    const vectorStoreId = currentChatVectorStoreId.value;
     const conversationId = currentConversationId.value;
     const useContext = currentChatUseContext.value;
+
+    // ペルソナIDがある場合、localStorageからペルソナのsystemPrompt/vectorStoreIdを動的取得
+    const chat = chats.value.find(c => c.id === chatId);
+    let systemPrompt = currentChatSystemPrompt.value;
+    let vectorStoreId = currentChatVectorStoreId.value;
+    if (chat?.personaId) {
+      const personasData = localStorage.getItem('mygpt_personas');
+      if (personasData) {
+        const personas = JSON.parse(personasData) as Persona[];
+        const persona = personas.find(p => p.id === chat.personaId);
+        if (persona) {
+          systemPrompt = persona.systemPrompt || null;
+          vectorStoreId = persona.vectorStoreId || null;
+        }
+      }
+    }
 
     if (!conversationId) {
       throw new Error('No conversation ID');
@@ -199,7 +213,7 @@ export function useChatLocal(state: ChatState): ChatOperations {
     chats.value = data.chats.sort((a, b) => b.updatedAt - a.updatedAt);
   };
 
-  const updateChatSettings = async (chatId: string, model?: string, systemPrompt?: string | null, vectorStoreId?: string | null, useContext?: boolean, presetName?: string | null) => {
+  const updateChatSettings = async (chatId: string, model?: string, systemPrompt?: string | null, vectorStoreId?: string | null, useContext?: boolean, personaId?: string | null) => {
     const data = loadFromStorage();
     const chatIndex = data.chats.findIndex(c => c.id === chatId);
     if (chatIndex !== -1) {
@@ -207,7 +221,7 @@ export function useChatLocal(state: ChatState): ChatOperations {
       if (systemPrompt !== undefined) data.chats[chatIndex].systemPrompt = systemPrompt || undefined;
       if (vectorStoreId !== undefined) data.chats[chatIndex].vectorStoreId = vectorStoreId || undefined;
       if (useContext !== undefined) data.chats[chatIndex].useContext = useContext;
-      if (presetName !== undefined) data.chats[chatIndex].presetName = presetName;
+      if (personaId !== undefined) data.chats[chatIndex].personaId = personaId;
       saveToStorage(data);
     }
 

@@ -20,12 +20,19 @@ export default defineEventHandler(async (event) => {
     await updateChatName(event, id, encName);
   }
 
-  // モデル・システムプロンプト・Vector Store IDの更新
-  if (body?.model !== undefined || body?.systemPrompt !== undefined || body?.vectorStoreId !== undefined || body?.useContext !== undefined || body?.presetName !== undefined) {
-    const encSystemPrompt = body?.systemPrompt !== undefined
-      ? await encryptNullable(body.systemPrompt, encKey) as string | undefined
+  // モデル・システムプロンプト・Vector Store ID・ペルソナIDの更新
+  if (body?.model !== undefined || body?.systemPrompt !== undefined || body?.vectorStoreId !== undefined || body?.useContext !== undefined || body?.personaId !== undefined) {
+    // personaId設定時はsystemPrompt/vectorStoreIdをnullにする（動的参照）
+    let systemPrompt = body?.systemPrompt;
+    let vectorStoreId = body?.vectorStoreId;
+    if (body?.personaId) {
+      systemPrompt = null;
+      vectorStoreId = null;
+    }
+    const encSystemPrompt = systemPrompt !== undefined
+      ? await encryptNullable(systemPrompt, encKey) as string | undefined
       : undefined;
-    await updateChatSettings(event, id, body.model, encSystemPrompt, body.vectorStoreId, body.useContext, body.presetName);
+    await updateChatSettings(event, id, body.model, encSystemPrompt, vectorStoreId, body.useContext, body.personaId);
   }
 
   return { success: true };

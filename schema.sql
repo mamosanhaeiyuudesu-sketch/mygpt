@@ -23,7 +23,7 @@ CREATE TABLE chats (
   system_prompt TEXT,                    -- システムプロンプト（カスタム指示）
   vector_store_id TEXT,                  -- Vector Store ID（RAG用）
   use_context INTEGER NOT NULL DEFAULT 1, -- 文脈保持（1=ON, 0=OFF）
-  preset_name TEXT,                      -- 選択されたペルソナ名
+  persona_id TEXT,                       -- 参照するペルソナID
   created_at INTEGER NOT NULL,           -- UNIXタイムスタンプ (ミリ秒)
   updated_at INTEGER NOT NULL,           -- UNIXタイムスタンプ (ミリ秒)
   FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -46,9 +46,9 @@ CREATE TABLE messages (
 -- メッセージ取得時のクエリ最適化用インデックス
 CREATE INDEX idx_messages_chat_created ON messages(chat_id, created_at);
 
--- プリセットテーブル
--- チャット設定のプリセットを保存
-CREATE TABLE presets (
+-- ペルソナテーブル
+-- チャット設定のペルソナを保存
+CREATE TABLE personas (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,                    -- ペルソナ名
   system_prompt TEXT,                    -- システムプロンプト（カスタム指示）
@@ -57,8 +57,8 @@ CREATE TABLE presets (
   created_at INTEGER NOT NULL            -- UNIXタイムスタンプ (ミリ秒)
 );
 
--- プリセット作成日時でソートするためのインデックス
-CREATE INDEX idx_presets_created_at ON presets(created_at);
+-- ペルソナ作成日時でソートするためのインデックス
+CREATE INDEX idx_personas_created_at ON personas(created_at);
 
 -- 日記エントリテーブル
 -- 音声入力で文字起こしした日記を保存

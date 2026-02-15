@@ -26,7 +26,7 @@
       @reorder-chats="handleReorderChats"
       @logout="handleLogout"
       @language-change="handleLanguageChange"
-      @open-preset-manager="showPresetManager = true"
+      @open-persona-manager="showPersonaManager = true"
     />
 
     <!-- メインエリア -->
@@ -34,7 +34,7 @@
       <!-- モバイル用ヘッダー -->
       <MobileHeader
         :model="currentChatModel"
-        :preset-name="currentChatPresetName"
+        :persona-name="currentPersonaName"
         :has-active-item="!!currentChatId"
         @open-sidebar="isSidebarOpen = true"
         @edit="showSettingsEditor = true"
@@ -59,7 +59,7 @@
           :model="currentChatModel || ''"
           :system-prompt="currentChatSystemPrompt"
           :vector-store-id="currentChatVectorStoreId"
-          :preset-name="currentChatPresetName"
+          :persona-name="currentPersonaName"
           @edit="showSettingsEditor = true"
         />
 
@@ -116,13 +116,13 @@
       :current-system-prompt="currentChatSystemPrompt"
       :current-vector-store-id="currentChatVectorStoreId"
       :current-use-context="currentChatUseContext"
-      :current-preset-name="currentChatPresetName"
+      :current-persona-id="currentChatPersonaId"
       @save="handleSaveSettings"
     />
 
-    <!-- プリセット管理ダイアログ -->
-    <PresetManagerDialog
-      v-model="showPresetManager"
+    <!-- ペルソナ管理ダイアログ -->
+    <PersonaManagerDialog
+      v-model="showPersonaManager"
     />
   </div>
 </template>
@@ -130,6 +130,7 @@
 <script setup lang="ts">
 import { useQuestionNavigation } from '~/composables/useQuestionNavigation';
 import { useChatPage } from '~/composables/useChatPage';
+import { usePersonas } from '~/composables/usePersonas';
 
 // アカウント管理
 const { currentUser, handleLogout, handleLanguageChange } = usePageAuth();
@@ -138,15 +139,24 @@ const { t, setLanguage } = useI18n();
 
 const {
   chats, currentChatId, currentChatModel, currentChatSystemPrompt,
-  currentChatVectorStoreId, currentChatUseContext, currentChatPresetName, messages, isLoading,
+  currentChatVectorStoreId, currentChatUseContext, currentChatPersonaId, messages, isLoading,
   fetchChats, createChat, selectChat, sendMessage, deleteChat, renameChat,
   updateChatSettings, reorderChats
 } = useChat();
 
+// ペルソナ名のルックアップ
+const { personas, loadPersonas, getPersonaById } = usePersonas();
+
+const currentPersonaName = computed(() => {
+  if (!currentChatPersonaId.value) return null;
+  const persona = getPersonaById(currentChatPersonaId.value);
+  return persona?.name || null;
+});
+
 // UI state
 const showAccountSetup = ref(false);
 const showSettingsEditor = ref(false);
-const showPresetManager = ref(false);
+const showPersonaManager = ref(false);
 const isPageReady = ref(false);
 const isSidebarOpen = ref(false);
 
@@ -191,5 +201,8 @@ const handleMobileDelete = () => {
 };
 
 // 初期化
-onMounted(() => initialize(fetchChats));
+onMounted(async () => {
+  await loadPersonas();
+  initialize(fetchChats);
+});
 </script>

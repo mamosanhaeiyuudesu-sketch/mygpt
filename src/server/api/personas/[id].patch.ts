@@ -1,6 +1,6 @@
-import { updatePreset } from '../../utils/db/presets';
+import { updatePersona } from '../../utils/db/personas';
 
-interface UpdatePresetBody {
+interface UpdatePersonaBody {
   name: string;
   systemPrompt?: string | null;
   vectorStoreId?: string | null;
@@ -13,11 +13,11 @@ export default defineEventHandler(async (event) => {
   if (!id) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'プリセットIDが必要です'
+      statusMessage: 'ペルソナIDが必要です'
     });
   }
 
-  const body = await readBody<UpdatePresetBody>(event);
+  const body = await readBody<UpdatePersonaBody>(event);
 
   if (!body.name) {
     throw createError({
@@ -26,7 +26,7 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  await updatePreset(
+  await updatePersona(
     event,
     id,
     body.name,
@@ -36,7 +36,7 @@ export default defineEventHandler(async (event) => {
   );
 
   return {
-    preset: {
+    persona: {
       id,
       name: body.name,
       systemPrompt: body.systemPrompt ?? null,
