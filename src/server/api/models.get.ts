@@ -14,14 +14,6 @@ interface Model {
 // 推奨モデル6選
 const AVAILABLE_MODELS: Model[] = [
   {
-    id: 'gpt-4o',
-    name: 'GPT-4o',
-    inputPrice: '$2.50',
-    outputPrice: '$10.00',
-    contextWindow: '128K',
-    description: 'バランス型の高性能モデル。マルチモーダル対応。'
-  },
-  {
     id: 'gpt-4o-mini',
     name: 'GPT-4o Mini',
     inputPrice: '$0.15',
@@ -29,7 +21,14 @@ const AVAILABLE_MODELS: Model[] = [
     contextWindow: '128K',
     description: 'コスパ最強。日常的なタスクに最適。'
   },
-
+  {
+    id: 'gpt-4o',
+    name: 'GPT-4o',
+    inputPrice: '$2.50',
+    outputPrice: '$10.00',
+    contextWindow: '128K',
+    description: 'バランス型の高性能モデル。マルチモーダル対応。'
+  },
   // {
   //   id: 'gpt-5',
   //   name: 'GPT-5',
