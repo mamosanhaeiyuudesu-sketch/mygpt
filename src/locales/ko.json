@@ -72,6 +72,8 @@
   "personaManager.vectorStoreId.placeholder": "vs_xxxxxxxxxxxxxxxx (빈칸이면 비활성)",
   "personaManager.image": "이미지",
   "personaManager.imageUpload": "이미지 업로드",
+  "personaManager.aiImage.needName": "이미지를 생성하려면 페르소나 이름을 입력하세요",
+  "personaManager.aiImage.error": "이미지 생성에 실패했습니다",
   "personaManager.empty": "페르소나가 없습니다",
   "personaManager.close": "닫기",
   "auth.placeholder": "비밀번호 입력",

@@ -72,6 +72,8 @@
   "personaManager.vectorStoreId.placeholder": "vs_xxxxxxxxxxxxxxxx (blank to disable)",
   "personaManager.image": "Image",
   "personaManager.imageUpload": "Upload Image",
+  "personaManager.aiImage.needName": "Please enter a persona name to generate an image",
+  "personaManager.aiImage.error": "Failed to generate image",
   "personaManager.empty": "No personas",
   "personaManager.close": "Close",
   "auth.placeholder": "Enter password",

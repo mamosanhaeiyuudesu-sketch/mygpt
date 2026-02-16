@@ -1,0 +1,7 @@
+-- 全テーブル削除（外部キー依存順）
+
+DROP TABLE IF EXISTS messages;
+DROP TABLE IF EXISTS chats;
+DROP TABLE IF EXISTS diaries;
+DROP TABLE IF EXISTS personas;
+DROP TABLE IF EXISTS users;

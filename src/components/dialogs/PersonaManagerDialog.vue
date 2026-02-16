@@ -5,7 +5,7 @@
     class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
     @click.self="emit('update:modelValue', false)"
   >
-    <div class="bg-gray-900 rounded-lg p-6 max-w-2xl w-full md:w-[70%] border border-gray-700 max-h-[80vh] flex flex-col">
+    <div class="bg-gray-900 rounded-lg p-6 max-w-[540px] w-full md:w-[80%] border border-gray-700 max-h-[80vh] flex flex-col">
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-lg font-bold">{{ t('personaManager.title') }}</h2>
         <button
@@ -146,7 +146,7 @@
             </div>
             <div class="flex gap-2">
               <label class="px-3 py-1.5 text-sm bg-gray-700 hover:bg-gray-600 rounded cursor-pointer transition-colors">
-                {{ editForm.imageUrl ? t('personaManager.edit') : t('personaManager.imageUpload') }}
+                {{ t('personaManager.imageUpload') }}
                 <input
                   type="file"
                   accept="image/*"
@@ -154,6 +154,20 @@
                   @change="handleEditImageUpload"
                 />
               </label>
+              <button
+                @click="generateEditImage"
+                :disabled="generatingImage"
+                class="px-3 py-1.5 text-sm bg-purple-600 hover:bg-purple-700 disabled:bg-purple-600/50 disabled:cursor-not-allowed rounded transition-colors flex items-center gap-1"
+              >
+                <svg v-if="generatingImage" class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                </svg>
+                <svg v-else class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+                AI
+              </button>
               <button
                 v-if="editForm.imageUrl"
                 @click="editForm.imageUrl = ''"
@@ -249,7 +263,7 @@
             </div>
             <div class="flex gap-2">
               <label class="px-3 py-1.5 text-sm bg-gray-700 hover:bg-gray-600 rounded cursor-pointer transition-colors">
-                {{ addForm.imageUrl ? t('personaManager.edit') : t('personaManager.imageUpload') }}
+                {{ t('personaManager.imageUpload') }}
                 <input
                   type="file"
                   accept="image/*"
@@ -257,6 +271,20 @@
                   @change="handleAddImageUpload"
                 />
               </label>
+              <button
+                @click="generateAddImage"
+                :disabled="generatingImage"
+                class="px-3 py-1.5 text-sm bg-purple-600 hover:bg-purple-700 disabled:bg-purple-600/50 disabled:cursor-not-allowed rounded transition-colors flex items-center gap-1"
+              >
+                <svg v-if="generatingImage" class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                </svg>
+                <svg v-else class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+                AI
+              </button>
               <button
                 v-if="addForm.imageUrl"
                 @click="addForm.imageUrl = ''"
@@ -434,4 +462,33 @@ const saveAdd = async () => {
   );
   isAdding.value = false;
 };
+
+// AI画像生成
+const generatingImage = ref(false);
+
+const generateImage = async (form: { name: string; systemPrompt: string; imageUrl: string }) => {
+  if (!form.name.trim()) {
+    alert(t('personaManager.aiImage.needName'));
+    return;
+  }
+  generatingImage.value = true;
+  try {
+    const res = await $fetch<{ imageUrl: string }>('/api/generate-image', {
+      method: 'POST',
+      body: {
+        name: form.name.trim(),
+        systemPrompt: form.systemPrompt.trim() || null,
+      },
+    });
+    form.imageUrl = res.imageUrl;
+  } catch (e) {
+    console.error('Failed to generate image:', e);
+    alert(t('personaManager.aiImage.error'));
+  } finally {
+    generatingImage.value = false;
+  }
+};
+
+const generateEditImage = () => generateImage(editForm);
+const generateAddImage = () => generateImage(addForm);
 </script>
