@@ -18,7 +18,6 @@ export interface Chat {
   id: string;
   userId: string;
   name: string;
-  conversationId: string;
   model: string;
   systemPrompt?: string | null;
   vectorStoreId?: string | null;
@@ -100,7 +99,7 @@ export interface CreateChatRequest {
 }
 
 export interface SendMessageRequest {
-  conversationId?: string;
+  history?: { role: string; content: string }[];
   message: string;
   model: string;
   systemPrompt?: string;
@@ -147,7 +146,6 @@ export interface CreateUserRequest {
 // API レスポンス型
 export interface CreateChatResponse {
   chatId: string;
-  conversationId: string;
 }
 
 export interface GetChatsResponse {

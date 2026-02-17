@@ -14,7 +14,6 @@ export interface User {
 export interface Chat {
   user_id: string;
   id: string;
-  conversation_id: string;
   name: string;
   model?: string | null;
   system_prompt?: string | null;

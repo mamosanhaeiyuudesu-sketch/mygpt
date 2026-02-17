@@ -13,11 +13,9 @@ CREATE TABLE users (
 CREATE INDEX idx_users_name ON users(name);
 
 -- チャットテーブル
--- 各チャットはOpenAI Conversation IDと紐付けられる
 CREATE TABLE chats (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,                 -- 所属するユーザーID
-  conversation_id TEXT UNIQUE NOT NULL,  -- OpenAI Conversations API の conversation ID
   name TEXT NOT NULL,                    -- チャット名（ユーザーが編集可能）
   model TEXT,                            -- 使用するOpenAIモデル
   system_prompt TEXT,                    -- システムプロンプト（カスタム指示）

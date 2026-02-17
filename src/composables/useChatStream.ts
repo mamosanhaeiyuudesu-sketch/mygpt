@@ -32,8 +32,8 @@ export async function parseSSEStream(
 
         try {
           const parsed = JSON.parse(data);
-          // Responses APIのストリーミング形式に対応
-          if (parsed.type === 'response.output_text.delta' && parsed.delta) {
+          // サーバー側で正規化された統一フォーマット
+          if (parsed.type === 'text.delta' && parsed.delta) {
             fullContent += parsed.delta;
             onChunk(fullContent);
           }

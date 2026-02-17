@@ -45,6 +45,22 @@ const AVAILABLE_MODELS: Model[] = [
     contextWindow: '400K',
     description: 'プロフェッショナル向け最新モデル。'
   },
+  {
+    id: 'claude-haiku-4-5-20251001',
+    name: 'Claude Haiku 4.5',
+    inputPrice: '$0.80',
+    outputPrice: '$4.00',
+    contextWindow: '200K',
+    description: '高速・軽量。日常タスクに最適。RAG非対応。'
+  },
+  {
+    id: 'claude-sonnet-4-5-20250929',
+    name: 'Claude Sonnet 4.5',
+    inputPrice: '$3.00',
+    outputPrice: '$15.00',
+    contextWindow: '200K',
+    description: 'バランス型の高性能モデル。RAG非対応。'
+  },
   // {
   //   id: 'o3-mini',
   //   name: 'o3-mini',

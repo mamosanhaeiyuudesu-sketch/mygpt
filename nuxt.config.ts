@@ -29,10 +29,14 @@ export default defineNuxtConfig({
   runtimeConfig: {
     // サーバー側のみ（NUXT_OPENAI_API_KEY 環境変数で設定）
     openaiApiKey: '',
+    // サーバー側のみ（NUXT_ANTHROPIC_API_KEY 環境変数で設定）
+    anthropicApiKey: '',
     // サーバー側のみ（NUXT_DEFAULT_MODEL 環境変数で設定）
     defaultModel: 'gpt-4o-mini',
     // サーバー側のみ（NUXT_APP_PASSWORD 環境変数で設定）
     appPassword: '',
+    // 履歴保持上限ラウンド数（NUXT_MAX_HISTORY_ROUNDS 環境変数で設定）
+    maxHistoryRounds: 20,
     // クライアント側でも使用可能
     public: {
       defaultModel: 'gpt-4o-mini'

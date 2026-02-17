@@ -12,7 +12,6 @@ export interface ChatState {
   currentChatId: Ref<string | null>;
   messages: Ref<Message[]>;
   isLoading: Ref<boolean>;
-  currentConversationId: ComputedRef<string | null>;
   currentChatModel: ComputedRef<string | null>;
   currentChatSystemPrompt: ComputedRef<string | null>;
   currentChatVectorStoreId: ComputedRef<string | null>;
@@ -31,7 +30,7 @@ export interface ChatOperations {
 }
 
 export function useChatLocal(state: ChatState): ChatOperations {
-  const { chats, currentChatId, messages, isLoading, currentConversationId, currentChatModel, currentChatSystemPrompt, currentChatVectorStoreId, currentChatUseContext } = state;
+  const { chats, currentChatId, messages, isLoading, currentChatModel, currentChatSystemPrompt, currentChatVectorStoreId, currentChatUseContext } = state;
 
   const fetchChats = async () => {
     const user = getUserFromStorage();
@@ -55,25 +54,12 @@ export function useChatLocal(state: ChatState): ChatOperations {
         throw new Error('ログインが必要です');
       }
 
-      const response = await fetch('/api/conversations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: chatName })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to create conversation');
-      }
-
-      const { conversationId } = await response.json() as { conversationId: string };
-
       const now = Date.now();
       const chatId = generateUUID();
       const newChat: Chat = {
         id: chatId,
         userId: user.id,
         name: chatName,
-        conversationId,
         model,
         systemPrompt,
         vectorStoreId,
@@ -113,7 +99,6 @@ export function useChatLocal(state: ChatState): ChatOperations {
 
     const chatId = currentChatId.value;
     const model = currentChatModel.value;
-    const conversationId = currentConversationId.value;
     const useContext = currentChatUseContext.value;
 
     // ペルソナIDがある場合、localStorageからペルソナのsystemPrompt/vectorStoreIdを動的取得
@@ -132,15 +117,10 @@ export function useChatLocal(state: ChatState): ChatOperations {
       }
     }
 
-    if (!conversationId) {
-      throw new Error('No conversation ID');
-    }
-
-    // localStorage にユーザーメッセージを先行保存
-    const data = loadFromStorage();
-    if (!data.messages[chatId]) {
-      data.messages[chatId] = [];
-    }
+    // useContext時は過去メッセージ履歴を送信
+    const history = useContext
+      ? messages.value.map(m => ({ role: m.role, content: m.content }))
+      : [];
 
     await executeSendMessage(content, {
       messages,
@@ -149,7 +129,7 @@ export function useChatLocal(state: ChatState): ChatOperations {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          conversationId: useContext ? conversationId : undefined,
+          history,
           message: msg,
           model,
           systemPrompt,

@@ -6,7 +6,9 @@ import type { H3Event } from 'h3';
 
 interface CloudflareEnv {
   NUXT_OPENAI_API_KEY?: string;
+  NUXT_ANTHROPIC_API_KEY?: string;
   NUXT_APP_PASSWORD?: string;
+  NUXT_MAX_HISTORY_ROUNDS?: string;
   DB?: D1Database;
 }
 
@@ -29,6 +31,37 @@ export function getOpenAIKey(event: H3Event): string {
   }
 
   throw new Error('OpenAI API key not configured');
+}
+
+/**
+ * Anthropic API キーを取得
+ */
+export function getAnthropicKey(event: H3Event): string {
+  const cfEnv = (event.context.cloudflare?.env as CloudflareEnv) || {};
+  if (cfEnv.NUXT_ANTHROPIC_API_KEY) {
+    return cfEnv.NUXT_ANTHROPIC_API_KEY;
+  }
+
+  const config = useRuntimeConfig();
+  if (config.anthropicApiKey) {
+    return config.anthropicApiKey;
+  }
+
+  throw new Error('Anthropic API key not configured');
+}
+
+/**
+ * 履歴保持上限を取得（ラウンド数）
+ * 1ラウンド = ユーザーメッセージ1件 + アシスタントメッセージ1件
+ */
+export function getMaxHistoryRounds(event: H3Event): number {
+  const cfEnv = (event.context.cloudflare?.env as CloudflareEnv) || {};
+  if (cfEnv.NUXT_MAX_HISTORY_ROUNDS) {
+    return parseInt(cfEnv.NUXT_MAX_HISTORY_ROUNDS, 10);
+  }
+
+  const config = useRuntimeConfig();
+  return parseInt(String(config.maxHistoryRounds || '20'), 10);
 }
 
 /**

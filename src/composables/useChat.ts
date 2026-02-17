@@ -21,7 +21,6 @@ export const useChat = () => {
     return chats.value.find(c => c.id === currentChatId.value) || null;
   });
 
-  const currentConversationId = computed(() => currentChat.value?.conversationId || null);
   const currentChatModel = computed(() => currentChat.value?.model || null);
   const currentChatSystemPrompt = computed(() => currentChat.value?.systemPrompt || null);
   const currentChatVectorStoreId = computed(() => currentChat.value?.vectorStoreId || null);
@@ -34,7 +33,6 @@ export const useChat = () => {
     currentChatId,
     messages,
     isLoading,
-    currentConversationId,
     currentChatModel,
     currentChatSystemPrompt,
     currentChatVectorStoreId,

@@ -16,7 +16,6 @@ export async function getAllChats(event: H3Event, userId: string): Promise<(Chat
       SELECT
         c.id,
         c.user_id,
-        c.conversation_id,
         c.name,
         c.model,
         c.system_prompt,
@@ -52,7 +51,6 @@ export async function createChat(
   event: H3Event,
   id: string,
   userId: string,
-  conversationId: string,
   name: string,
   model?: string,
   systemPrompt?: string,
@@ -65,7 +63,6 @@ export async function createChat(
   const chat: Chat = {
     id,
     user_id: userId,
-    conversation_id: conversationId,
     name,
     model: model || null,
     system_prompt: systemPrompt || null,
@@ -80,9 +77,9 @@ export async function createChat(
 
   if (db) {
     await db.prepare(`
-      INSERT INTO chats (id, user_id, conversation_id, name, model, system_prompt, vector_store_id, use_context, persona_id, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).bind(id, userId, conversationId, name, model || null, systemPrompt || null, vectorStoreId || null, useContextValue, personaId || null, now, now).run();
+      INSERT INTO chats (id, user_id, name, model, system_prompt, vector_store_id, use_context, persona_id, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(id, userId, name, model || null, systemPrompt || null, vectorStoreId || null, useContextValue, personaId || null, now, now).run();
   } else {
     memoryStore.chats.push(chat);
   }

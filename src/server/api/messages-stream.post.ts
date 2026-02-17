@@ -1,35 +1,41 @@
 /**
- * POST /api/messages-stream - OpenAI にメッセージをストリーミング送信
+ * POST /api/messages-stream - ストリーミング送信（ローカルパス）
  */
-import { sendMessageToOpenAIStream } from '~/server/utils/openai';
-import { getOpenAIKey } from '~/server/utils/env';
+import { streamChatMessage } from '~/server/utils/openai';
+import { getOpenAIKey, getAnthropicKey } from '~/server/utils/env';
+import { buildMessagesWithHistory } from '~/server/utils/history';
+import { supportsRAG, detectProvider } from '~/server/utils/providers';
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event);
-  const apiKey = getOpenAIKey(event);
 
-  if (!body?.message) {
+  if (!body?.message || !body?.model) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'メッセージが必要です'
+      statusMessage: 'メッセージとモデルが必要です'
     });
   }
 
-  if (!body?.model) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: 'モデルが必要です'
-    });
+  // クライアントから送られた履歴配列を使用
+  const history = body.history || [];
+  const messages = buildMessagesWithHistory(history, body.message);
+
+  let vectorStoreId = body.vectorStoreId;
+  if (vectorStoreId && !supportsRAG(body.model)) {
+    vectorStoreId = undefined;
   }
 
-  // OpenAI にストリーミングメッセージを送信
-  const response = await sendMessageToOpenAIStream(
-    apiKey,
-    body.conversationId || undefined,
-    body.message,
+  // APIキーを取得（プロバイダーに応じて）
+  const provider = detectProvider(body.model);
+  const openaiApiKey = getOpenAIKey(event);
+  const anthropicApiKey = provider === 'anthropic' ? getAnthropicKey(event) : undefined;
+
+  const stream = await streamChatMessage(
+    { openai: openaiApiKey, anthropic: anthropicApiKey },
+    messages,
     body.model,
     body.systemPrompt,
-    body.vectorStoreId
+    vectorStoreId
   );
 
   // SSEヘッダーを設定
@@ -37,6 +43,5 @@ export default defineEventHandler(async (event) => {
   setResponseHeader(event, 'Cache-Control', 'no-cache');
   setResponseHeader(event, 'Connection', 'keep-alive');
 
-  // OpenAIのストリームをそのまま転送
-  return response.body;
+  return stream;
 });

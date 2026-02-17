@@ -16,7 +16,6 @@ export default defineEventHandler(async (event) => {
     id: chat.id,
     userId: chat.user_id,
     name: await decryptIfKey(chat.name, encKey),
-    conversationId: chat.conversation_id,
     model: chat.model || 'gpt-4o',
     systemPrompt: await decryptNullable(chat.system_prompt, encKey) as string | null || null,
     vectorStoreId: chat.vector_store_id || null,

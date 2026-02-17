@@ -37,14 +37,13 @@ export function useChatRemote(state: ChatState): ChatOperations {
         throw new Error(`Failed to create chat: ${response.status} ${errorBody}`);
       }
 
-      const { chatId, conversationId, userId } = await response.json() as { chatId: string; conversationId: string; userId: string };
+      const { chatId, userId } = await response.json() as { chatId: string; userId: string };
 
       const now = Date.now();
       const newChat: Chat = {
         id: chatId,
         userId,
         name: chatName,
-        conversationId,
         model,
         systemPrompt,
         vectorStoreId,
