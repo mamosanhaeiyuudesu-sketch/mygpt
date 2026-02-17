@@ -56,7 +56,7 @@
       <template v-else-if="isPageReady && currentChatId">
         <!-- チャットヘッダー -->
         <ChatHeader
-          :model="currentChatModel || ''"
+          :model="currentModelName"
           :system-prompt="currentChatSystemPrompt"
           :vector-store-id="currentChatVectorStoreId"
           :persona-name="currentPersonaName"
@@ -146,6 +146,12 @@ const {
 
 // ペルソナ名のルックアップ
 const { personas, loadPersonas, getPersonaById } = usePersonas();
+
+const currentModelName = computed(() => {
+  if (!currentChatModel.value) return '';
+  const model = availableModels.value.find(m => m.id === currentChatModel.value);
+  return model?.name || currentChatModel.value;
+});
 
 const currentPersonaName = computed(() => {
   if (!currentChatPersonaId.value) return null;
