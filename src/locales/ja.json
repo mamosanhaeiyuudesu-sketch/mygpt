@@ -25,6 +25,7 @@
   "model.create": "作成",
   "settings.title": "チャット設定",
   "settings.persona": "ペルソナ",
+  "settings.persona.ragUnavailable": "Claudeモデルではこのペルソナは使用できません（RAG非対応）",
   "settings.persona.custom": "カスタム",
   "settings.persona.delete": "削除",
   "settings.persona.deleteConfirm": "このペルソナを削除しますか？",

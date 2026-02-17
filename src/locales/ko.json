@@ -25,6 +25,7 @@
   "model.create": "만들기",
   "settings.title": "채팅 설정",
   "settings.persona": "페르소나",
+  "settings.persona.ragUnavailable": "Claude 모델에서는 이 페르소나를 사용할 수 없습니다 (RAG 미지원)",
   "settings.persona.custom": "커스텀",
   "settings.persona.delete": "삭제",
   "settings.persona.deleteConfirm": "이 페르소나를 삭제하시겠습니까?",

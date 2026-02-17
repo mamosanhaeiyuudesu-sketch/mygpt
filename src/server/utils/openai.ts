@@ -50,7 +50,8 @@ export async function transcribeAudio(apiKey: string, audioBuffer: Uint8Array, f
 }
 
 /**
- * OpenAI Chat Completions API でストリーミング
+ * OpenAI Responses API でストリーミング
+ * Chat Completions APIではfile_search非対応のため、Responses APIを使用
  */
 async function streamOpenAI(
   apiKey: string,
@@ -59,14 +60,12 @@ async function streamOpenAI(
   systemPrompt: string,
   vectorStoreId?: string
 ): Promise<Response> {
-  console.log('[OpenAI] Streaming with Chat Completions:', { model, messageCount: messages.length, vectorStoreId });
+  console.log('[OpenAI] Streaming with Responses API:', { model, messageCount: messages.length, vectorStoreId });
 
   const requestBody: Record<string, unknown> = {
     model,
-    messages: [
-      { role: 'system', content: systemPrompt },
-      ...messages
-    ],
+    input: messages,
+    instructions: systemPrompt,
     stream: true
   };
 
@@ -78,7 +77,7 @@ async function streamOpenAI(
     }];
   }
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+  const response = await fetch('https://api.openai.com/v1/responses', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${apiKey}`,
@@ -194,7 +193,10 @@ function processLines(
       let delta: string | null = null;
 
       if (provider === 'openai') {
-        delta = parsed.choices?.[0]?.delta?.content || null;
+        // Responses API: response.output_text.delta
+        if (parsed.type === 'response.output_text.delta') {
+          delta = parsed.delta || null;
+        }
       } else if (provider === 'anthropic') {
         if (parsed.type === 'content_block_delta' && parsed.delta?.type === 'text_delta') {
           delta = parsed.delta.text;

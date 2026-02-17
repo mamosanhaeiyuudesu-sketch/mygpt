@@ -5,13 +5,17 @@
       <button
         v-for="persona in personas"
         :key="persona.id"
-        @click="emit('select', persona.id)"
+        @click="!isDisabled(persona) && emit('select', persona.id)"
+        :disabled="isDisabled(persona)"
         :class="[
           'rounded border p-2 text-left transition-colors',
-          selectedId === persona.id
-            ? 'bg-blue-600/20 border-blue-500'
-            : 'bg-gray-800 border-gray-700 hover:border-gray-500'
+          isDisabled(persona)
+            ? 'bg-gray-800/50 border-gray-700/50 opacity-50 cursor-not-allowed'
+            : selectedId === persona.id
+              ? 'bg-blue-600/20 border-blue-500'
+              : 'bg-gray-800 border-gray-700 hover:border-gray-500'
         ]"
+        :title="isDisabled(persona) ? t('settings.persona.ragUnavailable') : ''"
       >
         <div class="flex items-center gap-1.5">
           <div class="shrink-0">
@@ -42,9 +46,10 @@
 <script setup lang="ts">
 import type { Persona } from '~/types';
 
-defineProps<{
+const props = defineProps<{
   personas: readonly Persona[];
   selectedId: string;
+  selectedModel?: string;
 }>();
 
 const emit = defineEmits<{
@@ -52,4 +57,10 @@ const emit = defineEmits<{
 }>();
 
 const { t } = useI18n();
+
+const isClaude = computed(() => props.selectedModel?.startsWith('claude-') ?? false);
+
+const isDisabled = (persona: Persona) => {
+  return isClaude.value && !!persona.vectorStoreId;
+};
 </script>

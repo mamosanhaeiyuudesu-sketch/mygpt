@@ -25,6 +25,7 @@
   "model.create": "Create",
   "settings.title": "Chat Settings",
   "settings.persona": "Persona",
+  "settings.persona.ragUnavailable": "This persona is unavailable with Claude models (RAG not supported)",
   "settings.persona.custom": "Custom",
   "settings.persona.delete": "Delete",
   "settings.persona.deleteConfirm": "Delete this persona?",

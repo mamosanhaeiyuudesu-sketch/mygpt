@@ -24,7 +24,7 @@
         </div>
 
         <!-- ペルソナ選択（カード形式） -->
-        <PersonaCardGrid :personas="personas" :selected-id="selectedPersonaId" @select="selectPersona" />
+        <PersonaCardGrid :personas="personas" :selected-id="selectedPersonaId" :selected-model="selectedModel" @select="selectPersona" />
 
         <!-- 文脈保持設定 -->
         <div class="flex items-center justify-between">
@@ -67,6 +67,16 @@ const selectedPersonaId = ref('');
 // 初期表示時にペルソナを読み込む
 onMounted(() => {
   loadPersonas();
+});
+
+// モデル変更時、RAGペルソナが選択中なら解除
+watch(() => props.selectedModel, (model) => {
+  if (model?.startsWith('claude-') && selectedPersonaId.value) {
+    const persona = personas.value.find(p => p.id === selectedPersonaId.value);
+    if (persona?.vectorStoreId) {
+      selectedPersonaId.value = '';
+    }
+  }
 });
 
 const selectPersona = (personaId: string) => {
