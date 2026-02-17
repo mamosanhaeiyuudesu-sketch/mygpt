@@ -1,10 +1,10 @@
 /**
- * 音声日記 composable
- * 録音 → 文字起こし → 保存のフローを管理
+ * 日記 composable
+ * テキスト入力 + 音声入力 → 保存のフローを管理
  * デュアル環境対応（localStorage / API）
  */
 import { ref, readonly, computed } from 'vue';
-import type { DiaryEntry } from '~/types';
+import type { DiaryEntry, DiarySection } from '~/types';
 import { isLocalEnvironment } from '~/utils/environment';
 import { loadDiaryEntries, saveDiaryEntries } from '~/utils/diaryStorage';
 import { getUserFromStorage } from '~/utils/storage';
@@ -14,15 +14,52 @@ const currentEntryId = ref<string | null>(null);
 const isRecording = ref(false);
 const isTranscribing = ref(false);
 const recordingDuration = ref(0);
+const isEditing = ref(false);
+const editingContent = ref('');
+const editingEntryId = ref<string | null>(null);
 
 let mediaRecorder: MediaRecorder | null = null;
 let audioChunks: Blob[] = [];
 let durationTimer: ReturnType<typeof setInterval> | null = null;
 
+/**
+ * contentフィールドをセクション配列にパース
+ * 後方互換: JSONでなければ単一セクションとして扱う
+ */
+function parseSections(content: string): DiarySection[] {
+  if (!content) return [];
+  try {
+    const parsed = JSON.parse(content);
+    if (Array.isArray(parsed)) return parsed;
+  } catch {
+    // JSON でなければ旧形式（プレーンテキスト）
+  }
+  return [{ text: content, completedAt: 0 }];
+}
+
+/**
+ * セクション配列をJSON文字列にシリアライズ
+ */
+function serializeSections(sections: DiarySection[]): string {
+  return JSON.stringify(sections);
+}
+
+/**
+ * セクション配列からタイトル生成用のプレーンテキストを取得
+ */
+function sectionsToPlainText(sections: DiarySection[]): string {
+  return sections.map(s => s.text).join('\n');
+}
+
 export function useDiary() {
   const currentEntry = computed(() =>
     entries.value.find(e => e.id === currentEntryId.value) || null
   );
+
+  const currentSections = computed(() => {
+    if (!currentEntry.value) return [];
+    return parseSections(currentEntry.value.content);
+  });
 
   const loadEntries = async () => {
     if (isLocalEnvironment()) {
@@ -43,6 +80,22 @@ export function useDiary() {
 
   const selectEntry = (entryId: string | null) => {
     currentEntryId.value = entryId;
+    if (entryId) {
+      isEditing.value = true;
+      editingContent.value = '';
+      editingEntryId.value = entryId;
+    } else {
+      isEditing.value = false;
+      editingContent.value = '';
+      editingEntryId.value = null;
+    }
+  };
+
+  const startNewEntry = () => {
+    currentEntryId.value = null;
+    isEditing.value = true;
+    editingContent.value = '';
+    editingEntryId.value = null;
   };
 
   const startRecording = async () => {
@@ -74,8 +127,6 @@ export function useDiary() {
       durationTimer = null;
     }
 
-    const duration = recordingDuration.value;
-
     // Wait for MediaRecorder to stop and collect all data
     const audioBlob = await new Promise<Blob>((resolve) => {
       mediaRecorder!.onstop = () => {
@@ -106,24 +157,50 @@ export function useDiary() {
 
       const { text } = (await res.json()) as { text: string };
 
-      if (!text || text.trim().length === 0) {
-        return;
-      }
-
-      // Save entry and select it
-      const newEntry = await saveEntry(text, duration);
-      if (newEntry) {
-        currentEntryId.value = newEntry.id;
-        // AIでタイトル生成（バックグラウンド）
-        generateTitle(newEntry.id, text).catch(() => {});
+      if (text && text.trim().length > 0) {
+        // 末尾に追加
+        if (editingContent.value.length > 0 && !editingContent.value.endsWith('\n')) {
+          editingContent.value += '\n';
+        }
+        editingContent.value += text.trim();
       }
     } finally {
       isTranscribing.value = false;
     }
   };
 
-  const saveEntry = async (content: string, duration?: number): Promise<DiaryEntry | null> => {
-    const title = content.substring(0, 30).replace(/\n/g, ' ');
+  const saveEditingEntry = async (): Promise<void> => {
+    const text = editingContent.value.trim();
+    if (!text) return;
+
+    const newSection: DiarySection = { text, completedAt: Date.now() };
+
+    if (editingEntryId.value) {
+      // 既存エントリにセクション追加
+      const existingSections = currentSections.value;
+      const allSections = [...existingSections, newSection];
+      const content = serializeSections(allSections);
+      await updateEntryContent(editingEntryId.value, content);
+    } else {
+      // 新規作成
+      const content = serializeSections([newSection]);
+      const newEntry = await createEntry(content);
+      if (newEntry) {
+        editingEntryId.value = newEntry.id;
+        currentEntryId.value = newEntry.id;
+        // AIでタイトル生成（バックグラウンド）
+        generateTitle(newEntry.id, text).catch(() => {});
+      }
+    }
+
+    // フォームをクリア（次のセクション入力用）
+    editingContent.value = '';
+  };
+
+  const createEntry = async (content: string, duration?: number): Promise<DiaryEntry | null> => {
+    const sections = parseSections(content);
+    const plainText = sectionsToPlainText(sections);
+    const title = plainText.substring(0, 30).replace(/\n/g, ' ');
 
     if (isLocalEnvironment()) {
       const user = getUserFromStorage();
@@ -153,6 +230,28 @@ export function useDiary() {
       }
     }
     return null;
+  };
+
+  const updateEntryContent = async (entryId: string, content: string): Promise<void> => {
+    if (isLocalEnvironment()) {
+      const user = getUserFromStorage();
+      if (!user) return;
+      entries.value = entries.value.map(e =>
+        e.id === entryId ? { ...e, content } : e
+      );
+      saveDiaryEntries(user.id, entries.value);
+    } else {
+      const res = await fetch(`/api/diary/${entryId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content }),
+      });
+      if (res.ok) {
+        entries.value = entries.value.map(e =>
+          e.id === entryId ? { ...e, content } : e
+        );
+      }
+    }
   };
 
   const generateTitle = async (entryId: string, content: string) => {
@@ -209,9 +308,13 @@ export function useDiary() {
         entries.value = entries.value.filter(e => e.id !== entryId);
       }
     }
-    // If deleted entry was selected, deselect
     if (currentEntryId.value === entryId) {
       currentEntryId.value = null;
+    }
+    if (editingEntryId.value === entryId) {
+      editingEntryId.value = null;
+      isEditing.value = false;
+      editingContent.value = '';
     }
   };
 
@@ -219,13 +322,19 @@ export function useDiary() {
     entries: readonly(entries),
     currentEntryId: readonly(currentEntryId),
     currentEntry,
+    currentSections,
     isRecording: readonly(isRecording),
     isTranscribing: readonly(isTranscribing),
     recordingDuration: readonly(recordingDuration),
+    isEditing,
+    editingContent,
+    editingEntryId: readonly(editingEntryId),
     loadEntries,
     selectEntry,
+    startNewEntry,
     startRecording,
     stopRecording,
+    saveEditingEntry,
     renameEntry,
     deleteEntry,
   };

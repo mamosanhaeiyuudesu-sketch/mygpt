@@ -80,6 +80,19 @@ export async function renameDiaryEntry(event: H3Event, entryId: string, title: s
 }
 
 /**
+ * 日記エントリのコンテンツを更新
+ */
+export async function updateDiaryContent(event: H3Event, entryId: string, content: string): Promise<void> {
+  const db = getD1(event);
+  if (db) {
+    await db.prepare('UPDATE diaries SET content = ? WHERE id = ?').bind(content, entryId).run();
+  } else {
+    const entry = memoryStore.diaryEntries.find(e => e.id === entryId);
+    if (entry) entry.content = content;
+  }
+}
+
+/**
  * 日記エントリを削除
  */
 export async function deleteDiaryEntry(event: H3Event, entryId: string): Promise<void> {

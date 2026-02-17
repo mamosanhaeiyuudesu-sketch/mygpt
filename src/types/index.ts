@@ -36,6 +36,12 @@ export interface Message {
   createdAt?: number;
 }
 
+// 日記セクション（完了ごとの区切り）
+export interface DiarySection {
+  text: string;
+  completedAt: number;
+}
+
 // 日記エントリ
 export interface DiaryEntry {
   id: string;
@@ -50,6 +56,7 @@ export interface DiaryEntry {
 export interface DiaryEntryPreview {
   id: string;
   title: string;
+  content?: string;
   duration?: number;
   createdAt: number;
 }
