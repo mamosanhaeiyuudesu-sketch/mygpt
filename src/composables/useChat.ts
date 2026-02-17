@@ -14,6 +14,11 @@ export const useChat = () => {
   const currentChatId = ref<string | null>(null);
   const messages = ref<Message[]>([]);
   const isLoading = ref(false);
+  const abortController = ref<AbortController | null>(null);
+
+  const stopGeneration = () => {
+    abortController.value?.abort();
+  };
 
   // 現在のチャットの computed プロパティ
   const currentChat = computed(() => {
@@ -33,6 +38,7 @@ export const useChat = () => {
     currentChatId,
     messages,
     isLoading,
+    abortController,
     currentChatModel,
     currentChatSystemPrompt,
     currentChatVectorStoreId,
@@ -54,6 +60,7 @@ export const useChat = () => {
     isLoading,
 
     // Methods
+    stopGeneration,
     ...ops
   };
 };

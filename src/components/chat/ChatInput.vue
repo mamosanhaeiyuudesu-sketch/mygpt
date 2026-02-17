@@ -14,7 +14,18 @@
           @focus="isInputFocused = true"
           @blur="isInputFocused = false"
         ></textarea>
+        <!-- 停止ボタン（ストリーミング中） -->
         <button
+          v-if="isLoading"
+          type="button"
+          @click="emit('stop')"
+          class="px-4 py-2 md:px-6 md:py-3 bg-red-600 hover:bg-red-700 rounded-lg transition-colors shrink-0"
+        >
+          {{ t('chat.input.stop') }}
+        </button>
+        <!-- 送信ボタン（通常時） -->
+        <button
+          v-else
           type="submit"
           :disabled="!localMessage.trim() || disabled"
           class="px-4 py-2 md:px-6 md:py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed rounded-lg transition-colors shrink-0"
@@ -29,10 +40,12 @@
 <script setup lang="ts">
 const props = defineProps<{
   disabled?: boolean;
+  isLoading?: boolean;
 }>();
 
 const emit = defineEmits<{
   submit: [message: string];
+  stop: [];
 }>();
 
 const { t } = useI18n();

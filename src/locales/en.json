@@ -12,6 +12,7 @@
   "sidebar.deleteChat.confirm": "Delete this chat?",
   "chat.input.placeholder": "Enter message...",
   "chat.input.send": "Send",
+  "chat.input.stop": "Stop",
   "chat.copy": "Copy",
   "chat.copied": "Copied",
   "home.title": "Start a new chat",

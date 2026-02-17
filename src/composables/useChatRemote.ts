@@ -7,7 +7,7 @@ import type { ChatState, ChatOperations } from '~/composables/useChatLocal';
 import { executeSendMessage } from '~/composables/useChatStream';
 
 export function useChatRemote(state: ChatState): ChatOperations {
-  const { chats, currentChatId, messages, isLoading, currentChatModel, currentChatUseContext } = state;
+  const { chats, currentChatId, messages, isLoading, abortController, currentChatModel, currentChatUseContext } = state;
 
   const fetchChats = async () => {
     try {
@@ -91,14 +91,16 @@ export function useChatRemote(state: ChatState): ChatOperations {
     await executeSendMessage(content, {
       messages,
       isLoading,
-      fetchStream: (msg) => fetch(`/api/chats/${chatId}/messages-stream`, {
+      abortController,
+      fetchStream: (msg, signal) => fetch(`/api/chats/${chatId}/messages-stream`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: msg,
           model,
           useContext
-        })
+        }),
+        signal
       }),
       onSuccess: async (_userMessage, finalContent) => {
         // D1にメッセージを保存

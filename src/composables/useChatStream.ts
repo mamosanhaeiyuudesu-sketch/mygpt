@@ -71,7 +71,8 @@ export function updateMessageContent(
 export interface SendMessageOptions {
   messages: Ref<Message[]>;
   isLoading: Ref<boolean>;
-  fetchStream: (content: string) => Promise<Response>;
+  abortController: Ref<AbortController | null>;
+  fetchStream: (content: string, signal: AbortSignal) => Promise<Response>;
   onSuccess: (userMessage: Message, finalContent: string) => Promise<void>;
   onError?: (userMessage: Message, assistantMessage: Message) => void;
 }
@@ -80,7 +81,7 @@ export async function executeSendMessage(
   content: string,
   options: SendMessageOptions
 ): Promise<{ userMessage: Message; assistantMessage: Message }> {
-  const { messages, isLoading, fetchStream, onSuccess, onError } = options;
+  const { messages, isLoading, abortController, fetchStream, onSuccess, onError } = options;
   const now = Date.now();
 
   const userMessage: Message = {
@@ -99,10 +100,13 @@ export async function executeSendMessage(
   };
   messages.value.push(assistantMessage);
 
+  const controller = new AbortController();
+  abortController.value = controller;
+
   try {
     isLoading.value = true;
 
-    const response = await fetchStream(content);
+    const response = await fetchStream(content, controller.signal);
 
     if (!response.ok) {
       throw new Error('Failed to send message');
@@ -122,11 +126,22 @@ export async function executeSendMessage(
 
     return { userMessage, assistantMessage };
   } catch (error) {
+    // abort による中断の場合、途中のコンテンツがあればそのまま保存
+    if (controller.signal.aborted) {
+      const currentContent = messages.value.find(m => m.id === assistantMessage.id)?.content || '';
+      if (currentContent) {
+        await onSuccess(userMessage, currentContent);
+      } else {
+        messages.value = messages.value.filter(m => m.id !== userMessage.id && m.id !== assistantMessage.id);
+      }
+      return { userMessage, assistantMessage };
+    }
     messages.value = messages.value.filter(m => m.id !== userMessage.id && m.id !== assistantMessage.id);
     onError?.(userMessage, assistantMessage);
     console.error('Error sending message:', error);
     throw error;
   } finally {
+    abortController.value = null;
     isLoading.value = false;
   }
 }

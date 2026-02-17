@@ -104,7 +104,7 @@
         </div>
 
         <!-- 入力欄 -->
-        <ChatInput :disabled="isLoading" @submit="handleSendMessage" />
+        <ChatInput :disabled="isLoading" :is-loading="isLoading" @submit="handleSendMessage" @stop="stopGeneration" />
       </template>
     </div>
 
@@ -141,7 +141,7 @@ const {
   chats, currentChatId, currentChatModel, currentChatSystemPrompt,
   currentChatVectorStoreId, currentChatUseContext, currentChatPersonaId, messages, isLoading,
   fetchChats, createChat, selectChat, sendMessage, deleteChat, renameChat,
-  updateChatSettings, reorderChats
+  updateChatSettings, reorderChats, stopGeneration
 } = useChat();
 
 // ペルソナ名のルックアップ

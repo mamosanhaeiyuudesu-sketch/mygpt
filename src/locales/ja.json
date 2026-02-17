@@ -12,6 +12,7 @@
   "sidebar.deleteChat.confirm": "このチャットを削除しますか?",
   "chat.input.placeholder": "メッセージを入力...",
   "chat.input.send": "送信",
+  "chat.input.stop": "停止",
   "chat.copy": "コピー",
   "chat.copied": "コピーしました",
   "home.title": "新しいチャットを開始",

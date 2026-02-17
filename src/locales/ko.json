@@ -12,6 +12,7 @@
   "sidebar.deleteChat.confirm": "이 채팅을 삭제하시겠습니까?",
   "chat.input.placeholder": "메시지 입력...",
   "chat.input.send": "보내기",
+  "chat.input.stop": "중지",
   "chat.copy": "복사",
   "chat.copied": "복사됨",
   "home.title": "새 채팅 시작",

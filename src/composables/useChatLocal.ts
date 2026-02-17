@@ -12,6 +12,7 @@ export interface ChatState {
   currentChatId: Ref<string | null>;
   messages: Ref<Message[]>;
   isLoading: Ref<boolean>;
+  abortController: Ref<AbortController | null>;
   currentChatModel: ComputedRef<string | null>;
   currentChatSystemPrompt: ComputedRef<string | null>;
   currentChatVectorStoreId: ComputedRef<string | null>;
@@ -30,7 +31,7 @@ export interface ChatOperations {
 }
 
 export function useChatLocal(state: ChatState): ChatOperations {
-  const { chats, currentChatId, messages, isLoading, currentChatModel, currentChatSystemPrompt, currentChatVectorStoreId, currentChatUseContext } = state;
+  const { chats, currentChatId, messages, isLoading, abortController, currentChatModel, currentChatSystemPrompt, currentChatVectorStoreId, currentChatUseContext } = state;
 
   const fetchChats = async () => {
     const user = getUserFromStorage();
@@ -125,7 +126,8 @@ export function useChatLocal(state: ChatState): ChatOperations {
     await executeSendMessage(content, {
       messages,
       isLoading,
-      fetchStream: (msg) => fetch('/api/messages-stream', {
+      abortController,
+      fetchStream: (msg, signal) => fetch('/api/messages-stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -134,7 +136,8 @@ export function useChatLocal(state: ChatState): ChatOperations {
           model,
           systemPrompt,
           vectorStoreId
-        })
+        }),
+        signal
       }),
       onSuccess: async (userMessage, finalContent) => {
         const updatedData = loadFromStorage();
