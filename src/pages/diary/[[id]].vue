@@ -208,6 +208,7 @@ const {
   deleteEntry,
 } = useDiary();
 
+const lastDiaryId = useState<string | null>('lastDiaryId', () => null);
 const isSidebarOpen = ref(false);
 const textareaRef = ref<HTMLTextAreaElement | null>(null);
 
@@ -218,6 +219,7 @@ onMounted(async () => {
   if (entryId) {
     if (entries.value.some(e => e.id === entryId)) {
       selectEntry(entryId);
+      lastDiaryId.value = entryId;
     } else {
       router.replace('/diary');
     }
@@ -229,6 +231,7 @@ onMounted(async () => {
 
 const handleSelectEntry = (id: string) => {
   selectEntry(id);
+  lastDiaryId.value = id;
   router.push(`/diary/${id}`);
   isSidebarOpen.value = false;
 };

@@ -51,6 +51,25 @@ function sectionsToPlainText(sections: DiarySection[]): string {
   return sections.map(s => s.text).join('\n');
 }
 
+/**
+ * エントリの最終更新タイムスタンプを取得（最新セクションのcompletedAt、なければcreatedAt）
+ */
+function getLatestTimestamp(entry: DiaryEntry): number {
+  const sections = parseSections(entry.content);
+  if (sections.length > 0) {
+    const maxCompletedAt = Math.max(...sections.map(s => s.completedAt || 0));
+    if (maxCompletedAt > 0) return maxCompletedAt;
+  }
+  return entry.createdAt;
+}
+
+/**
+ * エントリ配列を最終更新日時の降順でソート
+ */
+function sortEntriesByLatest(entries: DiaryEntry[]): DiaryEntry[] {
+  return [...entries].sort((a, b) => getLatestTimestamp(b) - getLatestTimestamp(a));
+}
+
 export function useDiary() {
   const currentEntry = computed(() =>
     entries.value.find(e => e.id === currentEntryId.value) || null
@@ -68,12 +87,12 @@ export function useDiary() {
         entries.value = [];
         return;
       }
-      entries.value = loadDiaryEntries(user.id);
+      entries.value = sortEntriesByLatest(loadDiaryEntries(user.id));
     } else {
       const res = await fetch('/api/diary');
       if (res.ok) {
         const data = (await res.json()) as { entries: DiaryEntry[] };
-        entries.value = data.entries;
+        entries.value = sortEntriesByLatest(data.entries);
       }
     }
   };
@@ -236,9 +255,9 @@ export function useDiary() {
     if (isLocalEnvironment()) {
       const user = getUserFromStorage();
       if (!user) return;
-      entries.value = entries.value.map(e =>
+      entries.value = sortEntriesByLatest(entries.value.map(e =>
         e.id === entryId ? { ...e, content } : e
-      );
+      ));
       saveDiaryEntries(user.id, entries.value);
     } else {
       const res = await fetch(`/api/diary/${entryId}`, {
@@ -247,9 +266,9 @@ export function useDiary() {
         body: JSON.stringify({ content }),
       });
       if (res.ok) {
-        entries.value = entries.value.map(e =>
+        entries.value = sortEntriesByLatest(entries.value.map(e =>
           e.id === entryId ? { ...e, content } : e
-        );
+        ));
       }
     }
   };

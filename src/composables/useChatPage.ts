@@ -48,6 +48,7 @@ export function useChatPage(options: UseChatPageOptions) {
 
   const router = useRouter();
   const route = useRoute();
+  const lastChatId = useState<string | null>('lastChatId', () => null);
 
   // モデル関連
   const config = useRuntimeConfig();
@@ -100,6 +101,7 @@ export function useChatPage(options: UseChatPageOptions) {
     if (chatId) {
       if (chats.value.some(c => c.id === chatId)) {
         await selectChat(chatId);
+        lastChatId.value = chatId;
         // 最新の質問までスクロール
         nextTick(() => {
           const lastUserMessage = [...messages.value].reverse().find(m => m.role === 'user');
@@ -120,6 +122,7 @@ export function useChatPage(options: UseChatPageOptions) {
   const handleSelectChat = async (chatId: string) => {
     isSidebarOpen.value = false;
     await selectChat(chatId);
+    lastChatId.value = chatId;
     router.push(`/chat/${chatId}`);
 
     // 最新の質問（最後のユーザーメッセージ）までスクロール
@@ -228,6 +231,7 @@ export function useChatPage(options: UseChatPageOptions) {
     try {
       const chatId = await createChat(model, undefined, systemPrompt, vectorStoreId, useContext, personaId);
       if (chatId) {
+        lastChatId.value = chatId;
         history.replaceState(null, '', `/chat/${chatId}`);
       }
 
