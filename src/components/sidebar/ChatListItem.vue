@@ -42,7 +42,7 @@
         </div>
         <!-- 表示モード -->
         <template v-else>
-          <div class="font-medium text-sm truncate">{{ chat.name }}</div>
+          <div class="font-medium text-sm truncate">{{ chat.title }}</div>
           <div v-if="chat.lastMessage" class="text-xs text-gray-400 truncate mt-1">
             {{ chat.lastMessage }}
           </div>
@@ -104,7 +104,7 @@ const generatedTitles = ref<string[]>([]);
 
 const startEditing = () => {
   isEditing.value = true;
-  editingName.value = props.chat.name;
+  editingName.value = props.chat.title;
   generatedTitles.value = [];
   nextTick(() => {
     if (editInputRef.value) {

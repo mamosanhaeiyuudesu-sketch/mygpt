@@ -204,11 +204,11 @@ export function useChatPage(options: UseChatPageOptions) {
    */
   const autoGenerateTitle = async (chatId: string) => {
     const chat = chats.value.find(c => c.id === chatId);
-    if (!chat || chat.name !== 'New Chat') return;
+    if (!chat || chat.title !== 'New Chat') return;
 
     const excludeTitles = chats.value
       .filter(c => c.id !== chatId)
-      .map(c => c.name);
+      .map(c => c.title);
     const generatedTitle = await handleGenerateTitle(chatId, excludeTitles);
     if (generatedTitle) {
       await renameChat(chatId, generatedTitle);

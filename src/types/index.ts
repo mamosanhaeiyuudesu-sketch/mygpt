@@ -17,7 +17,7 @@ export interface User {
 export interface Chat {
   id: string;
   userId: string;
-  name: string;
+  title: string;
   model: string;
   systemPrompt?: string | null;
   vectorStoreId?: string | null;
@@ -36,9 +36,11 @@ export interface Message {
   createdAt?: number;
 }
 
-// 日記セクション（完了ごとの区切り）
+// 日記セクション（投稿ごとの区切り）
 export interface DiarySection {
+  id: string;
   text: string;
+  duration?: number; // 録音秒数
   completedAt: number;
 }
 
@@ -47,24 +49,23 @@ export interface DiaryEntry {
   id: string;
   userId: string;
   title: string;
-  content: string;
-  duration?: number; // 録音秒数
+  sections: DiarySection[];
   createdAt: number;
+  updatedAt: number;
 }
 
 // 日記エントリ（リスト表示用）
 export interface DiaryEntryPreview {
   id: string;
   title: string;
-  content?: string;
-  duration?: number;
   createdAt: number;
+  updatedAt: number;
 }
 
 // チャット（リスト表示用）
 export interface ChatPreview {
   id: string;
-  name: string;
+  title: string;
   lastMessage?: string;
 }
 
@@ -134,7 +135,7 @@ export interface CreatePersonaRequest {
 }
 
 export interface CreateDiaryEntryRequest {
-  content: string;
+  text: string;
   duration?: number;
 }
 

@@ -195,7 +195,7 @@ const {
 const handleMobileRename = () => {
   if (!currentChatId.value) return;
   const currentChat = chats.value.find(c => c.id === currentChatId.value);
-  const newName = prompt(t('menu.renamePrompt'), currentChat?.name || '');
+  const newName = prompt(t('menu.renamePrompt'), currentChat?.title || '');
   if (newName?.trim()) {
     handleRenameChat(currentChatId.value, newName.trim());
   }

@@ -14,7 +14,7 @@ export async function getMessages(event: H3Event, chatId: string): Promise<Messa
   if (db) {
     const result = await db.prepare(`
       SELECT id, chat_id, role, content, created_at
-      FROM messages
+      FROM chat_messages
       WHERE chat_id = ?
       ORDER BY created_at ASC
     `).bind(chatId).all();
@@ -22,7 +22,7 @@ export async function getMessages(event: H3Event, chatId: string): Promise<Messa
     return (result.results || []) as unknown as Message[];
   }
 
-  return memoryStore.messages
+  return memoryStore.chatMessages
     .filter(m => m.chat_id === chatId)
     .sort((a, b) => a.created_at - b.created_at);
 }
@@ -50,11 +50,11 @@ export async function createMessage(
 
   if (db) {
     await db.prepare(`
-      INSERT INTO messages (id, chat_id, role, content, created_at)
+      INSERT INTO chat_messages (id, chat_id, role, content, created_at)
       VALUES (?, ?, ?, ?, ?)
     `).bind(id, chatId, role, content, createdAt).run();
   } else {
-    memoryStore.messages.push(message);
+    memoryStore.chatMessages.push(message);
   }
 
   return message;

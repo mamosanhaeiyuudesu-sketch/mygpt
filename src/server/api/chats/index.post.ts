@@ -10,7 +10,7 @@ export default defineEventHandler(async (event) => {
   const userId = requireAuth(event);
   const body = await readBody(event);
 
-  const chatName = body?.name || 'New Chat';
+  const chatTitle = body?.name || 'New Chat';
   const model = body?.model;
   const useContext = body?.useContext;
   const personaId = body?.personaId;
@@ -22,9 +22,9 @@ export default defineEventHandler(async (event) => {
 
   try {
     const encKey = await getEncryptionKey(event);
-    const encName = await encryptIfKey(chatName, encKey);
+    const encTitle = await encryptIfKey(chatTitle, encKey);
     const encSystemPrompt = await encryptNullable(systemPrompt, encKey) as string | undefined;
-    await createChat(event, chatId, userId, encName, model, encSystemPrompt, vectorStoreId, useContext, personaId);
+    await createChat(event, chatId, userId, encTitle, model, encSystemPrompt, vectorStoreId, useContext, personaId);
   } catch (e) {
     console.error('[POST /api/chats] DB save failed:', e);
     throw createError({ statusCode: 500, statusMessage: `DB save failed: ${(e as Error).message}` });

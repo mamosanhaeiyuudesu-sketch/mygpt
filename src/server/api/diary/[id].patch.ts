@@ -1,7 +1,7 @@
 /**
- * PATCH /api/diary/:id - 日記エントリのタイトル・コンテンツ更新
+ * PATCH /api/diary/:id - 日記エントリのタイトル更新 or セクション追加
  */
-import { renameDiaryEntry, updateDiaryContent } from '~/server/utils/db/diary';
+import { renameDiaryEntry, addDiarySection } from '~/server/utils/db/diary';
 import { getEncryptionKey, encryptIfKey } from '~/server/utils/crypto';
 import { requireAuth, requireParam, assertDiaryOwner } from '~/server/utils/auth';
 
@@ -10,12 +10,12 @@ export default defineEventHandler(async (event) => {
   const entryId = requireParam(event, 'id', 'エントリIDが必要です');
 
   const body = await readBody(event);
-  const { title, content } = body || {};
+  const { title, text, duration } = body || {};
 
-  if (typeof title !== 'string' && typeof content !== 'string') {
+  if (typeof title !== 'string' && typeof text !== 'string') {
     throw createError({
       statusCode: 400,
-      statusMessage: 'タイトルまたはコンテンツが必要です'
+      statusMessage: 'タイトルまたはテキストが必要です'
     });
   }
 
@@ -28,9 +28,18 @@ export default defineEventHandler(async (event) => {
     await renameDiaryEntry(event, entryId, encTitle);
   }
 
-  if (typeof content === 'string') {
-    const encContent = await encryptIfKey(content, encKey);
-    await updateDiaryContent(event, entryId, encContent);
+  if (typeof text === 'string') {
+    const encText = await encryptIfKey(text, encKey);
+    const section = await addDiarySection(event, entryId, encText, duration);
+    return {
+      success: true,
+      section: {
+        id: section.id,
+        text,
+        duration: section.duration,
+        completedAt: section.completed_at,
+      }
+    };
   }
 
   return { success: true };

@@ -108,8 +108,8 @@
           <div class="max-w-[810px] mx-auto">
             <!-- 保存済みセクション一覧 -->
             <div
-              v-for="(section, index) in currentSections"
-              :key="index"
+              v-for="section in currentSections"
+              :key="section.id"
               class="mb-4"
             >
               <p class="text-gray-200 text-sm whitespace-pre-wrap leading-relaxed">{{ section.text }}</p>
@@ -262,7 +262,13 @@ const handleStopRecording = async () => {
 };
 
 const handleSave = async () => {
+  const wasNew = !currentEntryId.value;
   await saveEditingEntry();
+  // 新規作成後はURLとlastDiaryIdを更新
+  if (wasNew && currentEntryId.value) {
+    lastDiaryId.value = currentEntryId.value;
+    history.replaceState(null, '', `/diary/${currentEntryId.value}`);
+  }
   nextTick(() => {
     textareaRef.value?.focus();
   });

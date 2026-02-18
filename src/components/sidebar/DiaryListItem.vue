@@ -34,7 +34,7 @@
         <!-- 表示モード -->
         <template v-else>
           <div class="font-medium text-sm truncate">{{ entry.title }}</div>
-          <div v-if="previewText" class="text-xs text-gray-500 mt-0.5 truncate">{{ previewText }}</div>
+          <div class="text-xs text-gray-500 mt-0.5 truncate">{{ formatDateShort(entry.updatedAt || entry.createdAt) }}</div>
         </template>
       </div>
 
@@ -65,6 +65,7 @@
 
 <script setup lang="ts">
 import type { DiaryEntryPreview } from '~/types';
+import { formatDateShort } from '~/utils/dateFormat';
 
 const props = defineProps<{
   entry: DiaryEntryPreview;
@@ -76,19 +77,6 @@ const emit = defineEmits<{
   delete: [];
   rename: [title: string];
 }>();
-
-const previewText = computed(() => {
-  if (!props.entry.content) return '';
-  try {
-    const parsed = JSON.parse(props.entry.content);
-    if (Array.isArray(parsed) && parsed.length > 0) {
-      return parsed[0].text?.substring(0, 50).replace(/\n/g, ' ') || '';
-    }
-  } catch {
-    // 旧形式（プレーンテキスト）
-  }
-  return props.entry.content.substring(0, 50).replace(/\n/g, ' ');
-});
 
 const isEditing = ref(false);
 const editingTitle = ref('');

@@ -43,7 +43,7 @@ export function useChatRemote(state: ChatState): ChatOperations {
       const newChat: Chat = {
         id: chatId,
         userId,
-        name: chatName,
+        title: chatName,
         model,
         systemPrompt,
         vectorStoreId,
@@ -148,7 +148,7 @@ export function useChatRemote(state: ChatState): ChatOperations {
 
       const chatIndex = chats.value.findIndex(c => c.id === chatId);
       if (chatIndex !== -1) {
-        chats.value[chatIndex].name = name;
+        chats.value[chatIndex].title = name;
         chats.value = [...chats.value];
       }
     } catch (error) {

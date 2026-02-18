@@ -60,7 +60,7 @@ export function useChatLocal(state: ChatState): ChatOperations {
       const newChat: Chat = {
         id: chatId,
         userId: user.id,
-        name: chatName,
+        title: chatName,
         model,
         systemPrompt,
         vectorStoreId,
@@ -189,7 +189,7 @@ export function useChatLocal(state: ChatState): ChatOperations {
     const data = loadFromStorage();
     const chatIndex = data.chats.findIndex(c => c.id === chatId);
     if (chatIndex !== -1) {
-      data.chats[chatIndex].name = name;
+      data.chats[chatIndex].title = name;
       saveToStorage(data);
     }
 

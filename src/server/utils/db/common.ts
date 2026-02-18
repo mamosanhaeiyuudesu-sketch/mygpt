@@ -14,7 +14,7 @@ export interface User {
 export interface Chat {
   user_id: string;
   id: string;
-  name: string;
+  title: string;
   model?: string | null;
   system_prompt?: string | null;
   vector_store_id?: string | null;
@@ -45,18 +45,26 @@ export interface DiaryEntry {
   id: string;
   user_id: string;
   title: string;
-  content: string;
-  duration: number | null;
   created_at: number;
+  updated_at: number;
+}
+
+export interface DiarySection {
+  id: string;
+  entry_id: string;
+  text: string;
+  duration: number | null;
+  completed_at: number;
 }
 
 // インメモリストレージ（ローカル開発用フォールバック）
 export const memoryStore = {
   users: [] as User[],
   chats: [] as Chat[],
-  messages: [] as Message[],
+  chatMessages: [] as Message[],
   personas: [] as Persona[],
-  diaryEntries: [] as DiaryEntry[]
+  diaryEntries: [] as DiaryEntry[],
+  diarySections: [] as DiarySection[]
 };
 
 /**

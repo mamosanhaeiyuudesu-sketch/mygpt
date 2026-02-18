@@ -1,7 +1,7 @@
 /**
  * PATCH /api/chats/:id - チャット設定変更（名前・モデル・システムプロンプト・Vector Store ID）
  */
-import { updateChatName, updateChatSettings } from '~/server/utils/db/chats';
+import { updateChatTitle, updateChatSettings } from '~/server/utils/db/chats';
 import { getEncryptionKey, encryptIfKey, encryptNullable } from '~/server/utils/crypto';
 import { requireAuth, requireParam, assertChatOwner } from '~/server/utils/auth';
 
@@ -14,10 +14,10 @@ export default defineEventHandler(async (event) => {
 
   const encKey = await getEncryptionKey(event);
 
-  // 名前の更新
+  // タイトルの更新
   if (body?.name) {
-    const encName = await encryptIfKey(body.name, encKey);
-    await updateChatName(event, id, encName);
+    const encTitle = await encryptIfKey(body.name, encKey);
+    await updateChatTitle(event, id, encTitle);
   }
 
   // モデル・システムプロンプト・Vector Store ID・ペルソナIDの更新

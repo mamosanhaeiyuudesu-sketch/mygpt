@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
   const chats = await Promise.all(allChats.map(async chat => ({
     id: chat.id,
     userId: chat.user_id,
-    name: await decryptIfKey(chat.name, encKey),
+    title: await decryptIfKey(chat.title, encKey),
     model: chat.model || 'gpt-4o',
     systemPrompt: await decryptNullable(chat.system_prompt, encKey) as string | null || null,
     vectorStoreId: chat.vector_store_id || null,

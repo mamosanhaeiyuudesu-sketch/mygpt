@@ -1,5 +1,5 @@
 /**
- * POST /api/diary - 日記エントリ保存
+ * POST /api/diary - 日記エントリ作成（最初のセクション付き）
  */
 import { createDiaryEntry } from '~/server/utils/db/diary';
 import { getEncryptionKey, encryptIfKey } from '~/server/utils/crypto';
@@ -9,30 +9,35 @@ export default defineEventHandler(async (event) => {
   const userId = requireAuth(event);
 
   const body = await readBody(event);
-  const content = body?.content;
+  const text = body?.text;
   const duration = body?.duration;
 
-  if (!content) {
+  if (!text) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'コンテンツが必要です'
+      statusMessage: 'テキストが必要です'
     });
   }
 
   // タイトルを平文から生成してから暗号化
   const encKey = await getEncryptionKey(event);
-  const title = content.substring(0, 30).replace(/\n/g, ' ');
-  const encContent = await encryptIfKey(content, encKey);
+  const title = text.substring(0, 30).replace(/\n/g, ' ');
+  const encText = await encryptIfKey(text, encKey);
   const encTitle = await encryptIfKey(title, encKey);
 
-  const entry = await createDiaryEntry(event, userId, encContent, duration, encTitle);
+  const entry = await createDiaryEntry(event, userId, encText, encTitle, duration);
 
   return {
     id: entry.id,
     userId: entry.user_id,
     title,
-    content,
-    duration: entry.duration,
+    sections: [{
+      id: entry.sections[0].id,
+      text,
+      duration: entry.sections[0].duration,
+      completedAt: entry.sections[0].completed_at,
+    }],
     createdAt: entry.created_at,
+    updatedAt: entry.updated_at,
   };
 });

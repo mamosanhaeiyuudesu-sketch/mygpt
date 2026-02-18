@@ -22,54 +22,6 @@ let mediaRecorder: MediaRecorder | null = null;
 let audioChunks: Blob[] = [];
 let durationTimer: ReturnType<typeof setInterval> | null = null;
 
-/**
- * contentフィールドをセクション配列にパース
- * 後方互換: JSONでなければ単一セクションとして扱う
- */
-function parseSections(content: string): DiarySection[] {
-  if (!content) return [];
-  try {
-    const parsed = JSON.parse(content);
-    if (Array.isArray(parsed)) return parsed;
-  } catch {
-    // JSON でなければ旧形式（プレーンテキスト）
-  }
-  return [{ text: content, completedAt: 0 }];
-}
-
-/**
- * セクション配列をJSON文字列にシリアライズ
- */
-function serializeSections(sections: DiarySection[]): string {
-  return JSON.stringify(sections);
-}
-
-/**
- * セクション配列からタイトル生成用のプレーンテキストを取得
- */
-function sectionsToPlainText(sections: DiarySection[]): string {
-  return sections.map(s => s.text).join('\n');
-}
-
-/**
- * エントリの最終更新タイムスタンプを取得（最新セクションのcompletedAt、なければcreatedAt）
- */
-function getLatestTimestamp(entry: DiaryEntry): number {
-  const sections = parseSections(entry.content);
-  if (sections.length > 0) {
-    const maxCompletedAt = Math.max(...sections.map(s => s.completedAt || 0));
-    if (maxCompletedAt > 0) return maxCompletedAt;
-  }
-  return entry.createdAt;
-}
-
-/**
- * エントリ配列を最終更新日時の降順でソート
- */
-function sortEntriesByLatest(entries: DiaryEntry[]): DiaryEntry[] {
-  return [...entries].sort((a, b) => getLatestTimestamp(b) - getLatestTimestamp(a));
-}
-
 export function useDiary() {
   const currentEntry = computed(() =>
     entries.value.find(e => e.id === currentEntryId.value) || null
@@ -77,7 +29,7 @@ export function useDiary() {
 
   const currentSections = computed(() => {
     if (!currentEntry.value) return [];
-    return parseSections(currentEntry.value.content);
+    return currentEntry.value.sections;
   });
 
   const loadEntries = async () => {
@@ -87,12 +39,12 @@ export function useDiary() {
         entries.value = [];
         return;
       }
-      entries.value = sortEntriesByLatest(loadDiaryEntries(user.id));
+      entries.value = loadDiaryEntries(user.id);
     } else {
       const res = await fetch('/api/diary');
       if (res.ok) {
         const data = (await res.json()) as { entries: DiaryEntry[] };
-        entries.value = sortEntriesByLatest(data.entries);
+        entries.value = data.entries;
       }
     }
   };
@@ -192,18 +144,12 @@ export function useDiary() {
     const text = editingContent.value.trim();
     if (!text) return;
 
-    const newSection: DiarySection = { text, completedAt: Date.now() };
-
     if (editingEntryId.value) {
       // 既存エントリにセクション追加
-      const existingSections = currentSections.value;
-      const allSections = [...existingSections, newSection];
-      const content = serializeSections(allSections);
-      await updateEntryContent(editingEntryId.value, content);
+      await addSection(editingEntryId.value, text);
     } else {
       // 新規作成
-      const content = serializeSections([newSection]);
-      const newEntry = await createEntry(content);
+      const newEntry = await createEntry(text);
       if (newEntry) {
         editingEntryId.value = newEntry.id;
         currentEntryId.value = newEntry.id;
@@ -216,22 +162,27 @@ export function useDiary() {
     editingContent.value = '';
   };
 
-  const createEntry = async (content: string, duration?: number): Promise<DiaryEntry | null> => {
-    const sections = parseSections(content);
-    const plainText = sectionsToPlainText(sections);
-    const title = plainText.substring(0, 30).replace(/\n/g, ' ');
+  const createEntry = async (text: string, duration?: number): Promise<DiaryEntry | null> => {
+    const title = text.substring(0, 30).replace(/\n/g, ' ');
+    const now = Date.now();
 
     if (isLocalEnvironment()) {
       const user = getUserFromStorage();
       if (!user) return null;
 
+      const section: DiarySection = {
+        id: crypto.randomUUID(),
+        text,
+        duration,
+        completedAt: now,
+      };
       const entry: DiaryEntry = {
         id: crypto.randomUUID(),
         userId: user.id,
         title,
-        content,
-        duration,
-        createdAt: Date.now(),
+        sections: [section],
+        createdAt: now,
+        updatedAt: now,
       };
       entries.value = [entry, ...entries.value];
       saveDiaryEntries(user.id, entries.value);
@@ -240,7 +191,7 @@ export function useDiary() {
       const res = await fetch('/api/diary', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content, duration }),
+        body: JSON.stringify({ text, duration }),
       });
       if (res.ok) {
         const entry = (await res.json()) as DiaryEntry;
@@ -251,24 +202,39 @@ export function useDiary() {
     return null;
   };
 
-  const updateEntryContent = async (entryId: string, content: string): Promise<void> => {
+  const addSection = async (entryId: string, text: string, duration?: number): Promise<void> => {
+    const now = Date.now();
+
     if (isLocalEnvironment()) {
       const user = getUserFromStorage();
       if (!user) return;
-      entries.value = sortEntriesByLatest(entries.value.map(e =>
-        e.id === entryId ? { ...e, content } : e
-      ));
+      const newSection: DiarySection = {
+        id: crypto.randomUUID(),
+        text,
+        duration,
+        completedAt: now,
+      };
+      entries.value = entries.value
+        .map(e => e.id === entryId
+          ? { ...e, sections: [...e.sections, newSection], updatedAt: now }
+          : e
+        )
+        .sort((a, b) => b.updatedAt - a.updatedAt);
       saveDiaryEntries(user.id, entries.value);
     } else {
       const res = await fetch(`/api/diary/${entryId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content }),
+        body: JSON.stringify({ text, duration }),
       });
       if (res.ok) {
-        entries.value = sortEntriesByLatest(entries.value.map(e =>
-          e.id === entryId ? { ...e, content } : e
-        ));
+        const data = (await res.json()) as { section: DiarySection };
+        entries.value = entries.value
+          .map(e => e.id === entryId
+            ? { ...e, sections: [...e.sections, data.section], updatedAt: now }
+            : e
+          )
+          .sort((a, b) => b.updatedAt - a.updatedAt);
       }
     }
   };

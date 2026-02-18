@@ -6,7 +6,7 @@ import type { DiaryEntry } from '~/types';
 const DIARY_STORAGE_KEY = 'mygpt_diary';
 
 /**
- * 日記エントリを読み込み（created_at DESC）
+ * 日記エントリを読み込み（updated_at DESC）
  */
 export function loadDiaryEntries(userId: string): DiaryEntry[] {
   if (typeof window === 'undefined') return [];
@@ -16,7 +16,7 @@ export function loadDiaryEntries(userId: string): DiaryEntry[] {
       const all = JSON.parse(data) as DiaryEntry[];
       return all
         .filter(e => e.userId === userId)
-        .sort((a, b) => b.createdAt - a.createdAt);
+        .sort((a, b) => b.updatedAt - a.updatedAt);
     }
   } catch (e) {
     console.error('Failed to load diary entries from localStorage:', e);
