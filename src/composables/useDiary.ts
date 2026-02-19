@@ -8,21 +8,23 @@ import type { DiaryEntry, DiarySection } from '~/types';
 import { isLocalEnvironment } from '~/utils/environment';
 import { loadDiaryEntries, saveDiaryEntries } from '~/utils/diaryStorage';
 import { getUserFromStorage } from '~/utils/storage';
+import { useVoiceRecording } from '~/composables/useVoiceRecording';
 
 const entries = ref<DiaryEntry[]>([]);
 const currentEntryId = ref<string | null>(null);
-const isRecording = ref(false);
-const isTranscribing = ref(false);
-const recordingDuration = ref(0);
 const isEditing = ref(false);
 const editingContent = ref('');
 const editingEntryId = ref<string | null>(null);
 
-let mediaRecorder: MediaRecorder | null = null;
-let audioChunks: Blob[] = [];
-let durationTimer: ReturnType<typeof setInterval> | null = null;
-
 export function useDiary() {
+  const {
+    isRecording,
+    isTranscribing,
+    recordingDuration,
+    startRecording: voiceStartRecording,
+    stopRecording: voiceStopRecording,
+  } = useVoiceRecording();
+
   const currentEntry = computed(() =>
     entries.value.find(e => e.id === currentEntryId.value) || null
   );
@@ -70,74 +72,11 @@ export function useDiary() {
   };
 
   const startRecording = async () => {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    audioChunks = [];
-    recordingDuration.value = 0;
-
-    mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-
-    mediaRecorder.ondataavailable = (e) => {
-      if (e.data.size > 0) {
-        audioChunks.push(e.data);
-      }
-    };
-
-    mediaRecorder.start();
-    isRecording.value = true;
-
-    durationTimer = setInterval(() => {
-      recordingDuration.value++;
-    }, 1000);
+    await voiceStartRecording();
   };
 
   const stopRecording = async () => {
-    if (!mediaRecorder || mediaRecorder.state === 'inactive') return;
-
-    if (durationTimer) {
-      clearInterval(durationTimer);
-      durationTimer = null;
-    }
-
-    // Wait for MediaRecorder to stop and collect all data
-    const audioBlob = await new Promise<Blob>((resolve) => {
-      mediaRecorder!.onstop = () => {
-        resolve(new Blob(audioChunks, { type: 'audio/webm' }));
-      };
-      mediaRecorder!.stop();
-    });
-
-    // Stop all tracks
-    mediaRecorder.stream.getTracks().forEach(t => t.stop());
-    mediaRecorder = null;
-    isRecording.value = false;
-
-    // Transcribe
-    isTranscribing.value = true;
-    try {
-      const formData = new FormData();
-      formData.append('file', audioBlob, 'recording.webm');
-
-      const res = await fetch('/api/diary/transcribe', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!res.ok) {
-        throw new Error('Transcription failed');
-      }
-
-      const { text } = (await res.json()) as { text: string };
-
-      if (text && text.trim().length > 0) {
-        // 末尾に追加
-        if (editingContent.value.length > 0 && !editingContent.value.endsWith('\n')) {
-          editingContent.value += '\n';
-        }
-        editingContent.value += text.trim();
-      }
-    } finally {
-      isTranscribing.value = false;
-    }
+    await voiceStopRecording(editingContent);
   };
 
   const saveEditingEntry = async (): Promise<void> => {

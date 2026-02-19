@@ -2,18 +2,57 @@
   <div class="border-t border-gray-800 p-3 md:p-4">
     <div class="max-w-3xl mx-auto">
       <form @submit.prevent="handleSubmit" class="flex gap-2 md:gap-3 items-end">
-        <textarea
-          ref="textareaRef"
-          v-model="localMessage"
-          :placeholder="t('chat.input.placeholder')"
-          rows="1"
-          class="flex-1 bg-gray-800 text-white rounded-lg px-3 py-2 md:px-4 md:py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none max-h-32 overflow-y-auto"
-          :disabled="disabled"
-          @keydown="handleKeyDown"
-          @input="autoResize"
-          @focus="isInputFocused = true"
-          @blur="isInputFocused = false"
-        ></textarea>
+        <div class="relative flex-1">
+          <!-- 録音ボタン（テキストエリア左上） -->
+          <div class="absolute top-2 left-2 z-10">
+            <button
+              v-if="!isRecording && !isTranscribing"
+              type="button"
+              @click="handleStartRecording"
+              class="p-1 rounded hover:bg-gray-700 transition-colors"
+              :title="t('diary.startRecording')"
+              :disabled="disabled"
+            >
+              <svg class="w-4 h-4 text-red-400" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
+                <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
+              </svg>
+            </button>
+            <button
+              v-else-if="isRecording"
+              type="button"
+              @click="handleStopRecording"
+              class="flex items-center gap-1 px-1.5 py-1 rounded bg-gray-700 hover:bg-gray-600 transition-colors animate-pulse"
+            >
+              <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 24 24">
+                <rect x="6" y="6" width="12" height="12" rx="2" />
+              </svg>
+              <span class="text-red-400 text-xs font-mono">{{ formatDuration(recordingDuration) }}</span>
+            </button>
+            <div
+              v-else-if="isTranscribing"
+              class="flex items-center gap-1 px-1.5 py-1 rounded bg-gray-700"
+            >
+              <svg class="w-4 h-4 text-blue-400 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke-width="4" />
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              <span class="text-blue-400 text-xs">{{ t('diary.transcribing') }}</span>
+            </div>
+          </div>
+          <textarea
+            ref="textareaRef"
+            v-model="localMessage"
+            :placeholder="t('chat.input.placeholder')"
+            rows="1"
+            class="w-full bg-gray-800 text-white rounded-lg pl-10 pr-3 py-2 md:py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none max-h-32 overflow-y-auto"
+            :disabled="disabled"
+            @keydown="handleKeyDown"
+            @input="autoResize"
+            @focus="isInputFocused = true"
+            @blur="isInputFocused = false"
+          ></textarea>
+        </div>
         <!-- 停止ボタン（ストリーミング中） -->
         <button
           v-if="isLoading"
@@ -38,6 +77,9 @@
 </template>
 
 <script setup lang="ts">
+import { formatDuration } from '~/utils/dateFormat';
+import { useVoiceRecording } from '~/composables/useVoiceRecording';
+
 const props = defineProps<{
   disabled?: boolean;
   isLoading?: boolean;
@@ -49,10 +91,23 @@ const emit = defineEmits<{
 }>();
 
 const { t } = useI18n();
+const { isRecording, isTranscribing, recordingDuration, startRecording, stopRecording } = useVoiceRecording();
 
 const isInputFocused = useState('inputFocused', () => false);
 const localMessage = ref('');
 const textareaRef = ref<HTMLTextAreaElement | null>(null);
+
+const handleStartRecording = async () => {
+  try {
+    await startRecording();
+  } catch (e) {
+    alert(t('diary.micPermissionError'));
+  }
+};
+
+const handleStopRecording = async () => {
+  await stopRecording(localMessage);
+};
 
 const handleSubmit = () => {
   const message = localMessage.value.trim();
