@@ -81,7 +81,8 @@ src/
 │   ├── useI18n.ts                # 多言語対応（翻訳データはsrc/locales/*.json）
 │   ├── usePageAuth.ts            # ページレベル認証チェック
 │   ├── usePersonas.ts            # ペルソナ管理
-│   └── useQuestionNavigation.ts  # 質問ナビゲーション
+│   ├── useQuestionNavigation.ts  # 質問ナビゲーション
+│   └── useVoiceRecording.ts      # 音声録音・文字起こし共通ロジック（MediaRecorder + Whisper API）
 ├── types/
 │   └── index.ts                  # 共通型定義
 ├── locales/
@@ -108,7 +109,7 @@ src/
         │   └── diary.ts          # 日記エントリCRUD操作
         ├── constants.ts          # 定数（Cookie名、有効期限等）
         ├── crypto.ts             # 暗号化/復号化ユーティリティ
-        ├── openai.ts             # AI APIヘルパー（OpenAI Chat Completions + Anthropic Messages + SSE正規化）
+        ├── openai.ts             # AI APIヘルパー（OpenAI Chat Completions + Anthropic Messages + SSE正規化 + Whisper文字起こし）
         ├── providers.ts          # プロバイダー判定（detectProvider, supportsRAG）
         ├── history.ts            # メッセージ履歴管理（getContextMessages, buildMessagesWithHistory）
         └── env.ts                # 環境変数アクセス（CF Workers vs ローカル）
@@ -141,6 +142,8 @@ src/
 
 11. **DB型の統一**: `use_context`フィールドはDB側では`number | null`（0/1）で管理し、フロントエンドへの変換時に`useContextToBoolean()`を使用してbooleanに変換します。
 
+12. **音声入力の共通化**: `useVoiceRecording.ts`がMediaRecorder APIによる録音とWhisper APIによる文字起こしを共通ロジックとして提供します。`stopRecording(targetRef)`は文字起こし結果を任意のstring refに追記します。`useDiary.ts`と`ChatInput.vue`の両方がこのcomposableに委譲し、`/api/transcribe`エンドポイントを共有します。モジュールレベルのシングルトン状態（`isRecording`, `isTranscribing`, `recordingDuration`）により、アプリ全体で一度に一つの録音のみ許可されます。
+
 ### サーバーAPIルート
 
 | ルート | ハンドラー | 目的 |
@@ -163,19 +166,21 @@ src/
 | `POST /api/generate-title` | `generate-title.post.ts` | Chat Completions APIでチャットタイトル生成 |
 | `GET /api/models` | `models.get.ts` | 利用可能なモデルの静的リスト |
 | `POST /api/generate-image` | `generate-image.post.ts` | DALL-Eでペルソナ画像生成 |
+| `POST /api/transcribe` | `transcribe.post.ts` | 音声の文字起こし（Whisper API、チャット・日記共通） |
 | `GET/POST/PATCH/DELETE /api/personas` | `personas/` | ペルソナのCRUD |
 | `GET /api/diary` | `diary/index.get.ts` | 日記エントリ一覧取得 |
 | `POST /api/diary` | `diary/index.post.ts` | 日記エントリ作成 |
 | `PATCH /api/diary/:id` | `diary/[id].patch.ts` | 日記エントリ更新 |
 | `DELETE /api/diary/:id` | `diary/[id].delete.ts` | 日記エントリ削除 |
-| `POST /api/diary/transcribe` | `diary/transcribe.post.ts` | 音声の文字起こし |
 
 ### コンポーネントノート
 
 - `chat/[[id]].vue`が中心となるチャットページコンポーネント。`useChatPage()`をUIに接続します。オプショナルな`[id]`セグメントにより、`/chat`（未選択）と`/chat/:id`（チャット選択済み）の両方を許可します。
 - `diary/[[id]].vue`が日記ページコンポーネント。音声録音と文字起こし機能を持ちます。
 - `components`はnuxt configで`pathPrefix: false`に設定されているため、短い名前でインポートされます（例: `<SidebarSidebar>`ではなく`<Sidebar>`）。
+- `ChatInput.vue`はテキスト入力に加え、音声録音・文字起こし機能を内蔵。録音中・文字起こし中は送信が無効化されます。
 - `ChatMessage.vue`は`marked`を使用してアシスタントメッセージをMarkdownとしてレンダリングします。
+- `ChatListItem.vue`はペルソナが設定されたチャットにペルソナ名を青色バッジで表示します。`ChatPreview`型に`personaName`フィールドを持ち、`chat/[[id]].vue`の`chatPreviews` computedでペルソナ名をルックアップして付与します。
 - `AppNavigation.vue`がチャット/日記/マインドマップ間のナビゲーションを提供します。
 
 ### 環境と設定
