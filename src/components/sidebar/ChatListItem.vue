@@ -42,7 +42,10 @@
         </div>
         <!-- 表示モード -->
         <template v-else>
-          <div class="font-medium text-sm truncate">{{ chat.title }}</div>
+          <div class="flex items-center justify-between gap-1">
+            <div class="font-medium text-sm truncate">{{ chat.title }}</div>
+            <span v-if="chat.personaName" class="shrink-0 text-blue-400 bg-gray-800 px-1.5 py-0.5 rounded text-[0.6em] font-medium leading-tight">{{ chat.personaName }}</span>
+          </div>
           <div v-if="chat.lastMessage" class="text-xs text-gray-400 truncate mt-1">
             {{ chat.lastMessage }}
           </div>

@@ -15,7 +15,7 @@
     <!-- サイドバー -->
     <ChatSidebar
       v-model:open="isSidebarOpen"
-      :chats="chats"
+      :chats="chatPreviews"
       :current-chat-id="currentChatId"
       :on-generate-title="handleGenerateTitle"
       :user-name="currentUser?.name"
@@ -158,6 +158,14 @@ const currentPersonaName = computed(() => {
   const persona = getPersonaById(currentChatPersonaId.value);
   return persona?.name || null;
 });
+
+// チャット一覧にペルソナ名を付与
+const chatPreviews = computed(() =>
+  chats.value.map(chat => ({
+    ...chat,
+    personaName: chat.personaId ? getPersonaById(chat.personaId)?.name : undefined,
+  }))
+);
 
 // UI state
 const showAccountSetup = ref(false);

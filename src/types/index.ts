@@ -67,6 +67,7 @@ export interface ChatPreview {
   id: string;
   title: string;
   lastMessage?: string;
+  personaName?: string;
 }
 
 // ペルソナ
