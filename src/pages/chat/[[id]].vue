@@ -33,7 +33,7 @@
     <div class="flex-1 flex flex-col md:ml-0 pb-12 md:pb-0 bg-[#212121]">
       <!-- モバイル用ヘッダー -->
       <MobileHeader
-        :model="currentChatModel"
+        :model="currentModelName"
         :persona-name="currentPersonaName"
         :has-active-item="!!currentChatId"
         @open-sidebar="isSidebarOpen = true"
