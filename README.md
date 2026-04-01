@@ -44,8 +44,8 @@ npx wrangler d1 create mygpt
 Created your database using D1's new storage backend.
 
 [[d1_databases]]
-binding = "DB"
-database_name = "mygpt"
+binding = "MYGPT_DB"
+database_name = "mygpt-db"
 database_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 ```
 

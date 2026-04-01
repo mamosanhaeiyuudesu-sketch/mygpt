@@ -35,8 +35,8 @@ export default defineNuxtConfig({
     defaultModel: 'gpt-4o-mini',
     // サーバー側のみ（NUXT_APP_PASSWORD 環境変数で設定）
     appPassword: '',
-    // 履歴保持上限ラウンド数（NUXT_MAX_HISTORY_ROUNDS 環境変数で設定）
-    maxHistoryRounds: 20,
+    // 履歴保持上限メッセージ数（NUXT_MAX_MESSAGES 環境変数で設定）
+    maxMessages: 40,
     // クライアント側でも使用可能
     public: {
       defaultModel: 'gpt-4o-mini'

@@ -14,9 +14,9 @@ bucket = ".output/public"
 # 1. npx wrangler d1 create mygpt を実行
 # 2. 出力された database_id を以下の PLACEHOLDER に置き換え
 [[d1_databases]]
-binding = "DB"
-database_name = "mygpt-production"
-database_id = "2971b8e0-cf03-4431-be4d-f05986a07726" 
+binding = "MYGPT_DB"
+database_name = "mygpt-db"
+database_id = "8e45361e-0641-4474-938c-03d15197196c" 
 
 # 環境変数（シークレット）
 # OPENAI_API_KEY は以下のコマンドで設定:

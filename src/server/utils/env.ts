@@ -8,8 +8,9 @@ interface CloudflareEnv {
   NUXT_OPENAI_API_KEY?: string;
   NUXT_ANTHROPIC_API_KEY?: string;
   NUXT_APP_PASSWORD?: string;
-  NUXT_MAX_HISTORY_ROUNDS?: string;
-  DB?: D1Database;
+  NUXT_MAX_MESSAGES?: string;
+  ENCRYPTION_SALT?: string;
+  MYGPT_DB?: D1Database;
 }
 
 /**
@@ -51,17 +52,16 @@ export function getAnthropicKey(event: H3Event): string {
 }
 
 /**
- * 履歴保持上限を取得（ラウンド数）
- * 1ラウンド = ユーザーメッセージ1件 + アシスタントメッセージ1件
+ * 履歴保持上限を取得（メッセージ数）
  */
-export function getMaxHistoryRounds(event: H3Event): number {
+export function getMaxMessages(event: H3Event): number {
   const cfEnv = (event.context.cloudflare?.env as CloudflareEnv) || {};
-  if (cfEnv.NUXT_MAX_HISTORY_ROUNDS) {
-    return parseInt(cfEnv.NUXT_MAX_HISTORY_ROUNDS, 10);
+  if (cfEnv.NUXT_MAX_MESSAGES) {
+    return parseInt(cfEnv.NUXT_MAX_MESSAGES, 10);
   }
 
   const config = useRuntimeConfig();
-  return parseInt(String(config.maxHistoryRounds || '20'), 10);
+  return parseInt(String(config.maxMessages || '40'), 10);
 }
 
 /**
@@ -82,5 +82,5 @@ export function getAppPassword(event: H3Event): string {
  */
 export function getD1Database(event: H3Event): D1Database | null {
   const cfEnv = (event.context.cloudflare?.env as CloudflareEnv) || {};
-  return cfEnv.DB || null;
+  return cfEnv.MYGPT_DB || null;
 }

@@ -71,8 +71,8 @@ export const memoryStore = {
  * D1データベースを取得（Cloudflare Workers環境のみ）
  */
 export function getD1(event: H3Event): D1Database | null {
-  const cfEnv = event.context.cloudflare?.env as { DB?: D1Database } | undefined;
-  return cfEnv?.DB || null;
+  const cfEnv = event.context.cloudflare?.env as { MYGPT_DB?: D1Database } | undefined;
+  return cfEnv?.MYGPT_DB || null;
 }
 
 /**

@@ -8,17 +8,16 @@ export interface HistoryMessage {
 }
 
 /**
- * 直近Nラウンド分のメッセージを取得
+ * 直近N件のメッセージを取得
  * @param messages - 全メッセージ（created_at ASC順）
- * @param maxRounds - 最大ラウンド数（1ラウンド = user + assistant）
+ * @param maxMessages - 最大メッセージ数
  */
 export function getContextMessages(
   messages: { role: string; content: string }[],
-  maxRounds: number
+  maxMessages: number
 ): HistoryMessage[] {
   if (!messages || messages.length === 0) return [];
 
-  const maxMessages = maxRounds * 2;
   const recent = messages.slice(-maxMessages);
 
   return recent.map(msg => ({

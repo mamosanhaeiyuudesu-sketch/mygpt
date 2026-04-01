@@ -2,7 +2,7 @@
  * POST /api/chats/:id/messages-stream - ストリーミングメッセージ送信（本番パス）
  */
 import { streamChatMessage } from '~/server/utils/openai';
-import { getOpenAIKey, getAnthropicKey, getMaxHistoryRounds } from '~/server/utils/env';
+import { getOpenAIKey, getAnthropicKey, getMaxMessages } from '~/server/utils/env';
 import { useContextToBoolean } from '~/server/utils/db/common';
 import { requireAuth, requireParam, assertChatOwner } from '~/server/utils/auth';
 import { getEncryptionKey, decryptNullable } from '~/server/utils/crypto';
@@ -53,7 +53,7 @@ export default defineEventHandler(async (event) => {
   let messages: { role: 'user' | 'assistant'; content: string }[];
 
   if (useContext) {
-    const maxRounds = getMaxHistoryRounds(event);
+    const maxMessages = getMaxMessages(event);
     const dbMessages = await getMessages(event, id);
 
     // メッセージを復号
@@ -65,7 +65,7 @@ export default defineEventHandler(async (event) => {
       }))
     );
 
-    const contextMessages = getContextMessages(decryptedMessages, maxRounds);
+    const contextMessages = getContextMessages(decryptedMessages, maxMessages);
     messages = buildMessagesWithHistory(contextMessages, body.message);
   } else {
     messages = [{ role: 'user', content: body.message }];
